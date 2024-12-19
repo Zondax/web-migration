@@ -1,9 +1,16 @@
 {
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
     "build": "next build",
+    "dev": "next dev --turbo",
+    "format": "prettier --write . && sort-package-json",
     "start": "next start"
+  },
+  "prettier": {
+    "arrowParens": "always",
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "none"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
@@ -37,11 +44,8 @@
     "typescript": "5.7.2",
     "zod": "^3.24.1"
   },
-  "prettier": {
-    "arrowParens": "always",
-    "singleQuote": true,
-    "tabWidth": 2,
-    "trailingComma": "none"
+  "devDependencies": {
+    "sort-package-json": "^2.12.0"
   },
   "pnpm": {
     "overrides": {
