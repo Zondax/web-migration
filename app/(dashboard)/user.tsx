@@ -1,6 +1,6 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
-import { auth, signOut } from '@/lib/auth';
-import Image from 'next/image';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,11 +9,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import Link from 'next/link';
+import { observer } from '@legendapp/state/react';
+import { uiState$ } from 'app/state/ui';
+import Image from 'next/image';
+import { useCallback } from 'react';
 
-export async function User() {
-  let session = await auth();
-  let user = session?.user;
+function User() {
+  const user = { image: null }; // Placeholder for user object
+
+  const isLedgerConnected = uiState$.ledger.isConnected.get();
+
+  const connectDevice = useCallback(() => {
+    uiState$.connectLedger();
+  }, []);
+
+  const disconnectDevice = useCallback(() => {
+    uiState$.disconnectLedger();
+  }, []);
 
   return (
     <DropdownMenu>
@@ -32,29 +44,21 @@ export async function User() {
           />
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Settings</DropdownMenuItem>
-        <DropdownMenuItem>Support</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={isLedgerConnected ? disconnectDevice : connectDevice}
+        >
+          {isLedgerConnected ? 'Disconnect wallet' : 'Connect your wallet'}
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled>Settings</DropdownMenuItem>
+        <DropdownMenuItem disabled>Support</DropdownMenuItem>
         <DropdownMenuSeparator />
-        {user ? (
-          <DropdownMenuItem>
-            <form
-              action={async () => {
-                'use server';
-                await signOut();
-              }}
-            >
-              <button type="submit">Sign Out</button>
-            </form>
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem>
-            <Link href="/login">Sign In</Link>
-          </DropdownMenuItem>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
+
+export default observer(User);
