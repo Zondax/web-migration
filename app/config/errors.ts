@@ -1,4 +1,4 @@
-export interface LedgerErrorParams {
+export interface LedgerErrorDetails {
   title: string;
   description?: string;
   content?: string;
@@ -7,6 +7,7 @@ export interface LedgerErrorParams {
 export enum InternalErrors {
   'ADDRESS_NOT_SELECTED' = 'address_not_selected',
   'APP_NOT_OPEN' = 'app_not_open',
+  'WRONG_APP' = 'wrong_app',
   'UNKNOWN_ERROR' = 'unknown_error',
   'LOCKED_DEVICE' = 'locked_device',
   'DEVICE_NOT_SELECTED' = 'device_not_selected',
@@ -25,7 +26,7 @@ export enum LedgerErrors {
 }
 
 export type ErrorDetailsMap = {
-  [key in InternalErrors | LedgerErrors]: LedgerErrorParams;
+  [key in InternalErrors | LedgerErrors]: LedgerErrorDetails;
 };
 
 export const errorDetails: ErrorDetailsMap = {
@@ -54,6 +55,9 @@ export const errorDetails: ErrorDetailsMap = {
   address_not_selected: {
     title: 'Address not selected',
     description: 'Please select an address to continue.'
+  },
+  wrong_app: {
+    title: 'Wrong app.'
   },
   default: {
     title: 'An unknown error happens, please try again.'
@@ -87,5 +91,20 @@ export const errorDetails: ErrorDetailsMap = {
     title: 'Transport Interface Not Available',
     description: 'The transport interface is not available.',
     content: 'Please disconnect the device and try again.'
+  }
+};
+
+export const decodeLedgerResponseCode = (
+  errorCode: number
+): LedgerErrorDetails | undefined => {
+  switch (errorCode) {
+    case 21781:
+      return errorDetails.LockedDeviceError;
+    case 28161:
+      return errorDetails.app_not_open;
+    case 28160:
+      return errorDetails.wrong_app;
+    default:
+      return undefined;
   }
 };

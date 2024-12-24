@@ -16,16 +16,16 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
+import { observer } from '@legendapp/state/react';
+import { uiState$ } from 'app/state/ui';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Product } from './product';
+import Product from './product';
 
-export function ProductsTable({
-  products,
+function ProductsTable({
   offset,
   totalProducts
 }: {
-  products: any[];
   offset: number;
   totalProducts: number;
 }) {
@@ -43,32 +43,26 @@ export function ProductsTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Products</CardTitle>
+        <CardTitle>Supported Parachains</CardTitle>
         <CardDescription>
-          Manage your products and view their sales performance.
+          Please select the accounts you wish to synchronize, or choose to
+          synchronize all accounts.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]"> </TableHead>
               <TableHead className="hidden w-[100px] sm:table-cell">
                 <span className="sr-only">Image</span>
               </TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="hidden md:table-cell">Price</TableHead>
-              <TableHead className="hidden md:table-cell">
-                Total Sales
-              </TableHead>
-              <TableHead className="hidden md:table-cell">Created at</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
+              <TableHead className="hidden md:table-cell">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => (
+            {uiState$.apps.apps.get().map((product) => (
               <Product key={product.id} product={product} />
             ))}
           </TableBody>
@@ -114,3 +108,5 @@ export function ProductsTable({
     </Card>
   );
 }
+
+export default observer(ProductsTable);

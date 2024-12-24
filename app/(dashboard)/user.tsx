@@ -17,7 +17,7 @@ import { useCallback } from 'react';
 function User() {
   const user = { image: null }; // Placeholder for user object
 
-  const isLedgerConnected = uiState$.ledger.isConnected.get();
+  const isLedgerConnected = uiState$.device.isConnected.get();
 
   const connectDevice = useCallback(() => {
     uiState$.connectLedger();

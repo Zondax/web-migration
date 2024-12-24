@@ -1,52 +1,75 @@
-import { handleError } from '@/lib/utils';
+import { handleWalletError } from '@/lib/utils';
 import Transport from '@ledgerhq/hw-transport';
 import TransportWebUSB from '@ledgerhq/hw-transport-webhid';
 import { observable } from '@legendapp/state';
-import { errorDetails, LedgerErrorParams } from 'app/config/errors';
+import { PolkadotGenericApp } from '@zondax/ledger-substrate';
+import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
+import { appsConfigs, type AppsId } from 'app/config/apps';
+import { errorDetails, LedgerErrorDetails } from 'app/config/errors';
 import { ConnectionResponse, DeviceConnectionProps } from '../types/ledger';
 
 interface LedgerWalletState {
-  deviceConnection: DeviceConnectionProps | undefined;
-  isLoading: boolean;
-  error: LedgerErrorParams | undefined;
+  deviceConnection: {
+    connection?: DeviceConnectionProps;
+    isLoading: boolean;
+    error?: LedgerErrorDetails;
+  };
+  synchronization: {
+    // isAppOpen: boolean;
+    genericApp?: PolkadotGenericApp;
+    isSynchronized: boolean;
+    isLoading: boolean;
+    error?: LedgerErrorDetails;
+  };
 }
 
 export const InitialWalletState: LedgerWalletState = {
-  deviceConnection: undefined,
-  isLoading: false,
-  error: undefined
+  deviceConnection: {
+    connection: undefined,
+    isLoading: false,
+    error: undefined
+  },
+  synchronization: {
+    // isAppOpen: false,
+    isSynchronized: false,
+    genericApp: undefined,
+    isLoading: false,
+    error: undefined
+  }
 };
 
 export const ledgerWalletState$ = observable({
   ...InitialWalletState,
   async getDeviceConnection(): Promise<DeviceConnectionProps | undefined> {
-    let { deviceConnection } = ledgerWalletState$.get();
+    let {
+      deviceConnection: { connection }
+    } = ledgerWalletState$.get();
     let transport: Transport | undefined =
-      deviceConnection?.transport as unknown as Transport;
+      connection?.transport as unknown as Transport;
 
-    ledgerWalletState$.isLoading.set(true);
-    ledgerWalletState$.error.set(undefined);
+    ledgerWalletState$.deviceConnection.isLoading.set(true);
+    ledgerWalletState$.deviceConnection.error.set(undefined);
 
     try {
+      // Establish transport and add disconnect event listener
       if (!transport) {
         transport = await TransportWebUSB.create();
-
         transport?.on('disconnect', () => {
           ledgerWalletState$.assign(InitialWalletState);
           console.log('disconnecting');
         });
       }
 
-      const newDeviceConnection: DeviceConnectionProps = {
-        transport
+      const newDeviceConnection = {
+        connection: { transport },
+        isLoading: false,
+        error: undefined
       };
 
-      ledgerWalletState$.deviceConnection.set(newDeviceConnection);
-      ledgerWalletState$.error.set(undefined);
-      ledgerWalletState$.isLoading.set(false);
-      return newDeviceConnection;
+      ledgerWalletState$.deviceConnection.assign(newDeviceConnection);
+      return newDeviceConnection.connection;
     } catch (e) {
-      handleError(e, errorDetails.connection_error);
+      handleWalletError(e, errorDetails.connection_error);
       return undefined;
     }
   },
@@ -56,10 +79,10 @@ export const ledgerWalletState$ = observable({
       const { deviceConnection, getDeviceConnection } =
         ledgerWalletState$.get();
 
-      ledgerWalletState$.isLoading.set(true);
-      ledgerWalletState$.error.set(undefined);
+      ledgerWalletState$.deviceConnection.isLoading.set(true);
+      ledgerWalletState$.deviceConnection.error.set(undefined);
 
-      const transport = deviceConnection?.transport;
+      const transport = deviceConnection.connection?.transport;
 
       if (!transport) {
         console.log(
@@ -68,36 +91,116 @@ export const ledgerWalletState$ = observable({
         const connection = await getDeviceConnection();
         if (!connection) {
           console.log('Failed to establish device connection');
-          ledgerWalletState$.isLoading.set(false);
+          ledgerWalletState$.deviceConnection.isLoading.set(false);
           return {
             connected: false,
-            error: ledgerWalletState$.error.get()?.title
+            error: ledgerWalletState$.deviceConnection.error.get()?.title
           };
         }
       }
       console.log('Device connected successfully');
       return { connected: true };
     } catch (e) {
-      const error = handleError(e, errorDetails.connection_error);
+      const error = handleWalletError(e, errorDetails.connection_error);
       return {
         error: error.title,
         connected: false
       };
     }
   },
+  async getAccountAddress(
+    bip44Path: string,
+    ss58prefix: number,
+    showAddrInDevice: boolean
+  ): Promise<GenericeResponseAddress | undefined> {
+    let { synchronization } = ledgerWalletState$.get();
+
+    let genericApp =
+      synchronization?.genericApp as unknown as PolkadotGenericApp;
+
+    try {
+      const address = await genericApp.getAddress(
+        bip44Path,
+        ss58prefix,
+        showAddrInDevice
+      );
+      return address;
+    } catch (e) {
+      return undefined; // it means the address doens't exist
+    }
+  },
+  async synchronizeAccount(
+    appId: AppsId
+  ): Promise<{ result?: GenericeResponseAddress[]; error?: boolean }> {
+    let {
+      deviceConnection: { connection },
+      synchronization
+    } = ledgerWalletState$.get();
+    let transport: Transport | undefined =
+      connection?.transport as unknown as Transport;
+    let genericApp =
+      synchronization?.genericApp as unknown as PolkadotGenericApp;
+    const app = appsConfigs[appId.toUpperCase()];
+
+    if (!app) {
+      console.error(`The appId ${appId} is not supported.`);
+      return Promise.reject(new Error(`The appId ${appId} is not supported.`));
+    }
+
+    try {
+      // Establish transport and add disconnect event listener
+      if (!transport) {
+        const result = await ledgerWalletState$.connectDevice();
+
+        if (!result?.connected) {
+          return Promise.resolve({ error: true });
+        }
+      }
+
+      // Establish migrationApp
+      if (!genericApp) {
+        genericApp = new PolkadotGenericApp(transport);
+        ledgerWalletState$.synchronization.genericApp.set(genericApp);
+      }
+
+      // Check if the app is open
+      await genericApp.getVersion();
+
+      const addresses = await Promise.all(
+        Array.from({ length: 5 }).map(async (_, i) => {
+          const bip44Path = app.bip44Path.replace(/\/0'$/, `/${i}'`);
+
+          return await ledgerWalletState$.getAccountAddress(
+            bip44Path,
+            app.ss58Prefix,
+            false // showAddrInDevice
+          );
+        })
+      );
+
+      const filteredAddresses = addresses.filter(
+        (address) => address !== undefined
+      );
+
+      return Promise.resolve({ result: filteredAddresses });
+    } catch (e) {
+      handleWalletError(e, errorDetails.connection_error);
+      return Promise.resolve({ error: true });
+    }
+  },
   clearConnection() {
-    ledgerWalletState$.deviceConnection.set(undefined);
+    ledgerWalletState$.deviceConnection.connection.set(undefined);
   },
   disconnect() {
     const { deviceConnection } = ledgerWalletState$.get();
 
     // Close the transport connection if it exists
-    if (deviceConnection?.transport) {
+    if (deviceConnection.connection?.transport) {
       try {
-        deviceConnection.transport.close();
-        deviceConnection.transport.emit('disconnect');
+        deviceConnection.connection.transport.close();
+        deviceConnection.connection.transport.emit('disconnect');
       } catch (e) {
-        handleError(e, errorDetails.disconnection_error);
+        handleWalletError(e, errorDetails.disconnection_error);
       }
     }
   }
