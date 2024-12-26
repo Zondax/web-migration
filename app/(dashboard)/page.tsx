@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { File, PlusCircle } from 'lucide-react';
-import { ProductsTable } from './products-table';
+import ProductsTable from './products-table';
 // import { getProducts } from '@/lib/db';
 
 export default async function ProductsPage(props: {
@@ -43,11 +43,7 @@ export default async function ProductsPage(props: {
         </div>
       </div>
       <TabsContent value="all">
-        <ProductsTable
-          products={products}
-          offset={newOffset ?? 0}
-          totalProducts={totalProducts}
-        />
+        <ProductsTable offset={newOffset ?? 0} totalProducts={totalProducts} />
       </TabsContent>
     </Tabs>
   );
