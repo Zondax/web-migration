@@ -131,9 +131,7 @@ export const ledgerWalletState$ = observable({
       return undefined; // it means the address doesn't exist
     }
   },
-  async synchronizeAccount(
-    appId: AppsId
-  ): Promise<{ result?: GenericeResponseAddress[]; error?: boolean }> {
+  async isAppReady(): Promise<boolean> {
     let {
       deviceConnection: { connection },
       synchronization
@@ -142,12 +140,6 @@ export const ledgerWalletState$ = observable({
       connection?.transport as unknown as Transport;
     let genericApp =
       synchronization?.genericApp as unknown as PolkadotGenericApp;
-    const app = appsConfigs[appId.toUpperCase()];
-
-    if (!app) {
-      console.error(`The appId ${appId} is not supported.`);
-      return Promise.reject(new Error(`The appId ${appId} is not supported.`));
-    }
 
     try {
       // Establish transport and add disconnect event listener
@@ -155,7 +147,7 @@ export const ledgerWalletState$ = observable({
         const result = await ledgerWalletState$.connectDevice();
 
         if (!result?.connected) {
-          return Promise.resolve({ error: true });
+          return false;
         }
       }
 
@@ -164,8 +156,30 @@ export const ledgerWalletState$ = observable({
         genericApp = new PolkadotGenericApp(transport);
         ledgerWalletState$.synchronization.genericApp.set(genericApp);
       }
+
       // Check if the app is open
       await genericApp.getVersion();
+      return true;
+    } catch (e) {
+      handleWalletError(e, errorDetails.connection_error);
+      return false;
+    }
+  },
+  async synchronizeAccount(
+    appId: AppsId
+  ): Promise<{ result?: GenericeResponseAddress[]; error?: boolean }> {
+    const app = appsConfigs[appId.toUpperCase()];
+
+    if (!app) {
+      console.error(`The appId ${appId} is not supported.`);
+      return Promise.reject(new Error(`The appId ${appId} is not supported.`));
+    }
+
+    try {
+      const isAppReady = await ledgerWalletState$.isAppReady();
+      if (!isAppReady) {
+        return { error: true };
+      }
 
       // Get addresses from the Ledger device
       const addresses = await Promise.all(

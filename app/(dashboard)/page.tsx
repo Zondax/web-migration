@@ -30,7 +30,7 @@ async function ProductsPage(props: {
         </div>
       </div>
       <TabsContent value="all">
-        <ProductsTable offset={newOffset ?? 0} totalProducts={totalProducts} />
+        <ProductsTable />
       </TabsContent>
     </Tabs>
   );

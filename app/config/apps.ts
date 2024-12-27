@@ -31,15 +31,13 @@ export const appsConfigs: Record<string, AppConfig> = {
     name: 'Centrifuge',
     cla: 0x93,
     bip44Path: "m/44'/747'/0'/0'/0'", // 747 = 0x800002eb
-    ss58Prefix: 36,
-    rpcEndpoint: 'wss://centrifuge.api.onfinality.io/public-ws'
+    ss58Prefix: 36
   },
   EDGEWARE: {
     name: 'Edgeware',
     cla: 0x94,
     bip44Path: "m/44'/523'/0'/0'/0'", // 523 = 0x8000020b
-    ss58Prefix: 7,
-    rpcEndpoint: 'wss://edgeware.api.onfinality.io/public-ws'
+    ss58Prefix: 7
   },
   EQUILIBRIUM: {
     name: 'Equilibrium',
@@ -52,22 +50,20 @@ export const appsConfigs: Record<string, AppConfig> = {
     name: 'Statemint',
     cla: 0x96,
     bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
-    ss58Prefix: 0,
-    rpcEndpoint: 'wss://statemint.api.onfinality.io/public-ws'
+    ss58Prefix: 0
   },
   STATEMINE: {
     name: 'Statemine',
     cla: 0x97,
     bip44Path: "m/44'/434'/0'/0'/0'", // 434 = 0x800001b2
-    ss58Prefix: 2,
-    rpcEndpoint: 'wss://statemine.api.onfinality.io/public-ws'
+    ss58Prefix: 2
   },
   NODLE: {
     name: 'Nodle',
     cla: 0x98,
     bip44Path: "m/44'/1003'/0'/0'/0'", // 1003 = 0x800003eb
     ss58Prefix: 37,
-    rpcEndpoint: 'wss://nodle.api.onfinality.io/public-ws'
+    rpcEndpoint: 'wss://nodle-parachain.api.onfinality.io/public-ws'
   },
   KUSAMA: {
     name: 'Kusama',
@@ -126,15 +122,13 @@ export const appsConfigs: Record<string, AppConfig> = {
     name: 'Bifrost',
     cla: 0xa1,
     bip44Path: "m/44'/788'/0'/0'/0'", // 788 = 0x80000314
-    ss58Prefix: 6,
-    rpcEndpoint: 'wss://bifrost.api.onfinality.io/public-ws'
+    ss58Prefix: 6
   },
   REEF: {
     name: 'Reef',
     cla: 0xa2,
     bip44Path: "m/44'/819'/0'/0'/0'", // 819 = 0x80000333
-    ss58Prefix: 42,
-    rpcEndpoint: 'wss://reef.api.onfinality.io/public-ws'
+    ss58Prefix: 42
   },
   XXNETWORK: {
     name: 'XXNetwork',
@@ -153,8 +147,7 @@ export const appsConfigs: Record<string, AppConfig> = {
     name: 'Interlay',
     cla: 0xa5,
     bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
-    ss58Prefix: 2032,
-    rpcEndpoint: 'wss://interlay.api.onfinality.io/public-ws'
+    ss58Prefix: 2032
   },
   PARALLEL: {
     name: 'Parallel',
@@ -209,8 +202,7 @@ export const appsConfigs: Record<string, AppConfig> = {
     name: 'BifrostKusama',
     cla: 0xae,
     bip44Path: "m/44'/788'/0'/0'/0'", // 788 = 0x80000314
-    ss58Prefix: 6,
-    rpcEndpoint: 'wss://bifrostkusama.api.onfinality.io/public-ws'
+    ss58Prefix: 6
   },
   PHALA: {
     name: 'Phala',

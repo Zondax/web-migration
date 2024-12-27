@@ -122,8 +122,21 @@ export const uiState$ = observable({
     uiState$.apps.assign({ status: 'loading', apps: [] });
 
     try {
+      // Check if the Ledger app is ready before proceeding
+      const isAppReady = await ledgerWalletState$.isAppReady();
+      if (!isAppReady) {
+        uiState$.apps.assign({ status: undefined, apps: [] });
+        return;
+      }
+
       // request and save the accounts of each app synchronously
       for (const appId in appsConfigs) {
+        const rpcEndpoint = appsConfigs[appId].rpcEndpoint;
+        // Skip apps that do not have an rpcEndpoint defined
+        if (!rpcEndpoint) {
+          continue;
+        }
+
         const response = await ledgerWalletState$.synchronizeAccount(appId);
 
         if (response.error) {
@@ -143,28 +156,32 @@ export const uiState$ = observable({
         const accounts: Address[] = response.result
           ? await Promise.all(
               response.result.map(async (address) => {
-                return appsConfigs[appId].rpcEndpoint
-                  ? {
-                      ...address,
-                      balance: await getBalance(
-                        address.address,
-                        appsConfigs[appId].rpcEndpoint
-                      )
-                    }
-                  : address;
+                const balance = await getBalance(address.address, rpcEndpoint);
+                return {
+                  ...address,
+                  balance
+                };
               })
             )
           : [];
 
-        uiState$.apps.apps.set([
-          ...uiState$.apps.apps.get(),
-          {
-            name: appId,
-            id: appId,
-            status: 'synchronized',
-            accounts: accounts.filter(({ balance }) => balance !== 0)
-          }
-        ]);
+        // Filter out addresses with zero balance
+        const filteredAccounts = accounts.filter(
+          (account) => account.balance && account.balance > 0
+        );
+
+        // Only set the app if there are accounts with non-zero balance
+        if (filteredAccounts.length > 0) {
+          uiState$.apps.apps.set([
+            ...uiState$.apps.apps.get(),
+            {
+              name: appId,
+              id: appId,
+              status: 'synchronized',
+              accounts: filteredAccounts
+            }
+          ]);
+        }
       }
 
       uiState$.apps.status.set('synchronized');

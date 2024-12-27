@@ -15,7 +15,6 @@ export async function getBalance(
   const api = await ApiPromise.create({ provider });
 
   try {
-    console.log('getting balance, address ', address);
     const balance = await api.query.system.account(address);
     console.log(
       'the balance for ',
