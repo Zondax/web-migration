@@ -28,9 +28,6 @@ function Product({ product }: { product: App }) {
   };
 
   const renderAction = useCallback(() => {
-    if (product.status === 'synchronized') {
-      return null;
-    }
     if (product.status === 'loading') {
       return (
         <Badge variant="outline" className="capitalize">
@@ -38,18 +35,20 @@ function Product({ product }: { product: App }) {
         </Badge>
       );
     }
-
-    return (
-      <Button
-        aria-haspopup="true"
-        variant="default"
-        size="sm"
-        disabled={product.status === 'loading' || !isLedgerConnected}
-        onClick={synchronizeAccount}
-      >
-        Synchronize
-      </Button>
-    );
+    if (product.status === 'error') {
+      return (
+        <Button
+          aria-haspopup="true"
+          variant="default"
+          size="sm"
+          disabled={!isLedgerConnected}
+          onClick={synchronizeAccount}
+        >
+          Synchronize
+        </Button>
+      );
+    }
+    return null;
   }, [product.status, isLedgerConnected]);
 
   return (
@@ -108,7 +107,9 @@ function Product({ product }: { product: App }) {
                           />
                         </TableCell>
                         <TableCell className="py-2 text-sm text-right w-1/3">
-                          {account.balance || '-'}
+                          {account.balance !== undefined
+                            ? account.balance
+                            : '-'}
                         </TableCell>
                         <TableCell>
                           <Button

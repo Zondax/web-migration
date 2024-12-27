@@ -1,18 +1,21 @@
+import { getBalance } from '@/lib/account';
 import { observable } from '@legendapp/state';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
 import type { AppsId } from 'app/config/apps';
 import { appsConfigs } from 'app/config/apps';
 import { ledgerWalletState$ } from './wallet/ledger';
 
-export interface InternalApp extends GenericeResponseAddress {
+export interface Address extends GenericeResponseAddress {
   balance?: number;
 }
+
+export type AppStatus = 'synchronized' | 'loading' | 'error';
 
 export interface App {
   name: string;
   id: string;
-  accounts?: InternalApp[];
-  status?: 'synchronized' | 'loading';
+  accounts?: Address[];
+  status?: AppStatus;
 }
 
 interface UIState {
@@ -23,7 +26,7 @@ interface UIState {
   };
   apps: {
     apps: App[];
-    isLoading: boolean;
+    status?: AppStatus;
     error?: string;
   };
 }
@@ -35,12 +38,8 @@ const initialUIState: UIState = {
     error: undefined
   },
   apps: {
-    apps: Object.values(appsConfigs).map(({ name }) => ({
-      name,
-      id: name,
-      accounts: undefined
-    })),
-    isLoading: false,
+    apps: [],
+    status: undefined,
     error: undefined
   }
 };
@@ -48,6 +47,7 @@ const initialUIState: UIState = {
 export const uiState$ = observable({
   ...initialUIState,
   async connectLedger() {
+    // Set the loading state to true and clear any previous errors
     uiState$.device.isLoading.set(true);
     uiState$.device.error.set(undefined);
 
@@ -65,6 +65,7 @@ export const uiState$ = observable({
       uiState$.device.error.set('Failed to connect to Ledger');
       return { connected: false };
     } finally {
+      // Reset the loading state regardless of success or failure
       uiState$.device.isLoading.set(false);
     }
   },
@@ -76,15 +77,18 @@ export const uiState$ = observable({
     const apps = uiState$.apps.apps.get();
     const app = apps.findIndex((app) => app.name === appId);
 
+    // Set the status of the app to 'loading' while synchronization is in progress
     uiState$.apps.apps[app].set({
       ...apps[app],
       status: 'loading'
     });
 
     try {
+      // Attempt to synchronize the account with the Ledger device
       const response = await ledgerWalletState$.synchronizeAccount(
         appId.toUpperCase()
       );
+
       if (response.error) {
         uiState$.apps.apps[app].set({
           ...apps[app],
@@ -92,6 +96,8 @@ export const uiState$ = observable({
         });
         return;
       }
+
+      // If the app index is valid, update the app's accounts and status
       if (app !== undefined) {
         uiState$.apps.apps[app].set({
           ...apps[app],
@@ -99,14 +105,71 @@ export const uiState$ = observable({
           status: 'synchronized'
         });
       } else {
+        // If the app was not found, set an error message
         uiState$.apps.error.set(`App with id ${appId} not found`);
       }
     } catch (error) {
       uiState$.apps.error.set('Failed to synchronize accounts');
+      // Reset the app's status if an error occurs
       uiState$.apps.apps[app].set({
         ...apps[app],
         status: undefined
       });
+    }
+  },
+  async synchronizeAccounts() {
+    // reset the state, in case it was synchronized previously
+    uiState$.apps.assign({ status: 'loading', apps: [] });
+
+    try {
+      // request and save the accounts of each app synchronously
+      for (const appId in appsConfigs) {
+        const response = await ledgerWalletState$.synchronizeAccount(appId);
+
+        if (response.error) {
+          uiState$.apps.apps.set([
+            ...uiState$.apps.apps.get(),
+            {
+              name: appId,
+              id: appId,
+              status: 'error'
+            }
+          ]);
+          continue;
+        }
+
+        // TODO: Make this asynchronous to allow continued synchronization of other accounts
+        // Fetch the balance for each address
+        const accounts: Address[] = response.result
+          ? await Promise.all(
+              response.result.map(async (address) => {
+                return appsConfigs[appId].rpcEndpoint
+                  ? {
+                      ...address,
+                      balance: await getBalance(
+                        address.address,
+                        appsConfigs[appId].rpcEndpoint
+                      )
+                    }
+                  : address;
+              })
+            )
+          : [];
+
+        uiState$.apps.apps.set([
+          ...uiState$.apps.apps.get(),
+          {
+            name: appId,
+            id: appId,
+            status: 'synchronized',
+            accounts: accounts.filter(({ balance }) => balance !== 0)
+          }
+        ]);
+      }
+
+      uiState$.apps.status.set('synchronized');
+    } catch (error) {
+      uiState$.apps.error.set('Failed to synchronize accounts');
     }
   }
 });
