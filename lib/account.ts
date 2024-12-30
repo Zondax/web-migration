@@ -1,5 +1,20 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 
+const mockBalances = [
+  {
+    address: 'obPSGcVmQPZzgWZrVM4fPMYAjJYuduNCYckAqqnnDDHf4Wr',
+    balance: 2
+  },
+  {
+    address: 'DzdDXY4xGGsPSYBf4Fv8kbaS3kdZNb9PX8DpKRsM3UuRhJ4',
+    balance: 1
+  },
+  {
+    address: '13M7fitxMYMVNfeG3e6mP4pcCteG4Wyf8kcew5TRN7PGm84C',
+    balance: 4
+  }
+];
+
 /**
  * Retrieves the balance of a given address from a specified RPC endpoint.
  *
@@ -24,11 +39,15 @@ export async function getBalance(
         ? parseFloat((balance.data as any).free.toString())
         : ' not found '
     );
-    return 'data' in balance && 'free' in (balance as any).data
-      ? parseFloat((balance.data as any).free.toString())
-      : undefined;
+    const mockBalance = mockBalances.find(
+      (balance) => balance.address === address
+    )?.balance;
+    return mockBalance
+      ? mockBalance
+      : 'data' in balance && 'free' in (balance as any).data
+        ? parseFloat((balance.data as any).free.toString())
+        : undefined;
   } catch (e) {
-    console.log('The balance could not be gotten ', e);
   } finally {
     await api.disconnect();
   }

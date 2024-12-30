@@ -31,7 +31,8 @@ export type ErrorDetailsMap = {
 
 export const errorDetails: ErrorDetailsMap = {
   app_not_open: {
-    title: 'App does not seem to be open.'
+    title: 'App does not seem to be open.',
+    description: 'Please open Polkadot Migration App in your device.'
   },
   unknown_error: {
     title: 'An unknown error happens, please try again.'

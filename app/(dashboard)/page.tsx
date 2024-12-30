@@ -5,15 +5,6 @@ import ProductsTable from './products-table';
 async function ProductsPage(props: {
   searchParams: Promise<{ q: string; offset: string }>;
 }) {
-  const searchParams = await props.searchParams;
-  const search = searchParams.q ?? '';
-  const offset = searchParams.offset ?? 0;
-  const { products, newOffset, totalProducts } = {
-    products: [],
-    newOffset: 0,
-    totalProducts: 0
-  };
-
   return (
     <Tabs defaultValue="all">
       <div className="flex items-center">

@@ -3,6 +3,7 @@ import {
   errorDetails,
   LedgerErrorDetails
 } from 'app/config/errors';
+import { notifications$ } from 'app/state/layout';
 import { ledgerWalletState$ } from 'app/state/wallet/ledger';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -34,10 +35,12 @@ export function handleWalletError(
   ledgerWalletState$.deviceConnection.error.set(error);
   ledgerWalletState$.deviceConnection.isLoading.set(false);
 
-  // Enhanced error logging
-  console.error(
-    error.content ? `${error.title} - ${error.content}` : error.title
-  );
+  notifications$.push({
+    title: error.title,
+    description: error.description ?? '',
+    type: 'error',
+    autoHideDuration: 5000
+  });
 
   return error;
 }
