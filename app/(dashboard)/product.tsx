@@ -14,49 +14,48 @@ import { App, uiState$ } from 'app/state/ui';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
-function Product({ product }: { product: App }) {
+function app({ app }: { app: App }) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   const isLedgerConnected = uiState$.device.isConnected.get();
 
   const synchronizeAccount = useCallback(() => {
-    uiState$.synchronizeAccount(product.name);
-  }, [product.name]);
+    uiState$.synchronizeAccount(app.name);
+  }, [app.name]);
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
   };
 
   const renderAction = useCallback(() => {
-    if (product.status === 'synchronized') {
-      return null;
-    }
-    if (product.status === 'loading') {
+    if (app.status === 'loading') {
       return (
         <Badge variant="outline" className="capitalize">
           Loading
         </Badge>
       );
     }
-
-    return (
-      <Button
-        aria-haspopup="true"
-        variant="default"
-        size="sm"
-        disabled={product.status === 'loading' || !isLedgerConnected}
-        onClick={synchronizeAccount}
-      >
-        Synchronize
-      </Button>
-    );
-  }, [product.status, isLedgerConnected]);
+    if (app.status === 'error') {
+      return (
+        <Button
+          aria-haspopup="true"
+          variant="default"
+          size="sm"
+          disabled={!isLedgerConnected}
+          onClick={synchronizeAccount}
+        >
+          Synchronize
+        </Button>
+      );
+    }
+    return null;
+  }, [app.status, isLedgerConnected]);
 
   return (
     <>
       <TableRow>
         <TableCell>
-          {product.accounts && (
+          {app.accounts && (
             <Button
               variant="ghost"
               size="sm"
@@ -74,10 +73,10 @@ function Product({ product }: { product: App }) {
         <TableCell className="hidden sm:table-cell">
           {/* Image cell content */}
         </TableCell>
-        <TableCell className="font-medium">{product.name}</TableCell>
+        <TableCell className="font-medium">{app.name}</TableCell>
         <TableCell>{renderAction()}</TableCell>
       </TableRow>
-      {isExpanded && product.accounts && (
+      {isExpanded && app.accounts && (
         <TableRow>
           <TableCell colSpan={4} className="p-0">
             <div className="bg-muted/50 p-4">
@@ -90,8 +89,8 @@ function Product({ product }: { product: App }) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {product.accounts.length > 0 ? (
-                    product.accounts.map((account, index) => (
+                  {app.accounts.length > 0 ? (
+                    app.accounts.map((account, index) => (
                       <TableRow key={account.address || index}>
                         <TableCell className="py-2 text-sm w-1/3">
                           <AddressLink
@@ -108,7 +107,9 @@ function Product({ product }: { product: App }) {
                           />
                         </TableCell>
                         <TableCell className="py-2 text-sm text-right w-1/3">
-                          {account.balance || '-'}
+                          {account.balance !== undefined
+                            ? account.balance
+                            : '-'}
                         </TableCell>
                         <TableCell>
                           <Button
@@ -129,7 +130,7 @@ function Product({ product }: { product: App }) {
                         colSpan={4}
                         className="text-center text-muted-foreground"
                       >
-                        No hay cuentas para sincronizar
+                        No accounts to migrate
                       </TableCell>
                     </TableRow>
                   )}
@@ -143,4 +144,4 @@ function Product({ product }: { product: App }) {
   );
 }
 
-export default observer(Product);
+export default observer(app);

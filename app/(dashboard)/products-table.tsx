@@ -1,44 +1,35 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
 import {
   Table,
   TableBody,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow
 } from '@/components/ui/table';
 import { observer } from '@legendapp/state/react';
 import { uiState$ } from 'app/state/ui';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import Product from './product';
 
-function ProductsTable({
-  offset,
-  totalProducts
-}: {
-  offset: number;
-  totalProducts: number;
-}) {
-  let router = useRouter();
-  let productsPerPage = 5;
+function ProductsTable() {
+  // function prevPage() {
+  //   router.back();
+  // }
 
-  function prevPage() {
-    router.back();
-  }
+  // function nextPage() {
+  //   router.push(`/?offset=${offset}`, { scroll: false });
+  // }
 
-  function nextPage() {
-    router.push(`/?offset=${offset}`, { scroll: false });
-  }
+  const apps = uiState$.apps.apps.get();
+  const status = uiState$.apps.status.get();
 
   return (
     <Card>
@@ -62,13 +53,24 @@ function ProductsTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {uiState$.apps.apps.get().map((product) => (
-              <Product key={product.id} product={product} />
-            ))}
+            {apps.length ? (
+              apps.map((product) => <Product key={product.id} app={product} />)
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="text-center text-muted-foreground"
+                >
+                  {status === 'synchronized'
+                    ? 'No accounts to migrate'
+                    : 'No synchronized accounts'}
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>
-      <CardFooter>
+      {/* <CardFooter>
         <form className="flex items-center w-full justify-between">
           <div className="text-xs text-muted-foreground">
             Showing{' '}
@@ -104,7 +106,7 @@ function ProductsTable({
             </Button>
           </div>
         </form>
-      </CardFooter>
+      </CardFooter> */}
     </Card>
   );
 }

@@ -84,6 +84,7 @@ export const ledgerWalletState$ = observable({
 
       const transport = deviceConnection.connection?.transport;
 
+      // Check if transport is already established
       if (!transport) {
         console.log(
           'No transport found, attempting to get device connection...'
@@ -119,6 +120,7 @@ export const ledgerWalletState$ = observable({
       synchronization?.genericApp as unknown as PolkadotGenericApp;
 
     try {
+      // Get the address from the Ledger device
       const address = await genericApp.getAddress(
         bip44Path,
         ss58prefix,
@@ -126,12 +128,10 @@ export const ledgerWalletState$ = observable({
       );
       return address;
     } catch (e) {
-      return undefined; // it means the address doens't exist
+      return undefined; // it means the address doesn't exist
     }
   },
-  async synchronizeAccount(
-    appId: AppsId
-  ): Promise<{ result?: GenericeResponseAddress[]; error?: boolean }> {
+  async isAppReady(): Promise<boolean> {
     let {
       deviceConnection: { connection },
       synchronization
@@ -140,6 +140,34 @@ export const ledgerWalletState$ = observable({
       connection?.transport as unknown as Transport;
     let genericApp =
       synchronization?.genericApp as unknown as PolkadotGenericApp;
+
+    try {
+      // Establish transport and add disconnect event listener
+      if (!transport) {
+        const result = await ledgerWalletState$.connectDevice();
+
+        if (!result?.connected) {
+          return false;
+        }
+      }
+
+      // Establish genericApp
+      if (!genericApp) {
+        genericApp = new PolkadotGenericApp(transport);
+        ledgerWalletState$.synchronization.genericApp.set(genericApp);
+      }
+
+      // Check if the app is open
+      await genericApp.getVersion();
+      return true;
+    } catch (e) {
+      handleWalletError(e, errorDetails.connection_error);
+      return false;
+    }
+  },
+  async synchronizeAccount(
+    appId: AppsId
+  ): Promise<{ result?: GenericeResponseAddress[]; error?: boolean }> {
     const app = appsConfigs[appId.toUpperCase()];
 
     if (!app) {
@@ -148,24 +176,12 @@ export const ledgerWalletState$ = observable({
     }
 
     try {
-      // Establish transport and add disconnect event listener
-      if (!transport) {
-        const result = await ledgerWalletState$.connectDevice();
-
-        if (!result?.connected) {
-          return Promise.resolve({ error: true });
-        }
+      const isAppReady = await ledgerWalletState$.isAppReady();
+      if (!isAppReady) {
+        return { error: true };
       }
 
-      // Establish migrationApp
-      if (!genericApp) {
-        genericApp = new PolkadotGenericApp(transport);
-        ledgerWalletState$.synchronization.genericApp.set(genericApp);
-      }
-
-      // Check if the app is open
-      await genericApp.getVersion();
-
+      // Get addresses from the Ledger device
       const addresses = await Promise.all(
         Array.from({ length: 5 }).map(async (_, i) => {
           const bip44Path = app.bip44Path.replace(/\/0'$/, `/${i}'`);
@@ -173,11 +189,12 @@ export const ledgerWalletState$ = observable({
           return await ledgerWalletState$.getAccountAddress(
             bip44Path,
             app.ss58Prefix,
-            false // showAddrInDevice
+            false
           );
         })
       );
 
+      // Filter out undefined addresses
       const filteredAddresses = addresses.filter(
         (address) => address !== undefined
       );
