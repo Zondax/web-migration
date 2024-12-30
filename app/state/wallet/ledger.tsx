@@ -4,7 +4,7 @@ import TransportWebUSB from '@ledgerhq/hw-transport-webhid';
 import { observable } from '@legendapp/state';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
-import { appsConfigs, type AppsId } from 'app/config/apps';
+import { AppIds, appsConfigs } from 'app/config/apps';
 import { errorDetails, LedgerErrorDetails } from 'app/config/errors';
 import { ConnectionResponse, DeviceConnectionProps } from '../types/ledger';
 
@@ -166,9 +166,9 @@ export const ledgerWalletState$ = observable({
     }
   },
   async synchronizeAccount(
-    appId: AppsId
+    appId: AppIds
   ): Promise<{ result?: GenericeResponseAddress[]; error?: boolean }> {
-    const app = appsConfigs[appId.toUpperCase()];
+    const app = appsConfigs.find((app) => app.id === appId);
 
     if (!app) {
       console.error(`The appId ${appId} is not supported.`);

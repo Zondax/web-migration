@@ -1,7 +1,7 @@
-import { getBalance } from '@/lib/account';
+import { getAppLightIcon, getBalance } from '@/lib/account';
 import { observable } from '@legendapp/state';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
-import type { AppsId } from 'app/config/apps';
+import type { AppIds } from 'app/config/apps';
 import { appsConfigs } from 'app/config/apps';
 import { ledgerWalletState$ } from './wallet/ledger';
 
@@ -10,6 +10,10 @@ export interface Address extends GenericeResponseAddress {
 }
 
 export type AppStatus = 'synchronized' | 'loading' | 'error';
+
+export type AppIcons = {
+  [key in AppIds]: string;
+};
 
 export interface App {
   name: string;
@@ -28,6 +32,7 @@ interface UIState {
     apps: App[];
     status?: AppStatus;
     error?: string;
+    icons: { [key in AppIds]: any };
   };
 }
 
@@ -40,9 +45,12 @@ const initialUIState: UIState = {
   apps: {
     apps: [],
     status: undefined,
-    error: undefined
+    error: undefined,
+    icons: {}
   }
 };
+
+let iconsLoaded: boolean = false;
 
 export const uiState$ = observable({
   ...initialUIState,
@@ -73,7 +81,7 @@ export const uiState$ = observable({
     ledgerWalletState$.disconnect();
     uiState$.device.isConnected.set(false);
   },
-  async synchronizeAccount(appId: AppsId) {
+  async synchronizeAccount(appId: AppIds) {
     const apps = uiState$.apps.apps.get();
     const app = apps.findIndex((app) => app.name === appId);
 
@@ -130,21 +138,21 @@ export const uiState$ = observable({
       }
 
       // request and save the accounts of each app synchronously
-      for (const appId in appsConfigs) {
-        const rpcEndpoint = appsConfigs[appId].rpcEndpoint;
+      for (const app of appsConfigs) {
+        const rpcEndpoint = app.rpcEndpoint;
         // Skip apps that do not have an rpcEndpoint defined
         if (!rpcEndpoint) {
           continue;
         }
 
-        const response = await ledgerWalletState$.synchronizeAccount(appId);
+        const response = await ledgerWalletState$.synchronizeAccount(app.id);
 
         if (response.error) {
           uiState$.apps.apps.set([
             ...uiState$.apps.apps.get(),
             {
-              name: appId,
-              id: appId,
+              name: app.name,
+              id: app.id,
               status: 'error'
             }
           ]);
@@ -175,8 +183,8 @@ export const uiState$ = observable({
           uiState$.apps.apps.set([
             ...uiState$.apps.apps.get(),
             {
-              name: appId,
-              id: appId,
+              name: app.name,
+              id: app.id,
               status: 'synchronized',
               accounts: filteredAccounts
             }
@@ -188,5 +196,23 @@ export const uiState$ = observable({
     } catch (error) {
       uiState$.apps.error.set('Failed to synchronize accounts');
     }
+  },
+  async loadInitialIcons() {
+    if (iconsLoaded) return;
+
+    const appIcons: AppIcons = {};
+
+    const iconPromises = Object.values(appsConfigs)
+      .filter((app) => app.rpcEndpoint)
+      .map(async (app) => {
+        const lightIconResponse = await getAppLightIcon(app.id);
+        if (typeof lightIconResponse?.error === 'undefined') {
+          appIcons[app.id] = lightIconResponse?.data;
+        }
+      });
+
+    await Promise.all(iconPromises);
+    uiState$.apps.icons.set(appIcons);
+    iconsLoaded = true;
   }
 });

@@ -1,4 +1,5 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
+import axios from 'axios';
 
 const mockBalances = [
   {
@@ -52,3 +53,19 @@ export async function getBalance(
     await api.disconnect();
   }
 }
+
+export const getAppLightIcon = async (appId: string) => {
+  try {
+    const hubUrl = process.env.NEXT_PUBLIC_HUB_BACKEND_URL;
+
+    if (!hubUrl) {
+      return;
+    }
+
+    const response = await axios.get(hubUrl + `/app/${appId}/icon/light`);
+    return { data: response.data, error: undefined };
+  } catch (error) {
+    // TODO: capture exception
+    return { data: [], error: 'error' };
+  }
+};

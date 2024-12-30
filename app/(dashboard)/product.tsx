@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
+import { muifyHtml } from '@/lib/muifyHtml';
 import { observer } from '@legendapp/state/react';
 import { App, uiState$ } from 'app/state/ui';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -19,8 +20,10 @@ function app({ app }: { app: App }) {
 
   const isLedgerConnected = uiState$.device.isConnected.get();
 
+  const icon = uiState$.apps.icons.get()[app.id];
+
   const synchronizeAccount = useCallback(() => {
-    uiState$.synchronizeAccount(app.name);
+    uiState$.synchronizeAccount(app.id);
   }, [app.name]);
 
   const toggleExpand = () => {
@@ -71,7 +74,7 @@ function app({ app }: { app: App }) {
           )}
         </TableCell>
         <TableCell className="hidden sm:table-cell">
-          {/* Image cell content */}
+          {muifyHtml(icon)}
         </TableCell>
         <TableCell className="font-medium">{app.name}</TableCell>
         <TableCell>{renderAction()}</TableCell>
