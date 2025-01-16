@@ -131,8 +131,10 @@ export const uiState$ = observable({
 
     try {
       // Check if the Ledger app is ready before proceeding
-      const isAppReady = await ledgerWalletState$.isAppReady();
-      if (!isAppReady) {
+      const connection =
+        await ledgerWalletState$.deviceConnection.connection.get();
+
+      if (!connection) {
         uiState$.apps.assign({ status: undefined, apps: [] });
         return;
       }
