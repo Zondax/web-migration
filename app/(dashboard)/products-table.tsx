@@ -27,8 +27,7 @@ function ProductsTable() {
   // function nextPage() {
   //   router.push(`/?offset=${offset}`, { scroll: false });
   // }
-
-  const apps = uiState$.apps.apps.get();
+  const apps = uiState$.apps.apps;
   const status = uiState$.apps.status.get();
 
   return (
@@ -54,7 +53,9 @@ function ProductsTable() {
           </TableHeader>
           <TableBody>
             {apps.length ? (
-              apps.map((product) => <Product key={product.id} app={product} />)
+              apps.map((product) => (
+                <Product key={product.id.get()} app={product} />
+              ))
             ) : (
               <TableRow>
                 <TableCell

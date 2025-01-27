@@ -13,6 +13,7 @@ export enum InternalErrors {
   'DEVICE_NOT_SELECTED' = 'device_not_selected',
   'CONNECTION_ERROR' = 'connection_error',
   'DISCONNECTION_ERROR' = 'disconnection_error',
+  'BALANCE_NOT_GOTTEN' = 'balance_not_gotten',
   'DEFAULT' = 'default'
 }
 
@@ -59,6 +60,10 @@ export const errorDetails: ErrorDetailsMap = {
   },
   wrong_app: {
     title: 'Wrong app.'
+  },
+  balance_not_gotten: {
+    title: 'Balance Not Retrieved',
+    description: 'The balance could not be retrieved. Please try again later.'
   },
   default: {
     title: 'An unknown error happens, please try again.'

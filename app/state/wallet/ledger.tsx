@@ -165,7 +165,6 @@ export const ledgerWalletState$ = observable({
           );
         })
       );
-
       // Filter out undefined addresses
       const filteredAddresses = addresses.filter(
         (address) => address !== undefined
@@ -175,6 +174,18 @@ export const ledgerWalletState$ = observable({
     } catch (e) {
       handleWalletError(e, InternalErrors.CONNECTION_ERROR);
       return Promise.resolve({ error: true });
+    }
+  },
+  async migrateAccount(
+    appId: AppIds,
+    accountIndex: number
+  ): Promise<{ migrated?: boolean; error?: string }> {
+    try {
+      // Wait for 5 seconds before responding
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      return { migrated: true };
+    } catch (e) {
+      return { error: (e as Error).message };
     }
   },
   clearConnection() {
