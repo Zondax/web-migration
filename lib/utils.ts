@@ -1,8 +1,11 @@
 import {
   decodeLedgerResponseCode,
   errorDetails,
-  LedgerErrorDetails
+  InternalErrors,
+  LedgerErrorDetails,
+  LedgerErrors
 } from 'app/config/errors';
+import { notifications$ } from 'app/state/layout';
 import { ledgerWalletState$ } from 'app/state/wallet/ledger';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -12,34 +15,36 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function handleWalletError(
-  e: any,
-  defaultError: LedgerErrorDetails
+  error: unknown,
+  defaultError: InternalErrors | LedgerErrors
 ): LedgerErrorDetails {
-  let error: LedgerErrorDetails | undefined;
+  let resolvedError: LedgerErrorDetails | undefined;
 
-  if (e instanceof Error) {
-    if (e.name in errorDetails) {
-      error = errorDetails[e.name as keyof typeof errorDetails];
-    }
-    if ('returnCode' in e) {
-      error = decodeLedgerResponseCode(e.returnCode as number);
+  if (error instanceof Error) {
+    const errorDetail = errorDetails[error.name as keyof typeof errorDetails];
+    if (errorDetail) {
+      resolvedError = errorDetail;
+    } else if ('returnCode' in error) {
+      resolvedError = decodeLedgerResponseCode(error.returnCode as number);
     }
   }
 
-  if (!error) {
-    error = defaultError ?? errorDetails.default;
+  if (!resolvedError) {
+    resolvedError = errorDetails[defaultError] || errorDetails.default;
   }
 
   // Update wallet state
-  ledgerWalletState$.deviceConnection.error.set(error);
+  ledgerWalletState$.deviceConnection.error.set(resolvedError);
   ledgerWalletState$.deviceConnection.isLoading.set(false);
 
-  // Enhanced error logging
-  console.error(
-    error.content ? `${error.title} - ${error.content}` : error.title
-  );
+  notifications$.push({
+    title: resolvedError.title,
+    description: resolvedError.description ?? '',
+    type: 'error',
+    autoHideDuration: 5000
+  });
 
-  return error;
+  return resolvedError;
 }
 
 /**

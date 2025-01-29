@@ -30,6 +30,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { NavItem } from './nav-item';
 import Providers from './providers';
 import { SearchInput } from './search';
+import Snackbar from './snackbar';
 import User from './user';
 
 export default function DashboardLayout({
@@ -53,6 +54,7 @@ export default function DashboardLayout({
           </main>
         </div>
         <Analytics />
+        <Snackbar />
       </main>
     </Providers>
   );

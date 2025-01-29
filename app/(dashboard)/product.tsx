@@ -1,41 +1,84 @@
-import { AddressLink } from '@/components/AddressLink';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
+import { TableCell, TableRow } from '@/components/ui/table';
+import { muifyHtml } from '@/lib/muifyHtml';
+import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
-import { App, uiState$ } from 'app/state/ui';
+import { Address, App, uiState$ } from 'app/state/ui';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import Accounts from './account';
 
-function app({ app }: { app: App }) {
+interface AccountActionButtonProps {
+  account: Observable<Address>;
+  index: number;
+  appId: string;
+}
+
+const AccountActionButton: React.FC<AccountActionButtonProps> = ({
+  account,
+  index,
+  appId
+}) => {
+  const balance = account.balance.get();
+  const status = account.status.get();
+  const isLoading = account.isLoading.get();
+
+  const migrateAccount = useCallback(
+    (accountIndex: number) => {
+      uiState$.migrateAccount(appId, accountIndex);
+    },
+    [appId]
+  );
+
+  if (status === 'migrated') {
+    return (
+      <Badge variant="outline" className="capitalize">
+        Migrated
+      </Badge>
+    );
+  }
+  return (
+    <Button
+      aria-haspopup="true"
+      variant="default"
+      size="sm"
+      disabled={!(balance && balance > 0) || isLoading}
+      onClick={() => migrateAccount(index)}
+    >
+      {isLoading ? 'Loading...' : 'Migrate'}
+    </Button>
+  );
+};
+
+function app({ app }: { app: Observable<App> }) {
+  const name = app.name.get();
+  const id = app.id.get();
+  const status = app.status.get();
+
   const [isExpanded, setIsExpanded] = useState(true);
 
   const isLedgerConnected = uiState$.device.isConnected.get();
 
+  const icon = uiState$.apps.icons.get()[id];
+
   const synchronizeAccount = useCallback(() => {
-    uiState$.synchronizeAccount(app.name);
-  }, [app.name]);
+    uiState$.synchronizeAccount(id);
+  }, [name]);
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
   };
 
   const renderAction = useCallback(() => {
-    if (app.status === 'loading') {
+    if (status === 'loading') {
       return (
-        <Badge variant="outline" className="capitalize">
+        <Badge variant="destructive" className="capitalize">
           Loading
         </Badge>
       );
     }
-    if (app.status === 'error') {
+    if (status === 'error') {
       return (
         <Button
           aria-haspopup="true"
@@ -49,13 +92,13 @@ function app({ app }: { app: App }) {
       );
     }
     return null;
-  }, [app.status, isLedgerConnected]);
+  }, [status, isLedgerConnected]);
 
   return (
     <>
       <TableRow>
         <TableCell>
-          {app.accounts && (
+          {app.accounts.get() && (
             <Button
               variant="ghost"
               size="sm"
@@ -71,75 +114,12 @@ function app({ app }: { app: App }) {
           )}
         </TableCell>
         <TableCell className="hidden sm:table-cell">
-          {/* Image cell content */}
+          {muifyHtml(icon)}
         </TableCell>
-        <TableCell className="font-medium">{app.name}</TableCell>
+        <TableCell className="font-medium">{name}</TableCell>
         <TableCell>{renderAction()}</TableCell>
       </TableRow>
-      {isExpanded && app.accounts && (
-        <TableRow>
-          <TableCell colSpan={4} className="p-0">
-            <div className="bg-muted/50 p-4">
-              <Table className="w-full">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-left py-2">Address</TableHead>
-                    <TableHead className="text-left py-2">Public Key</TableHead>
-                    <TableHead className="text-right py-2">Balance</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {app.accounts.length > 0 ? (
-                    app.accounts.map((account, index) => (
-                      <TableRow key={account.address || index}>
-                        <TableCell className="py-2 text-sm w-1/3">
-                          <AddressLink
-                            value={account.address}
-                            tooltipText={account.address}
-                            className="break-all"
-                          />
-                        </TableCell>
-                        <TableCell className="py-2 text-sm w-1/3">
-                          <AddressLink
-                            value={account.pubKey}
-                            tooltipText={account.pubKey}
-                            className="break-all"
-                          />
-                        </TableCell>
-                        <TableCell className="py-2 text-sm text-right w-1/3">
-                          {account.balance !== undefined
-                            ? account.balance
-                            : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            aria-haspopup="true"
-                            variant="default"
-                            size="sm"
-                            disabled={!(account.balance && account.balance > 0)}
-                            onClick={synchronizeAccount}
-                          >
-                            Migrate
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={4}
-                        className="text-center text-muted-foreground"
-                      >
-                        No accounts to migrate
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TableCell>
-        </TableRow>
-      )}
+      {isExpanded ? <Accounts appId={id} accounts={app.accounts} /> : null}
     </>
   );
 }
