@@ -48,7 +48,9 @@ function ProductsTable() {
                 <span className="sr-only">Image</span>
               </TableHead>
               <TableHead>Name</TableHead>
-              <TableHead className="hidden md:table-cell">Actions</TableHead>
+              <TableHead>Addresses</TableHead>
+              <TableHead>Total Balance</TableHead>
+              {/* <TableHead className="hidden md:table-cell">Actions</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -70,8 +70,8 @@ function accounts({
 }) {
   return (
     <TableRow>
-      <TableCell colSpan={4} className="p-0">
-        <div className="bg-muted/50 p-4">
+      <TableCell colSpan={5} className="p-0">
+        <div className="bg-muted/50">
           <Table className="w-full">
             <TableHeader>
               <TableRow>

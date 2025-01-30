@@ -54,45 +54,45 @@ const AccountActionButton: React.FC<AccountActionButtonProps> = ({
 function app({ app }: { app: Observable<App> }) {
   const name = app.name.get();
   const id = app.id.get();
-  const status = app.status.get();
+  // const status = app.status.get();
 
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const isLedgerConnected = uiState$.device.isConnected.get();
+  // const isLedgerConnected = uiState$.device.isConnected.get();
 
   const icon = uiState$.apps.icons.get()[id];
 
-  const synchronizeAccount = useCallback(() => {
-    uiState$.synchronizeAccount(id);
-  }, [name]);
+  // const synchronizeAccount = useCallback(() => {
+  //   uiState$.synchronizeAccount(id);
+  // }, [name]);
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
   };
 
-  const renderAction = useCallback(() => {
-    if (status === 'loading') {
-      return (
-        <Badge variant="destructive" className="capitalize">
-          Loading
-        </Badge>
-      );
-    }
-    if (status === 'error') {
-      return (
-        <Button
-          aria-haspopup="true"
-          variant="default"
-          size="sm"
-          disabled={!isLedgerConnected}
-          onClick={synchronizeAccount}
-        >
-          Synchronize
-        </Button>
-      );
-    }
-    return null;
-  }, [status, isLedgerConnected]);
+  // const renderAction = useCallback(() => {
+  //   if (status === 'loading') {
+  //     return (
+  //       <Badge variant="destructive" className="capitalize">
+  //         Loading
+  //       </Badge>
+  //     );
+  //   }
+  //   if (status === 'error') {
+  //     return (
+  //       <Button
+  //         aria-haspopup="true"
+  //         variant="default"
+  //         size="sm"
+  //         disabled={!isLedgerConnected}
+  //         onClick={synchronizeAccount}
+  //       >
+  //         Synchronize
+  //       </Button>
+  //     );
+  //   }
+  //   return null;
+  // }, [status, isLedgerConnected]);
 
   return (
     <>
@@ -113,11 +113,21 @@ function app({ app }: { app: Observable<App> }) {
             </Button>
           )}
         </TableCell>
-        <TableCell className="hidden sm:table-cell">
+        <TableCell className="hidden sm:table-cell [&_svg]:h-8 [&_svg]:w-8">
           {muifyHtml(icon)}
         </TableCell>
         <TableCell className="font-medium">{name}</TableCell>
-        <TableCell>{renderAction()}</TableCell>
+        <TableCell className="font-medium">
+          {app.accounts.get()?.length ?? '-'}
+        </TableCell>
+        <TableCell className="font-medium">
+          {app.accounts.get()
+            ? app.accounts
+                .get()
+                ?.reduce((total, account) => total + (account.balance || 0), 0)
+            : '-'}
+        </TableCell>
+        {/* <TableCell>{renderAction()}</TableCell> */}
       </TableRow>
       {isExpanded ? <Accounts appId={id} accounts={app.accounts} /> : null}
     </>
