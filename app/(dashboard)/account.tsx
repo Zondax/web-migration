@@ -12,11 +12,13 @@ import {
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger
 } from '@/components/ui/tooltip';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
 import { Address, uiState$ } from 'app/state/ui';
+import { AlertCircle } from 'lucide-react';
 import { useCallback } from 'react';
 
 interface AccountActionButtonProps {
@@ -70,7 +72,7 @@ function accounts({
 }) {
   return (
     <TableRow>
-      <TableCell colSpan={5} className="p-0">
+      <TableCell colSpan={6} className="p-0">
         <div className="bg-muted/50">
           <Table className="w-full">
             <TableHeader>
@@ -78,6 +80,7 @@ function accounts({
                 <TableHead className="text-left py-2">Address</TableHead>
                 <TableHead className="text-left py-2">Public Key</TableHead>
                 <TableHead className="text-right py-2">Balance</TableHead>
+                <TableHead className="w-[100px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -104,31 +107,24 @@ function accounts({
                         : '-'}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1 justify-center items-center">
-                        {account.error.get() ? (
-                          <div className="">
+                      <div className="flex gap-2 justify-end items-center">
+                        {/* <AccountActionButton
+                          account={account}
+                          index={index}
+                          appId={appId}
+                        /> */}
+                        {account.error.get() && (
+                          <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Badge
-                                  variant="destructive"
-                                  className="capitalize"
-                                >
-                                  !
-                                </Badge>
+                                <AlertCircle className="h-4 w-4 text-destructive cursor-help" />
                               </TooltipTrigger>
-                              <TooltipContent side="right">
-                                {account.error.description.get()}
+                              <TooltipContent>
+                                <p>{account.error.get()?.description}</p>
                               </TooltipContent>
                             </Tooltip>
-                          </div>
-                        ) : null}
-                        <div className="">
-                          <AccountActionButton
-                            account={account}
-                            index={index}
-                            appId={appId}
-                          />
-                        </div>
+                          </TooltipProvider>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { observer } from '@legendapp/state/react';
 import { uiState$ } from 'app/state/ui';
 import { useCallback } from 'react';
-import { Badge } from './ui/badge';
 
 function SynchronizeButton() {
   const isLedgerConnected = uiState$.device.isConnected.get();
@@ -16,11 +15,7 @@ function SynchronizeButton() {
   const status = uiState$.apps.status.get();
 
   if (status === 'synchronized') {
-    return (
-      <Badge variant="outline" className="capitalize">
-        Synchronized Accounts
-      </Badge>
-    );
+    return null;
   }
   return (
     <Button

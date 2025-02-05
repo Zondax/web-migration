@@ -138,12 +138,16 @@ export const ledgerWalletState$ = observable({
       return undefined; // it means the address doesn't exist
     }
   },
-  async synchronizeAccount(
+  async synchronizeAccounts(
     appId: AppIds
   ): Promise<{ result?: GenericeResponseAddress[]; error?: boolean }> {
     const connection = ledgerWalletState$.deviceConnection.connection.get();
     const app = appsConfigs.find((app) => app.id === appId);
 
+    // TODO: Delete mock
+    if (appId === 'equilibrium') {
+      return { error: true };
+    }
     if (!app) {
       console.error(`The appId ${appId} is not supported.`);
       return Promise.reject(new Error(`The appId ${appId} is not supported.`));

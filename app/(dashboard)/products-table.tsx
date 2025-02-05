@@ -1,7 +1,9 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -15,102 +17,176 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { observer } from '@legendapp/state/react';
+import { observable } from '@legendapp/state';
+import { observer, use$ } from '@legendapp/state/react';
 import { uiState$ } from 'app/state/ui';
+import { useCallback, useState } from 'react';
 import Product from './product';
 
 function ProductsTable() {
-  // function prevPage() {
-  //   router.back();
-  // }
+  const apps$ = uiState$.apps.apps;
+  const status = use$(uiState$.apps.status);
+  const [isRescaning, setIsRescaning] = useState<boolean>(false);
 
-  // function nextPage() {
-  //   router.push(`/?offset=${offset}`, { scroll: false });
-  // }
-  const apps = uiState$.apps.apps;
-  const status = uiState$.apps.status.get();
+  const handleMigrateAll = useCallback(() => {
+    uiState$.migrateAll();
+  }, []);
+
+  // Compute if there are any accounts with errors
+  const hasAccountsWithErrors = use$(() => {
+    return apps$
+      .get()
+      .some((app) => app.accounts?.some((account) => account.error));
+  });
+
+  // Create observables for apps with and without error accounts
+  const appsWithoutErrorAccounts$ = use$(() =>
+    apps$
+      .get()
+      .map((app) => ({
+        ...app,
+        accounts: app.accounts?.filter((account) => !account.error) || []
+      }))
+      .filter((app) => app.accounts.length > 0)
+  );
+
+  const appsWithErrorAccounts$ = use$(() =>
+    apps$
+      .get()
+      .map((app) => ({
+        ...app,
+        accounts: app.accounts?.filter((account) => account.error) || []
+      }))
+      .filter((app) => app.accounts.length > 0 || app.status === 'error')
+  );
+
+  const rescan = async () => {
+    for (const app of appsWithErrorAccounts$) {
+      if (app.status === 'error') {
+        await uiState$.synchronizeAccount(app.id);
+      } else {
+        for (const account of app.accounts) {
+          if (account.error) {
+            await uiState$.synchronizeBalance(app.id, account.address);
+          }
+        }
+      }
+    }
+  };
+
+  const handleRescan = async () => {
+    setIsRescaning(true);
+    await rescan();
+    setIsRescaning(false);
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Supported Parachains</CardTitle>
-        <CardDescription>
-          Please select the accounts you wish to synchronize, or choose to
-          synchronize all accounts.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]"> </TableHead>
-              <TableHead className="hidden w-[100px] sm:table-cell">
-                <span className="sr-only">Image</span>
-              </TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Addresses</TableHead>
-              <TableHead>Total Balance</TableHead>
-              {/* <TableHead className="hidden md:table-cell">Actions</TableHead> */}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {apps.length ? (
-              apps.map((product) => (
-                <Product key={product.id.get()} app={product} />
-              ))
-            ) : (
+    <div className="space-y-4">
+      {/* Add space between the two tables */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div className="space-y-1.5">
+              <CardTitle>Synchronized Accounts</CardTitle>
+              <CardDescription>
+                Please select migrate to migrate all the accounts.
+              </CardDescription>
+            </div>
+            <CardAction>
+              {status === 'synchronized' ? (
+                <Button variant="default" size="sm" onClick={handleMigrateAll}>
+                  Migrate All
+                </Button>
+              ) : null}
+            </CardAction>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-center text-muted-foreground"
-                >
-                  {status === 'synchronized'
-                    ? 'No accounts to migrate'
-                    : 'No synchronized accounts'}
-                </TableCell>
+                <TableHead className="w-[50px]"> </TableHead>
+                <TableHead className="hidden w-[100px] sm:table-cell">
+                  <span className="sr-only">Image</span>
+                </TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Addresses</TableHead>
+                <TableHead>Total Balance</TableHead>
+                <TableHead></TableHead>
+                {/* <TableHead className="hidden md:table-cell">Actions</TableHead> */}
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-      {/* <CardFooter>
-        <form className="flex items-center w-full justify-between">
-          <div className="text-xs text-muted-foreground">
-            Showing{' '}
-            <strong>
-              {Math.max(
-                0,
-                Math.min(offset - productsPerPage, totalProducts) + 1
+            </TableHeader>
+            <TableBody>
+              {appsWithoutErrorAccounts$.length ? (
+                appsWithoutErrorAccounts$.map((app) => (
+                  <Product key={app.id} app={observable(app)} />
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="text-center text-muted-foreground"
+                  >
+                    {status === 'synchronized'
+                      ? 'No accounts to migrate'
+                      : 'No synchronized accounts'}
+                  </TableCell>
+                </TableRow>
               )}
-              -{offset}
-            </strong>{' '}
-            of <strong>{totalProducts}</strong> products
-          </div>
-          <div className="flex">
-            <Button
-              formAction={prevPage}
-              variant="ghost"
-              size="sm"
-              type="submit"
-              disabled={offset === productsPerPage}
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              Prev
-            </Button>
-            <Button
-              formAction={nextPage}
-              variant="ghost"
-              size="sm"
-              type="submit"
-              disabled={offset + productsPerPage > totalProducts}
-            >
-              Next
-              <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        </form>
-      </CardFooter> */}
-    </Card>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      {/* Only show error table if there are accounts with errors */}
+      {hasAccountsWithErrors && (
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <div className="space-y-1.5">
+                <CardTitle>Failed Synchronization</CardTitle>
+                <CardDescription>
+                  The account couldn't be scanned successfully. Please try again
+                  or continue with the successfully scanned accounts.
+                </CardDescription>
+              </div>
+
+              <CardAction>
+                {status && ['synchronized', 'rescaning'].includes(status) ? (
+                  <Button variant="default" size="sm" onClick={handleRescan}>
+                    {isRescaning ? 'Loading...' : 'Rescan'}
+                  </Button>
+                ) : null}
+              </CardAction>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]"> </TableHead>
+                  <TableHead className="hidden w-[100px] sm:table-cell">
+                    <span className="sr-only">Image</span>
+                  </TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Addresses</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {/* Filter and show only apps with error accounts */}
+                {appsWithErrorAccounts$.map((app) => (
+                  <Product
+                    key={app.id.toString()}
+                    app={observable(app)}
+                    hideBalance
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
 

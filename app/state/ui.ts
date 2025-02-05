@@ -28,6 +28,10 @@ export interface App {
   id: string;
   accounts?: Address[];
   status?: AppStatus;
+  error?: {
+    source: 'synchronization';
+    description: string;
+  };
 }
 
 interface UIState {
@@ -99,7 +103,7 @@ export const uiState$ = observable({
       uiState$.apps.apps[appIndex].set(updatedApp);
 
       try {
-        const response = await ledgerWalletState$.synchronizeAccount(
+        const response = await ledgerWalletState$.synchronizeAccounts(
           appId.toUpperCase()
         );
 
@@ -148,7 +152,7 @@ export const uiState$ = observable({
           continue;
         }
 
-        const response = await ledgerWalletState$.synchronizeAccount(app.id);
+        const response = await ledgerWalletState$.synchronizeAccounts(app.id);
 
         if (response.error) {
           uiState$.apps.apps.set([
@@ -162,26 +166,11 @@ export const uiState$ = observable({
           continue;
         }
 
-        // TODO: Make this asynchronous to allow continued synchronization of other accounts
         // Fetch the balance for each address
         const accounts: Address[] = response.result
           ? await Promise.all(
               response.result.map(async (address) => {
-                const balanceResult = await getBalance(
-                  address.address,
-                  rpcEndpoint
-                );
-                return {
-                  ...address,
-                  balance: balanceResult.result,
-                  status: 'synchronized',
-                  error: balanceResult.error
-                    ? {
-                        source: 'balance_fetch',
-                        description: balanceResult.error
-                      }
-                    : undefined
-                } as Address;
+                return await uiState$.fetchAccountBalance(address, rpcEndpoint);
               })
             )
           : [];
@@ -207,6 +196,92 @@ export const uiState$ = observable({
       uiState$.apps.status.set('synchronized');
     } catch (error) {
       uiState$.apps.error.set('Failed to synchronize accounts');
+    }
+  },
+  async fetchAccountBalance(
+    address: GenericeResponseAddress,
+    rpcEndpoint: string
+  ): Promise<Address> {
+    console.log(
+      `Fetching balance for address: ${address.address} using RPC endpoint: ${rpcEndpoint}`
+    );
+    const balanceResult = await getBalance(address.address, rpcEndpoint);
+    console.log(
+      `Balance fetch result for address ${address.address}:`,
+      balanceResult
+    );
+
+    return {
+      ...address,
+      balance: balanceResult.result,
+      status: 'synchronized',
+      error: balanceResult.error
+        ? {
+            source: 'balance_fetch',
+            description: balanceResult.error
+          }
+        : undefined
+    } as Address;
+  },
+  async synchronizeBalance(appId: AppIds, address: string) {
+    console.log(
+      `Synchronizing balance for appId: ${appId}, address: ${address}`
+    );
+    const apps = uiState$.apps.apps.get();
+    const appIndex = apps.findIndex((app) => app.id === appId);
+
+    if (appIndex !== -1) {
+      console.log(`App found at index ${appIndex} for appId: ${appId}`);
+      const accounts = apps[appIndex]?.accounts
+        ? [...apps[appIndex].accounts]
+        : [];
+
+      const accountIndex = accounts.findIndex(
+        (account) => account.address === address
+      );
+
+      if (accountIndex !== -1) {
+        console.log(
+          `Account found at index ${accountIndex} for address: ${address}`
+        );
+        // Create a copy of the account object to ensure immutability
+        const updatedAccount = { ...accounts[accountIndex], isLoading: true };
+        accounts[accountIndex] = updatedAccount;
+        uiState$.apps.apps[appIndex].accounts.set(accounts);
+
+        try {
+          const rpcEndpoint = appsConfigs.find(
+            (app) => app.id === appId
+          )?.rpcEndpoint;
+          if (!rpcEndpoint) throw new Error('RPC endpoint not found');
+          console.log(`RPC endpoint found: ${rpcEndpoint} for appId: ${appId}`);
+
+          const accountWithBalance = await uiState$.fetchAccountBalance(
+            accounts[accountIndex],
+            rpcEndpoint
+          );
+          console.log(
+            `Fetched account balance for address: ${address}`,
+            accountWithBalance
+          );
+
+          accounts[accountIndex] = { ...accountWithBalance, isLoading: false };
+          uiState$.apps.apps[appIndex].accounts.set(accounts);
+        } catch (error) {
+          accounts[accountIndex] = { ...updatedAccount, isLoading: false };
+          uiState$.apps.apps[appIndex].accounts.set(accounts);
+          console.error(
+            `Error synchronizing balance for account with address ${address} in app ${appId}:`,
+            error
+          );
+        }
+      } else {
+        console.warn(
+          `Account with address ${address} not found in app ${appId}`
+        );
+      }
+    } else {
+      console.warn(`App with appId ${appId} not found`);
     }
   },
   async loadInitialIcons() {
@@ -277,6 +352,62 @@ export const uiState$ = observable({
           );
         }
       }
+    }
+  },
+  async migrateAll() {
+    const apps = uiState$.apps.apps.get();
+
+    try {
+      // Iterate through each app
+      for (const app of apps) {
+        const appId = app.id;
+        const accounts = app.accounts;
+
+        if (!accounts || accounts.length === 0) continue;
+
+        // Set app status to loading before starting migration
+        const appIndex = apps.findIndex((a) => a.id === appId);
+        if (appIndex === -1) continue;
+
+        uiState$.apps.apps[appIndex].status.set('loading');
+
+        // Migrate each account in the app
+        for (
+          let accountIndex = 0;
+          accountIndex < accounts.length;
+          accountIndex++
+        ) {
+          const account = accounts[accountIndex];
+
+          // Skip accounts that are already migrated or have no balance
+          if (
+            account.status === 'migrated' ||
+            !account.balance ||
+            account.balance <= 0
+          ) {
+            continue;
+          }
+
+          try {
+            await uiState$.migrateAccount(appId, accountIndex);
+          } catch (error) {
+            const errorDescription = `Failed to migrate account ${accountIndex} for app ${appId}:`;
+            console.error(errorDescription, error);
+            accounts[accountIndex] = {
+              ...accounts[accountIndex],
+              error: { source: 'migration', description: errorDescription }
+            };
+            uiState$.apps.apps[appIndex].accounts.set(accounts);
+            // Continue with next account even if one fails
+          }
+        }
+
+        // Update app status after all accounts are processed
+        uiState$.apps.apps[appIndex].status.set('synchronized');
+      }
+    } catch (error) {
+      console.error('Failed to complete migration:', error);
+      uiState$.apps.error.set('Failed to complete migration');
     }
   }
 });
