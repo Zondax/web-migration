@@ -10,54 +10,12 @@ import {
 import { muifyHtml } from '@/lib/muifyHtml';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
-import { Address, App, uiState$ } from 'app/state/ui';
+import { App, uiState$ } from 'app/state/ui';
 import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import Accounts from './account';
+import Accounts from './accounts-table';
 
-interface AccountActionButtonProps {
-  account: Observable<Address>;
-  index: number;
-  appId: string;
-}
-
-const AccountActionButton: React.FC<AccountActionButtonProps> = ({
-  account,
-  index,
-  appId
-}) => {
-  const balance = account.balance.get();
-  const status = account.status.get();
-  const isLoading = account.isLoading.get();
-
-  const migrateAccount = useCallback(
-    (accountIndex: number) => {
-      uiState$.migrateAccount(appId, accountIndex);
-    },
-    [appId]
-  );
-
-  if (status === 'migrated') {
-    return (
-      <Badge variant="outline" className="capitalize">
-        Migrated
-      </Badge>
-    );
-  }
-  return (
-    <Button
-      aria-haspopup="true"
-      variant="default"
-      size="sm"
-      disabled={!(balance && balance > 0) || isLoading}
-      onClick={() => migrateAccount(index)}
-    >
-      {isLoading ? 'Loading...' : 'Migrate'}
-    </Button>
-  );
-};
-
-function app({
+function AppRow({
   app,
   hideBalance
 }: {
@@ -70,7 +28,6 @@ function app({
 
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const isLedgerConnected = uiState$.device.isConnected.get();
   const isSynchronizationLoading = uiState$.apps.status.get();
   const icon = uiState$.apps.icons.get()[id];
 
@@ -146,9 +103,9 @@ function app({
           </div>
         </TableCell>
       </TableRow>
-      {isExpanded ? <Accounts appId={id} accounts={app.accounts} /> : null}
+      {isExpanded ? <Accounts accounts={app.accounts} /> : null}
     </>
   );
 }
 
-export default observer(app);
+export default observer(AppRow);

@@ -21,15 +21,24 @@ import { observable } from '@legendapp/state';
 import { observer, use$ } from '@legendapp/state/react';
 import { uiState$ } from 'app/state/ui';
 import { useCallback, useState } from 'react';
-import Product from './product';
+import AppRow from './app-row';
 
-function ProductsTable() {
+interface AppsTableProps {
+  mode?: 'synchronize' | 'migrate';
+}
+
+function AppsTable({ mode = 'migrate' }: AppsTableProps) {
   const apps$ = uiState$.apps.apps;
   const status = use$(uiState$.apps.status);
   const [isRescaning, setIsRescaning] = useState<boolean>(false);
+  const isLedgerConnected = uiState$.device.isConnected.get();
 
   const handleMigrateAll = useCallback(() => {
     uiState$.migrateAll();
+  }, []);
+
+  const handleSynchronize = useCallback(() => {
+    uiState$.synchronizeAccounts();
   }, []);
 
   // Compute if there are any accounts with errors
@@ -80,25 +89,47 @@ function ProductsTable() {
     setIsRescaning(false);
   };
 
+  const renderActionButton = () => {
+    if (mode === 'synchronize') {
+      return (
+        <Button
+          variant="default"
+          size="sm"
+          onClick={handleSynchronize}
+          disabled={!isLedgerConnected || status === 'loading'}
+        >
+          {status === 'loading'
+            ? 'Synchronizing...'
+            : 'Synchronize All Accounts'}
+        </Button>
+      );
+    }
+
+    return status === 'synchronized' ? (
+      <Button variant="default" size="sm" onClick={handleMigrateAll}>
+        Migrate All
+      </Button>
+    ) : null;
+  };
+
   return (
     <div className="space-y-4">
-      {/* Add space between the two tables */}
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
             <div className="space-y-1.5">
-              <CardTitle>Synchronized Accounts</CardTitle>
+              <CardTitle>
+                {mode === 'synchronize'
+                  ? 'Synchronize Accounts'
+                  : 'Synchronized Accounts'}
+              </CardTitle>
               <CardDescription>
-                Please select migrate to migrate all the accounts.
+                {mode === 'synchronize'
+                  ? 'Click synchronize to start scanning your accounts.'
+                  : 'Please select migrate to migrate all the accounts.'}
               </CardDescription>
             </div>
-            <CardAction>
-              {status === 'synchronized' ? (
-                <Button variant="default" size="sm" onClick={handleMigrateAll}>
-                  Migrate All
-                </Button>
-              ) : null}
-            </CardAction>
+            <CardAction>{renderActionButton()}</CardAction>
           </div>
         </CardHeader>
         <CardContent>
@@ -109,23 +140,23 @@ function ProductsTable() {
                 <TableHead className="hidden w-[100px] sm:table-cell">
                   <span className="sr-only">Image</span>
                 </TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Addresses</TableHead>
-                <TableHead>Total Balance</TableHead>
+                <TableHead className="w-[25%]">Name</TableHead>
+                <TableHead className="w-[25%]">Addresses</TableHead>
+                <TableHead className="w-[25%]">Total Balance</TableHead>
                 <TableHead></TableHead>
-                {/* <TableHead className="hidden md:table-cell">Actions</TableHead> */}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {appsWithoutErrorAccounts$.length ? (
+              {(status === 'synchronized' || status === 'loading') &&
+              appsWithoutErrorAccounts$.length ? (
                 appsWithoutErrorAccounts$.map((app) => (
-                  <Product key={app.id} app={observable(app)} />
+                  <AppRow key={app.id} app={observable(app)} />
                 ))
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
-                    className="text-center text-muted-foreground"
+                    colSpan={6}
+                    className="text-center text-muted-foreground p-4"
                   >
                     {status === 'synchronized'
                       ? 'No accounts to migrate'
@@ -137,7 +168,8 @@ function ProductsTable() {
           </Table>
         </CardContent>
       </Card>
-      {/* Only show error table if there are accounts with errors */}
+
+      {/* Error accounts card - unchanged */}
       {hasAccountsWithErrors && (
         <Card>
           <CardHeader>
@@ -167,15 +199,16 @@ function ProductsTable() {
                   <TableHead className="hidden w-[100px] sm:table-cell">
                     <span className="sr-only">Image</span>
                   </TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Addresses</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead className="w-[25%]">Name</TableHead>
+                  <TableHead className="w-[25%]">Addresses</TableHead>
+                  <TableHead className="w-[25%]"></TableHead>
+                  <TableHead className="w-[100px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {/* Filter and show only apps with error accounts */}
                 {appsWithErrorAccounts$.map((app) => (
-                  <Product
+                  <AppRow
                     key={app.id.toString()}
                     app={observable(app)}
                     hideBalance
@@ -190,4 +223,4 @@ function ProductsTable() {
   );
 }
 
-export default observer(ProductsTable);
+export default observer(AppsTable);

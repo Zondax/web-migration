@@ -1,6 +1,4 @@
 import { AddressLink } from '@/components/AddressLink';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -17,58 +15,13 @@ import {
 } from '@/components/ui/tooltip';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
-import { Address, uiState$ } from 'app/state/ui';
+import { Address } from 'app/state/ui';
 import { AlertCircle } from 'lucide-react';
-import { useCallback } from 'react';
 
-interface AccountActionButtonProps {
-  account: Observable<Address>;
-  index: number;
-  appId: string;
-}
-
-const AccountActionButton: React.FC<AccountActionButtonProps> = ({
-  account,
-  index,
-  appId
-}) => {
-  const balance = account.balance.get();
-  const status = account.status.get();
-  const isLoading = account.isLoading.get();
-
-  const migrateAccount = useCallback(
-    (accountIndex: number) => {
-      uiState$.migrateAccount(appId, accountIndex);
-    },
-    [appId]
-  );
-
-  if (status === 'migrated') {
-    return (
-      <Badge variant="outline" className="capitalize">
-        Migrated
-      </Badge>
-    );
-  }
-  return (
-    <Button
-      aria-haspopup="true"
-      variant="default"
-      size="sm"
-      disabled={!(balance && balance > 0) || isLoading}
-      onClick={() => migrateAccount(index)}
-    >
-      {isLoading ? 'Loading...' : 'Migrate'}
-    </Button>
-  );
-};
-
-function accounts({
-  accounts,
-  appId
+function AccountsTable({
+  accounts
 }: {
   accounts: Observable<Address[] | undefined>;
-  appId: string;
 }) {
   return (
     <TableRow>
@@ -108,11 +61,6 @@ function accounts({
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2 justify-end items-center">
-                        {/* <AccountActionButton
-                          account={account}
-                          index={index}
-                          appId={appId}
-                        /> */}
                         {account.error.get() && (
                           <TooltipProvider>
                             <Tooltip>
@@ -135,7 +83,7 @@ function accounts({
                     colSpan={4}
                     className="text-center text-muted-foreground"
                   >
-                    No accounts to migrate
+                    No AccountsTable to migrate
                   </TableCell>
                 </TableRow>
               )}
@@ -147,4 +95,4 @@ function accounts({
   );
 }
 
-export default observer(accounts);
+export default observer(AccountsTable);
