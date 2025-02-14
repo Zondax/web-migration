@@ -1,3 +1,4 @@
+import { Spinner } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -36,7 +37,14 @@ function AppRow({
   };
 
   const renderAction = useCallback(() => {
-    if (status && ['loading', 'migrated'].includes(status)) {
+    if (hideBalance || !status) {
+      return null;
+    }
+    if (status === 'loading') {
+      return <Spinner />;
+    }
+
+    if (status === 'migrated') {
       return (
         <Badge variant="destructive" className="capitalize">
           {status}

@@ -22,7 +22,7 @@ function Snackbar() {
       <Toast.Root
         open={Boolean(lastNotification)}
         onOpenChange={onOpenChange}
-        className="bg-white rounded-md shadow-lg p-4 border border-gray-200"
+        className="bg-white rounded-md shadow-lg p-4 mr-0.5 border border-gray-200"
       >
         <Toast.Title className="font-semibold">
           {lastNotification?.title}

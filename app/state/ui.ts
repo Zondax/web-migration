@@ -1,23 +1,12 @@
 import { getAppLightIcon, getBalance } from '@/lib/account';
 import { observable } from '@legendapp/state';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
-import type { AppIds } from 'app/config/apps';
+import type { AppConfig, AppIds } from 'app/config/apps';
 import { appsConfigs } from 'app/config/apps';
+import { Address } from './types/ledger';
 import { ledgerWalletState$ } from './wallet/ledger';
 
-export type AddressStatus = 'synchronized' | 'migrated';
-
-export interface Address extends GenericeResponseAddress {
-  balance?: number;
-  status?: AddressStatus;
-  isLoading?: boolean;
-  error?: {
-    source: 'migration' | 'balance_fetch';
-    description: string;
-  };
-}
-
-export type AppStatus = 'synchronized' | 'loading' | 'error';
+export type AppStatus = 'migrated' | 'synchronized' | 'loading' | 'error';
 
 export type AppIcons = {
   [key in AppIds]: string;
@@ -25,7 +14,7 @@ export type AppIcons = {
 
 export interface App {
   name: string;
-  id: string;
+  id: AppIds;
   accounts?: Address[];
   status?: AppStatus;
   error?: {
@@ -44,7 +33,7 @@ interface UIState {
     apps: App[];
     status?: AppStatus;
     error?: string;
-    icons: { [key in AppIds]: any };
+    icons: Partial<{ [key in AppIds]: any }>;
   };
 }
 
@@ -103,9 +92,7 @@ export const uiState$ = observable({
       uiState$.apps.apps[appIndex].set(updatedApp);
 
       try {
-        const response = await ledgerWalletState$.synchronizeAccounts(
-          appId.toUpperCase()
-        );
+        const response = await ledgerWalletState$.synchronizeAccounts(appId);
 
         if (response.error) {
           uiState$.apps.apps[appIndex].set({
@@ -142,53 +129,68 @@ export const uiState$ = observable({
         uiState$.apps.assign({ status: undefined, apps: [] });
         return;
       }
-
-      // TODO: BORRAR SLICE
       // request and save the accounts of each app synchronously
-      for (const app of appsConfigs.slice(0, 10)) {
+      for (const app of Array.from(appsConfigs.values()).slice(0, 10)) {
         const rpcEndpoint = app.rpcEndpoint;
         // Skip apps that do not have an rpcEndpoint defined
-        if (!rpcEndpoint) {
-          continue;
-        }
+        if (!rpcEndpoint) continue;
 
-        const response = await ledgerWalletState$.synchronizeAccounts(app.id);
+        try {
+          const response = await ledgerWalletState$.synchronizeAccounts(app.id);
 
-        if (response.error) {
+          if (response.error) {
+            uiState$.apps.apps.set([
+              ...uiState$.apps.apps.get(),
+              {
+                name: app.name,
+                id: app.id,
+                status: 'error'
+              }
+            ]);
+            continue;
+          }
+
+          // Fetch the balance for each address
+          const accounts: Address[] = response.result
+            ? await Promise.all(
+                response.result.map(async (address) => {
+                  return await uiState$.fetchAccountBalance(
+                    address,
+                    rpcEndpoint
+                  );
+                })
+              )
+            : [];
+
+          // Filter out addresses with zero balance
+          const filteredAccounts = accounts.filter(
+            (account) =>
+              (account.balance && account.balance > 0) || account.error
+          );
+
+          // Only set the app if there are accounts with non-zero balance
+          if (filteredAccounts.length > 0) {
+            uiState$.apps.apps.set([
+              ...uiState$.apps.apps.get(),
+              {
+                name: app.name,
+                id: app.id,
+                status: 'synchronized',
+                accounts: filteredAccounts
+              }
+            ]);
+          }
+        } catch (error) {
+          console.error(
+            `Failed to synchronize accounts for app ${app.name}:`,
+            error
+          );
           uiState$.apps.apps.set([
             ...uiState$.apps.apps.get(),
             {
               name: app.name,
               id: app.id,
               status: 'error'
-            }
-          ]);
-          continue;
-        }
-
-        // Fetch the balance for each address
-        const accounts: Address[] = response.result
-          ? await Promise.all(
-              response.result.map(async (address) => {
-                return await uiState$.fetchAccountBalance(address, rpcEndpoint);
-              })
-            )
-          : [];
-
-        // Filter out addresses with zero balance
-        const filteredAccounts = accounts.filter(
-          (account) => (account.balance && account.balance > 0) || account.error
-        );
-
-        // Only set the app if there are accounts with non-zero balance
-        if (filteredAccounts.length > 0) {
-          uiState$.apps.apps.set([
-            ...uiState$.apps.apps.get(),
-            {
-              name: app.name,
-              id: app.id,
-              status: 'synchronized',
-              accounts: filteredAccounts
             }
           ]);
         }
@@ -250,9 +252,7 @@ export const uiState$ = observable({
         uiState$.apps.apps[appIndex].accounts.set(accounts);
 
         try {
-          const rpcEndpoint = appsConfigs.find(
-            (app) => app.id === appId
-          )?.rpcEndpoint;
+          const rpcEndpoint = appsConfigs.get(appId)?.rpcEndpoint;
           if (!rpcEndpoint) throw new Error('RPC endpoint not found');
           console.log(`RPC endpoint found: ${rpcEndpoint} for appId: ${appId}`);
 
@@ -287,11 +287,11 @@ export const uiState$ = observable({
   async loadInitialIcons() {
     if (iconsLoaded) return;
 
-    const appIcons: AppIcons = {};
+    const appIcons: Partial<AppIcons> = {};
 
     const iconPromises = Object.values(appsConfigs)
       .filter((app) => app.rpcEndpoint)
-      .map(async (app) => {
+      .map(async (app: AppConfig) => {
         const lightIconResponse = await getAppLightIcon(app.id);
         if (typeof lightIconResponse?.error === 'undefined') {
           appIcons[app.id] = lightIconResponse?.data;
@@ -323,7 +323,8 @@ export const uiState$ = observable({
 
         try {
           const response = await ledgerWalletState$.migrateAccount(
-            appId.toUpperCase(),
+            appId,
+            accounts[accountIndex],
             accountIndex
           );
 
@@ -339,7 +340,7 @@ export const uiState$ = observable({
           } else {
             accounts[accountIndex] = { ...updatedAccount, isLoading: false };
             console.log(
-              `Account at index ${accountIndex} in app ${appId} migration failed`
+              `Account at index ${accountIndex} in app ${appId} migration failed. ${response.error}`
             );
           }
           uiState$.apps.apps[appIndex].accounts.set(accounts);

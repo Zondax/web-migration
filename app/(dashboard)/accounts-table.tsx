@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
-import { Address } from 'app/state/ui';
+import { Address } from 'app/state/types/ledger';
 import { AlertCircle } from 'lucide-react';
 
 function AccountsTable({
@@ -83,7 +83,7 @@ function AccountsTable({
                     colSpan={4}
                     className="text-center text-muted-foreground"
                   >
-                    No AccountsTable to migrate
+                    No accounts to migrate
                   </TableCell>
                 </TableRow>
               )}
