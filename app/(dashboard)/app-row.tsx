@@ -74,8 +74,10 @@ function AppRow({
             </Button>
           )}
         </TableCell>
-        <TableCell className="hidden sm:table-cell [&_svg]:h-8 [&_svg]:w-8">
-          {muifyHtml(icon)}
+        <TableCell className="hidden sm:table-cell">
+          <div className="max-h-8 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8">
+            {muifyHtml(icon)}
+          </div>
         </TableCell>
         <TableCell className="font-medium">{name}</TableCell>
         <TableCell className="font-medium">
