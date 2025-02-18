@@ -6,6 +6,7 @@ import { observable } from '@legendapp/state';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
 import { AppIds, appsConfigs } from 'app/config/apps';
+import { POLKADOT_GENERIC_API_TRANSACTION_METADATA } from 'app/config/config';
 import { InternalErrors, LedgerErrorDetails } from 'app/config/errors';
 import {
   Address,
@@ -71,7 +72,7 @@ export const ledgerWalletState$ = observable({
         genericApp = new PolkadotGenericApp(
           transport,
           undefined,
-          'https://api.zondax.ch/polkadot/transaction/metadata'
+          POLKADOT_GENERIC_API_TRANSACTION_METADATA
         );
 
         // Check if the app is open

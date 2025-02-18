@@ -264,6 +264,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       bip44Path: "m/44'/788'/0'/0'/0'", // 788 = 0x80000314
       ss58Prefix: 6,
       ticker: 'BNC'
+      // rpcEndpoint: 'wss://bifrost-polkadot.api.onfinality.io/public-ws',
     }
   ],
   [

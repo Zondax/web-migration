@@ -3,6 +3,7 @@ import { ExtrinsicPayloadValue } from '@polkadot/types/types/extrinsic';
 import { hexToU8a } from '@polkadot/util';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { AppConfig } from 'app/config/apps';
+import { POLKADOT_GENERIC_API_METADATA_HASH } from 'app/config/config';
 import { errorDetails } from 'app/config/errors';
 import axios from 'axios';
 
@@ -15,8 +16,12 @@ const mockBalances = [
     address: 'DzdDXY4xGGsPSYBf4Fv8kbaS3kdZNb9PX8DpKRsM3UuRhJ4',
     balance: 1
   },
+  {
+    address: 'WVDmu85CwmEDHwyfVCfEX1WMeJc2ziRZBEi8WRPZU68GNbs', // ASTAR
+    balance: 3
+  },
   // {
-  //   address: '13M7fitxMYMVNfeG3e6mP4pcCteG4Wyf8kcew5TRN7PGm84C',
+  //   address: '13M7fitxMYMVNfeG3e6mP4pcCteG4Wyf8kcew5TRN7PGm84C', // POLKADOT
   //   balance: 4
   // },
   {
@@ -104,18 +109,21 @@ export const createTransfer = async (
   const api = await ApiPromise.create({ provider });
 
   try {
+    // Define sender and receiver addresses and the amount to transfer
+    const amount = 1_000_000_000_000;
+
     console.log('sender address ' + senderAddress);
+    console.log('receiver address ' + receiverAddress);
     const nonceResp = await api.query.system.account(senderAddress);
     const { nonce } = nonceResp.toHuman() as any;
     console.log('nonce ' + nonce);
 
     // Create the transfer transaction
     const transfer = api.tx.balances.transferKeepAlive(receiverAddress, amount);
-
-    const resp = await axios.post(
-      'https://api.zondax.ch/polkadot/node/metadata/hash',
-      { id: ticker }
-    );
+    console.log('ticker ', ticker.toLowerCase());
+    const resp = await axios.post(POLKADOT_GENERIC_API_METADATA_HASH, {
+      id: ticker.toLowerCase()
+    });
 
     console.log('metadata hash ' + resp.data.metadataHash);
 
@@ -130,7 +138,7 @@ export const createTransfer = async (
       runtimeVersion: api.runtimeVersion,
       version: api.extrinsicVersion,
       mode: 1,
-      metadataHash: hexToU8a('01' + resp.data.metadataHash) // TODO: Analize if "01" should be fixed or not
+      metadataHash: hexToU8a('01' + resp.data.metadataHash) // "01" indicates the field is sent, "00" indicated the field is not sent.
     });
 
     console.log(
@@ -143,7 +151,7 @@ export const createTransfer = async (
     const bip44Path = getBip44Path(config.bip44Path, index);
     // Request signature from Ledger
     // Remove first byte as it indicates the length, and it is not supported by shortener and ledger app
-    genericApp.txMetadataChainId = config.ticker;
+    genericApp.txMetadataChainId = ticker.toLowerCase();
     const { signature } = await genericApp.sign(
       bip44Path,
       Buffer.from(payload.toU8a(true))
