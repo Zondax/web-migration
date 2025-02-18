@@ -24,6 +24,8 @@ function ProductsPage() {
   const isDeviceConnected = uiState$.device.isConnected.get();
   const isSynchronized = uiState$.apps.status.get() === 'synchronized';
 
+  uiState$.loadInitialIcons();
+
   // Update steps completion status
   useEffect(() => {
     setSteps((prev) =>

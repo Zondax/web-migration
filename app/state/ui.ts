@@ -1,8 +1,7 @@
 import { getAppLightIcon, getBalance } from '@/lib/account';
 import { observable } from '@legendapp/state';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
-import type { AppConfig, AppIds } from 'app/config/apps';
-import { appsConfigs } from 'app/config/apps';
+import { AppConfig, AppIds, appsConfigs } from 'app/config/apps';
 import { Address } from './types/ledger';
 import { ledgerWalletState$ } from './wallet/ledger';
 
@@ -51,7 +50,7 @@ const initialUIState: UIState = {
   }
 };
 
-let iconsLoaded: boolean = false;
+let iconsStatus: 'loading' | 'loaded' | 'unloaded' = 'unloaded';
 
 export const uiState$ = observable({
   ...initialUIState,
@@ -285,11 +284,12 @@ export const uiState$ = observable({
     }
   },
   async loadInitialIcons() {
-    if (iconsLoaded) return;
+    if (iconsStatus !== 'unloaded') return;
+    iconsStatus = 'loading';
 
     const appIcons: Partial<AppIcons> = {};
 
-    const iconPromises = Object.values(appsConfigs)
+    const iconPromises = Array.from(appsConfigs.values())
       .filter((app) => app.rpcEndpoint)
       .map(async (app: AppConfig) => {
         const lightIconResponse = await getAppLightIcon(app.id);
@@ -300,7 +300,7 @@ export const uiState$ = observable({
 
     await Promise.all(iconPromises);
     uiState$.apps.icons.set(appIcons);
-    iconsLoaded = true;
+    iconsStatus = 'loaded';
   },
   async migrateAccount(appId: AppIds, accountIndex: number) {
     const apps = uiState$.apps.apps.get();
