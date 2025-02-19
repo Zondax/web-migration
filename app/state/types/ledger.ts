@@ -1,5 +1,6 @@
 import Transport from '@ledgerhq/hw-transport';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
+import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
 
 /**
  * Represents a response object from a connection request.
@@ -15,4 +16,16 @@ export interface ConnectionResponse {
 export interface DeviceConnectionProps {
   transport?: Transport;
   genericApp?: PolkadotGenericApp;
+}
+
+export type AddressStatus = 'synchronized' | 'migrated';
+
+export interface Address extends GenericeResponseAddress {
+  balance?: number;
+  status?: AddressStatus;
+  isLoading?: boolean;
+  error?: {
+    source: 'migration' | 'balance_fetch';
+    description: string;
+  };
 }

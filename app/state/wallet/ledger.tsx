@@ -1,3 +1,4 @@
+import { createTransfer, getBip44Path } from '@/lib/account';
 import { handleWalletError } from '@/lib/utils';
 import Transport from '@ledgerhq/hw-transport';
 import TransportWebUSB from '@ledgerhq/hw-transport-webhid';
@@ -5,8 +6,16 @@ import { observable } from '@legendapp/state';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
 import { AppIds, appsConfigs } from 'app/config/apps';
+import { POLKADOT_GENERIC_API_TRANSACTION_METADATA } from 'app/config/config';
 import { InternalErrors, LedgerErrorDetails } from 'app/config/errors';
-import { ConnectionResponse, DeviceConnectionProps } from '../types/ledger';
+import { errorApps } from 'app/config/mockData';
+import {
+  Address,
+  ConnectionResponse,
+  DeviceConnectionProps
+} from '../types/ledger';
+
+const polkadotAddresses = observable<Address[]>([]);
 
 interface LedgerWalletState {
   deviceConnection: {
@@ -61,7 +70,11 @@ export const ledgerWalletState$ = observable({
         console.log(
           'No transport found, attempting to get device connection...'
         );
-        genericApp = new PolkadotGenericApp(transport);
+        genericApp = new PolkadotGenericApp(
+          transport,
+          undefined,
+          POLKADOT_GENERIC_API_TRANSACTION_METADATA
+        );
 
         // Check if the app is open
         await genericApp.getVersion();
@@ -138,12 +151,16 @@ export const ledgerWalletState$ = observable({
       return undefined; // it means the address doesn't exist
     }
   },
-  async synchronizeAccount(
+  async synchronizeAccounts(
     appId: AppIds
   ): Promise<{ result?: GenericeResponseAddress[]; error?: boolean }> {
     const connection = ledgerWalletState$.deviceConnection.connection.get();
-    const app = appsConfigs.find((app) => app.id === appId);
+    const app = appsConfigs.get(appId);
 
+    // TODO: Delete mock
+    if (errorApps.includes(appId)) {
+      return { error: true };
+    }
     if (!app) {
       console.error(`The appId ${appId} is not supported.`);
       return Promise.reject(new Error(`The appId ${appId} is not supported.`));
@@ -157,7 +174,7 @@ export const ledgerWalletState$ = observable({
       // Get addresses from the Ledger device
       const addresses = await Promise.all(
         Array.from({ length: 5 }).map(async (_, i) => {
-          const bip44Path = app.bip44Path.replace(/\/0'$/, `/${i}'`);
+          const bip44Path = getBip44Path(app.bip44Path, i);
           return await ledgerWalletState$.getAccountAddress(
             bip44Path,
             app.ss58Prefix,
@@ -170,6 +187,11 @@ export const ledgerWalletState$ = observable({
         (address) => address !== undefined
       );
 
+      // Save the Polkadot addresses for future use during migration
+      if (appId === 'polkadot') {
+        polkadotAddresses.set(filteredAddresses);
+      }
+
       return Promise.resolve({ result: filteredAddresses });
     } catch (e) {
       handleWalletError(e, InternalErrors.CONNECTION_ERROR);
@@ -178,15 +200,55 @@ export const ledgerWalletState$ = observable({
   },
   async migrateAccount(
     appId: AppIds,
+    account: Address,
     accountIndex: number
   ): Promise<{ migrated?: boolean; error?: string }> {
-    try {
-      // Wait for 5 seconds before responding
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      return { migrated: true };
-    } catch (e) {
-      return { error: (e as Error).message };
+    // Define sender and receiver addresses and the amount to transfer
+    const senderAddress = account.address;
+    if (!polkadotAddresses.get() || !polkadotAddresses.get()[accountIndex]) {
+      return { error: 'there is no polkadot address to migrate to.' };
     }
+    const receiverAddress = polkadotAddresses.get()[accountIndex].address;
+
+    const transferAmount = account.balance;
+    if (!transferAmount) {
+      return { error: 'there is no amount to transfer' };
+    }
+
+    // Find the ticker for the given appId
+    const appConfig = appsConfigs.get(appId);
+    if (!appConfig) {
+      return { error: `App configuration for ${appId} not found.` };
+    }
+
+    const polkadotConfig = appsConfigs.get(AppIds.POLKADOT);
+    if (!polkadotConfig?.rpcEndpoint) {
+      throw new Error('Polkadot configuration not found');
+    }
+    const genericApp =
+      ledgerWalletState$.deviceConnection.connection.genericApp.get();
+    if (!genericApp) {
+      throw new Error('Generic app not found');
+    }
+
+    try {
+      // Perform the transfer
+      await createTransfer(
+        genericApp as unknown as PolkadotGenericApp,
+        senderAddress,
+        receiverAddress,
+        transferAmount,
+        polkadotConfig,
+        appConfig,
+        accountIndex
+      );
+    } catch (e) {
+      const errorMessage =
+        e instanceof Error ? e.message : 'An unknown error occurred';
+      return { error: errorMessage };
+    }
+
+    return { migrated: true };
   },
   clearConnection() {
     ledgerWalletState$.deviceConnection.connection.set(undefined);
