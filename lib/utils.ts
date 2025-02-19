@@ -79,3 +79,22 @@ export const truncateMiddleOfString = (str: string, maxLength: number) => {
   const end = str.substring(str.length - middle, str.length);
   return `${start}...${end}`;
 };
+
+/**
+ * Formats a balance to a human-readable string.
+ *
+ * @param {number} balance - The balance to format.
+ * @returns {string} The formatted balance.
+ */
+export const formatBalance = (balance: number, ticker: string): string => {
+  if (balance === 0) {
+    return `0 ${ticker}`;
+  }
+
+  const formattedBalance = balance.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 5
+  });
+
+  return `${formattedBalance} ${ticker}`;
+};
