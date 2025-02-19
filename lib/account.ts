@@ -1,4 +1,7 @@
+import { merkleizeMetadata } from '@polkadot-api/merkleize-metadata';
 import { ApiPromise, WsProvider } from '@polkadot/api';
+import { Option } from '@polkadot/types-codec';
+import { OpaqueMetadata } from '@polkadot/types/interfaces';
 import { ExtrinsicPayloadValue } from '@polkadot/types/types/extrinsic';
 import { hexToU8a } from '@polkadot/util';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
@@ -84,7 +87,7 @@ export const getAppLightIcon = async (appId: string) => {
   }
 };
 
-export const createTransfer = async (
+export const createGenericApiTransfer = async (
   genericApp: PolkadotGenericApp,
   senderAddress: string,
   receiverAddress: string,
@@ -158,6 +161,118 @@ export const createTransfer = async (
       transactionVersion: api.runtimeVersion.transactionVersion,
       mode: 1,
       metadataHash: hexToU8a('01' + resp.data.metadataHash)
+    };
+
+    // Combine the payload and signature to create a signed extrinsic
+    const signedExtrinsic = transfer.addSignature(
+      senderAddress,
+      signature,
+      payloadValue
+    );
+
+    console.log(
+      'signedTx to broadcast[hex] ' +
+        Buffer.from(signedExtrinsic.toU8a()).toString('hex')
+    );
+    console.log(
+      'signedTx to broadcast[human] ' +
+        JSON.stringify(signedExtrinsic.toHuman(true))
+    );
+
+    // Submit the signed transaction
+    await transfer.send((status) => {
+      console.log(`Tx status: ${JSON.stringify(status)}`);
+    });
+  } catch (error) {
+    console.error('Error during transfer:', error);
+    throw new Error(
+      'Transfer failed: ' +
+        (error instanceof Error ? error.message : 'Unknown error')
+    );
+  } finally {
+    await api.disconnect();
+  }
+};
+
+export const createTransfer = async (
+  genericApp: PolkadotGenericApp,
+  senderAddress: string,
+  receiverAddress: string,
+  amount: number,
+  polkadotConfig: AppConfig,
+  appConfig: AppConfig,
+  index: number
+) => {
+  const provider = new WsProvider(appConfig.rpcEndpoint);
+  const api = await ApiPromise.create({ provider });
+
+  try {
+    console.log('sender address ' + senderAddress);
+    console.log('receiver address ' + receiverAddress);
+    // Define nonce and the amount to transfer
+    const nonceResp = await api.query.system.account(senderAddress);
+    const { nonce } = nonceResp.toHuman() as any;
+    console.log('nonce ' + nonce);
+    const amount = 1_000_000_000_000; // TODO: delete it when we have amount in any account
+
+    const metadataV15 = await api.call.metadata
+      .metadataAtVersion<Option<OpaqueMetadata>>(15)
+      .then((m) => {
+        if (!m.isNone) {
+          return m.unwrap();
+        }
+      });
+    if (!metadataV15) return;
+
+    const merkleizedMetadata = merkleizeMetadata(metadataV15, {
+      decimals: appConfig.decimals,
+      tokenSymbol: appConfig.ticker
+    });
+
+    const metadataHash = merkleizedMetadata.digest();
+    // Create the transfer transaction
+    const transfer = api.tx.balances.transferKeepAlive(receiverAddress, amount);
+
+    // Create the payload for signing
+    const payload = api.createType('ExtrinsicPayload', {
+      method: transfer.method.toHex(),
+      nonce: nonce as unknown as number,
+      genesisHash: api.genesisHash,
+      blockHash: api.genesisHash,
+      transactionVersion: api.runtimeVersion.transactionVersion,
+      specVersion: api.runtimeVersion.specVersion,
+      runtimeVersion: api.runtimeVersion,
+      version: api.extrinsicVersion,
+      mode: 1,
+      metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex'))
+    });
+
+    // Request signature from Ledger
+    // Remove first byte as it indicates the length, and it is not supported by shortener and ledger app
+    const bip44Path = getBip44Path(polkadotConfig.bip44Path, index);
+    const payloadBytes = payload.toU8a(true);
+    genericApp.txMetadataChainId = appConfig.ticker.toLowerCase();
+    const proof1: Uint8Array =
+      merkleizedMetadata.getProofForExtrinsicPayload(payloadBytes);
+    const { signature } = await genericApp.signWithMetadata(
+      bip44Path,
+      Buffer.from(payloadBytes),
+      Buffer.from(proof1)
+    );
+
+    console.log('signature ' + signature.toString('hex'));
+
+    const payloadValue: ExtrinsicPayloadValue = {
+      era: payload.era,
+      genesisHash: api.genesisHash,
+      blockHash: api.genesisHash,
+      method: transfer.method.toHex(),
+      nonce: nonce as unknown as number,
+      specVersion: api.runtimeVersion.specVersion,
+      tip: 0,
+      transactionVersion: api.runtimeVersion.transactionVersion,
+      mode: 1,
+      metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex'))
     };
 
     // Combine the payload and signature to create a signed extrinsic

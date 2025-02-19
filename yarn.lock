@@ -601,6 +601,11 @@
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.6.1.tgz#df6e5943edcea504bac61395926d6fd67869a0d5"
   integrity sha512-pq5D8h10hHBjyqX+cfBm0i8JUXJ0UhczFc4r74zbuT9XgewFo2E3J1cOaGtdZynILNmQ685YWGzGE1Zv6io50w==
 
+"@noble/hashes@^1.6.1":
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.7.1.tgz#5738f6d765710921e7a751e00c20ae091ed8db0f"
+  integrity sha512-B8XBPsn4vT/KJAGqDzbwztd+6Yte3P4V7iafm24bxgDe/mlRuK6xmWPuCNrKt2vDafZ8MfJLlchDG/vYafQEjQ==
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -642,6 +647,23 @@
   resolved "https://registry.yarnpkg.com/@polkadot-api/json-rpc-provider/-/json-rpc-provider-0.0.1.tgz#333645d40ccd9bccfd1f32503f17e4e63e76e297"
   integrity sha512-/SMC/l7foRjpykLTUTacIH05H3mr9ip8b5xxfwXlVezXrNVLp3Cv0GX6uItkKd+ZjzVPf3PFrDF2B2/HLSNESA==
 
+"@polkadot-api/merkleize-metadata@^1.1.13":
+  version "1.1.13"
+  resolved "https://registry.yarnpkg.com/@polkadot-api/merkleize-metadata/-/merkleize-metadata-1.1.13.tgz#020293de8263aab3090611f2f6095cf5a23bb676"
+  integrity sha512-qz2nAb2x1CvVBZXsTbCMj+Gp9w/k7EwJd+Xb29t8inTBl9VVit0kvGYSeBkQK64zqgl8BZywzFC+1JB62YoJCA==
+  dependencies:
+    "@polkadot-api/metadata-builders" "0.10.1"
+    "@polkadot-api/substrate-bindings" "0.11.0"
+    "@polkadot-api/utils" "0.1.2"
+
+"@polkadot-api/metadata-builders@0.10.1":
+  version "0.10.1"
+  resolved "https://registry.yarnpkg.com/@polkadot-api/metadata-builders/-/metadata-builders-0.10.1.tgz#eccee6a01c5d051227afdf50d752fcf3d9d2906b"
+  integrity sha512-0GQFph1vT0wWTfijM7eO+JICR7hwqJeVmil1P29uLjScBI4IH7gX032nOuNz/SG1Qlu0CtDFasFWVeazuPJ0pw==
+  dependencies:
+    "@polkadot-api/substrate-bindings" "0.11.0"
+    "@polkadot-api/utils" "0.1.2"
+
 "@polkadot-api/metadata-builders@0.3.2":
   version "0.3.2"
   resolved "https://registry.yarnpkg.com/@polkadot-api/metadata-builders/-/metadata-builders-0.3.2.tgz#007f158c9e0546cf79ba440befc0c753ab1a6629"
@@ -658,6 +680,16 @@
     "@polkadot-api/metadata-builders" "0.3.2"
     "@polkadot-api/substrate-bindings" "0.6.0"
     "@polkadot-api/utils" "0.1.0"
+
+"@polkadot-api/substrate-bindings@0.11.0":
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/@polkadot-api/substrate-bindings/-/substrate-bindings-0.11.0.tgz#54086d4059960766cc778996e6b80c4398bed2a1"
+  integrity sha512-UGCa0xYtfcS/5LJAcro1vhIwxF31fsF5f42mzro9G85T854cbXPzqABDICYmJqdF72tBRMrnJlx6okGtLx9TKA==
+  dependencies:
+    "@noble/hashes" "^1.6.1"
+    "@polkadot-api/utils" "0.1.2"
+    "@scure/base" "^1.2.1"
+    scale-ts "^1.6.1"
 
 "@polkadot-api/substrate-bindings@0.6.0":
   version "0.6.0"
@@ -681,6 +713,11 @@
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/@polkadot-api/utils/-/utils-0.1.0.tgz#d36937cdc465c2ea302f3278cf53157340ab33a0"
   integrity sha512-MXzWZeuGxKizPx2Xf/47wx9sr/uxKw39bVJUptTJdsaQn/TGq+z310mHzf1RCGvC1diHM8f593KrnDgc9oNbJA==
+
+"@polkadot-api/utils@0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@polkadot-api/utils/-/utils-0.1.2.tgz#45471371183efaa2fc52f40d84326d84e49c7297"
+  integrity sha512-yhs5k2a8N1SBJcz7EthZoazzLQUkZxbf+0271Xzu42C5AEM9K9uFLbsB+ojzHEM72O5X8lPtSwGKNmS7WQyDyg==
 
 "@polkadot/api-augment@15.0.2":
   version "15.0.2"
@@ -1347,6 +1384,11 @@
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/@scure/base/-/base-1.2.1.tgz#dd0b2a533063ca612c17aa9ad26424a2ff5aa865"
   integrity sha512-DGmGtC8Tt63J5GfHgfl5CuAXh96VF/LD8K9Hr/Gv0J2lAoRGlPOMpqMpMbCTOoOJMZCk2Xt+DskdDyn6dEFdzQ==
+
+"@scure/base@^1.2.1":
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/@scure/base/-/base-1.2.4.tgz#002eb571a35d69bdb4c214d0995dff76a8dcd2a9"
+  integrity sha512-5Yy9czTO47mqz+/J8GM6GIId4umdCk1wc1q8rKERQulIoc8VP9pzDcghv10Tl2E7R96ZUx/PhND3ESYUQX8NuQ==
 
 "@substrate/connect-extension-protocol@^2.0.0":
   version "2.2.1"
@@ -2776,7 +2818,7 @@ saxes@^6.0.0:
   dependencies:
     xmlchars "^2.2.0"
 
-scale-ts@^1.6.0:
+scale-ts@^1.6.0, scale-ts@^1.6.1:
   version "1.6.1"
   resolved "https://registry.yarnpkg.com/scale-ts/-/scale-ts-1.6.1.tgz#45151e156d6c04792223c39d8e7484ce926445f2"
   integrity sha512-PBMc2AWc6wSEqJYBDPcyCLUj9/tMKnLX70jLOSndMtcUoLQucP/DM0vnQo1wJAYjTrQiq8iG9rD0q6wFzgjH7g==
