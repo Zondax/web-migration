@@ -15,6 +15,7 @@ export interface App {
   name: string;
   id: AppIds;
   accounts?: Address[];
+  ticker: string;
   status?: AppStatus;
   error?: {
     source: 'synchronization';
@@ -129,7 +130,15 @@ export const uiState$ = observable({
         return;
       }
       // request and save the accounts of each app synchronously
-      for (const app of Array.from(appsConfigs.values()).slice(0, 10)) {
+      // TODO: Change to Array.from(appsConfigs.values()) when the web is ready
+      for (const app of [
+        appsConfigs.get(AppIds.ASTAR),
+        appsConfigs.get(AppIds.POLKADOT),
+        appsConfigs.get(AppIds.KUSAMA),
+        appsConfigs.get(AppIds.EQUILIBRIUM),
+        appsConfigs.get(AppIds.NODLE)
+      ]) {
+        if (!app) continue;
         const rpcEndpoint = app.rpcEndpoint;
         // Skip apps that do not have an rpcEndpoint defined
         if (!rpcEndpoint) continue;
@@ -143,6 +152,7 @@ export const uiState$ = observable({
               {
                 name: app.name,
                 id: app.id,
+                ticker: app.ticker,
                 status: 'error'
               }
             ]);
@@ -174,6 +184,7 @@ export const uiState$ = observable({
               {
                 name: app.name,
                 id: app.id,
+                ticker: app.ticker,
                 status: 'synchronized',
                 accounts: filteredAccounts
               }
@@ -189,6 +200,7 @@ export const uiState$ = observable({
             {
               name: app.name,
               id: app.id,
+              ticker: app.ticker,
               status: 'error'
             }
           ]);
@@ -328,7 +340,20 @@ export const uiState$ = observable({
             accountIndex
           );
 
-          if (response.migrated) {
+          if (response.error || !response.migrated) {
+            accounts[accountIndex] = {
+              ...updatedAccount,
+              isLoading: false,
+              error: {
+                source: 'migration',
+                description: response.error ?? 'Unknown error'
+              }
+            };
+            console.log(
+              `Account at index ${accountIndex} in app ${appId} migration failed:`,
+              response.error
+            );
+          } else if (response.migrated) {
             accounts[accountIndex] = {
               ...updatedAccount,
               status: 'migrated',
@@ -337,15 +362,18 @@ export const uiState$ = observable({
             console.log(
               `Account at index ${accountIndex} in app ${appId} migrated successfully`
             );
-          } else {
-            accounts[accountIndex] = { ...updatedAccount, isLoading: false };
-            console.log(
-              `Account at index ${accountIndex} in app ${appId} migration failed. ${response.error}`
-            );
           }
+
           uiState$.apps.apps[appIndex].accounts.set(accounts);
         } catch (error) {
-          accounts[accountIndex] = { ...updatedAccount, isLoading: false };
+          accounts[accountIndex] = {
+            ...updatedAccount,
+            isLoading: false,
+            error: {
+              source: 'migration',
+              description: 'Migration could not be done.'
+            }
+          };
           uiState$.apps.apps[appIndex].accounts.set(accounts);
           console.log(
             `Error migrating account at index ${accountIndex} in app ${appId}:`,
@@ -389,18 +417,7 @@ export const uiState$ = observable({
             continue;
           }
 
-          try {
-            await uiState$.migrateAccount(appId, accountIndex);
-          } catch (error) {
-            const errorDescription = `Failed to migrate account ${accountIndex} for app ${appId}:`;
-            console.error(errorDescription, error);
-            accounts[accountIndex] = {
-              ...accounts[accountIndex],
-              error: { source: 'migration', description: errorDescription }
-            };
-            uiState$.apps.apps[appIndex].accounts.set(accounts);
-            // Continue with next account even if one fails
-          }
+          await uiState$.migrateAccount(appId, accountIndex);
         }
 
         // Update app status after all accounts are processed

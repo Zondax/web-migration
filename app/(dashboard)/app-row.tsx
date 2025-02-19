@@ -9,6 +9,7 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip';
 import { muifyHtml } from '@/lib/muifyHtml';
+import { formatBalance } from '@/lib/utils';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
 import { App, uiState$ } from 'app/state/ui';
@@ -55,6 +56,10 @@ function AppRow({
     return null;
   }, [status, isSynchronizationLoading]);
 
+  const balance = app.accounts
+    .get()
+    ?.reduce((total, account) => total + (account.balance || 0), 0);
+
   return (
     <>
       <TableRow>
@@ -85,13 +90,8 @@ function AppRow({
         </TableCell>
         {!hideBalance && (
           <TableCell className="font-medium">
-            {app.accounts.get()
-              ? app.accounts
-                  .get()
-                  ?.reduce(
-                    (total, account) => total + (account.balance || 0),
-                    0
-                  )
+            {balance !== undefined
+              ? formatBalance(balance, app.ticker.get())
               : '-'}
           </TableCell>
         )}
@@ -113,7 +113,9 @@ function AppRow({
           </div>
         </TableCell>
       </TableRow>
-      {isExpanded ? <Accounts accounts={app.accounts} /> : null}
+      {isExpanded ? (
+        <Accounts accounts={app.accounts} ticker={app.ticker.get()} />
+      ) : null}
     </>
   );
 }

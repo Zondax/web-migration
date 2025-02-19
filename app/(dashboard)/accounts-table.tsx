@@ -13,15 +13,18 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/components/ui/tooltip';
+import { formatBalance } from '@/lib/utils';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
 import { Address } from 'app/state/types/ledger';
 import { AlertCircle } from 'lucide-react';
 
 function AccountsTable({
-  accounts
+  accounts,
+  ticker
 }: {
   accounts: Observable<Address[] | undefined>;
+  ticker: string;
 }) {
   return (
     <TableRow>
@@ -56,7 +59,7 @@ function AccountsTable({
                     </TableCell>
                     <TableCell className="py-2 text-sm text-right w-1/3">
                       {account.balance.get() !== undefined
-                        ? account.balance.get()
+                        ? formatBalance(account.balance.get()!, ticker)
                         : '-'}
                     </TableCell>
                     <TableCell>

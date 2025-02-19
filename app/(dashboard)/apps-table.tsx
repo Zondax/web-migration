@@ -19,13 +19,42 @@ import {
 } from '@/components/ui/table';
 import { observable } from '@legendapp/state';
 import { observer, use$ } from '@legendapp/state/react';
-import { uiState$ } from 'app/state/ui';
+import { Address } from 'app/state/types/ledger';
+import { App, uiState$ } from 'app/state/ui';
 import { useCallback, useState } from 'react';
 import AppRow from './app-row';
 
 interface AppsTableProps {
   mode?: 'synchronize' | 'migrate';
 }
+
+// Helper function to filter apps without errors
+const filterAppsWithoutErrors = (apps: App[]): App[] => {
+  return apps
+    .map((app) => ({
+      ...app,
+      accounts:
+        app.accounts?.filter(
+          (account: Address) =>
+            !account.error || account.error?.source === 'migration'
+        ) || []
+    }))
+    .filter((app) => app.accounts.length > 0);
+};
+
+// Helper function to filter apps with errors
+const filterAppsWithErrors = (apps: App[]): App[] => {
+  return apps
+    .map((app) => ({
+      ...app,
+      accounts:
+        app.accounts?.filter(
+          (account: Address) =>
+            account.error && account.error?.source !== 'migration'
+        ) || []
+    }))
+    .filter((app) => app.accounts.length > 0 || app.status === 'error');
+};
 
 function AppsTable({ mode = 'migrate' }: AppsTableProps) {
   const apps$ = uiState$.apps.apps;
@@ -48,32 +77,18 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
       .some((app) => app.accounts?.some((account) => account.error));
   });
 
-  // Create observables for apps with and without error accounts
-  const appsWithoutErrorAccounts$ = use$(() =>
-    apps$
-      .get()
-      .map((app) => ({
-        ...app,
-        accounts: app.accounts?.filter((account) => !account.error) || []
-      }))
-      .filter((app) => app.accounts.length > 0)
+  // Inside your component:
+  const filteredAppsWithoutErrors$ = use$(() =>
+    filterAppsWithoutErrors(apps$.get())
   );
 
-  const appsWithErrorAccounts$ = use$(() =>
-    apps$
-      .get()
-      .map((app) => ({
-        ...app,
-        accounts: app.accounts?.filter((account) => account.error) || []
-      }))
-      .filter((app) => app.accounts.length > 0 || app.status === 'error')
-  );
+  const filteredAppsWithErrors$ = use$(() => filterAppsWithErrors(apps$.get()));
 
   const rescan = async () => {
-    for (const app of appsWithErrorAccounts$) {
+    for (const app of filteredAppsWithErrors$) {
       if (app.status === 'error') {
         await uiState$.synchronizeAccount(app.id);
-      } else {
+      } else if (app.accounts) {
         for (const account of app.accounts) {
           if (account.error) {
             await uiState$.synchronizeBalance(app.id, account.address);
@@ -148,8 +163,8 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
             </TableHeader>
             <TableBody>
               {(status === 'synchronized' || status === 'loading') &&
-              appsWithoutErrorAccounts$.length ? (
-                appsWithoutErrorAccounts$.map((app) => (
+              filteredAppsWithoutErrors$.length ? (
+                filteredAppsWithoutErrors$.map((app) => (
                   <AppRow key={app.id} app={observable(app)} />
                 ))
               ) : (
@@ -207,7 +222,7 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
               </TableHeader>
               <TableBody>
                 {/* Filter and show only apps with error accounts */}
-                {appsWithErrorAccounts$.map((app) => (
+                {filteredAppsWithErrors$.map((app) => (
                   <AppRow
                     key={app.id.toString()}
                     app={observable(app)}

@@ -8,6 +8,7 @@ import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
 import { AppIds, appsConfigs } from 'app/config/apps';
 import { POLKADOT_GENERIC_API_TRANSACTION_METADATA } from 'app/config/config';
 import { InternalErrors, LedgerErrorDetails } from 'app/config/errors';
+import { errorApps } from 'app/config/mockData';
 import {
   Address,
   ConnectionResponse,
@@ -157,7 +158,7 @@ export const ledgerWalletState$ = observable({
     const app = appsConfigs.get(appId);
 
     // TODO: Delete mock
-    if (appId === 'equilibrium') {
+    if (errorApps.includes(appId)) {
       return { error: true };
     }
     if (!app) {
@@ -202,59 +203,52 @@ export const ledgerWalletState$ = observable({
     account: Address,
     accountIndex: number
   ): Promise<{ migrated?: boolean; error?: string }> {
-    try {
-      // Define sender and receiver addresses and the amount to transfer
-      const senderAddress = account.address;
-      if (!polkadotAddresses.get() || !polkadotAddresses.get()[accountIndex]) {
-        return { error: 'there is no polkadot address to migrate to.' };
-      }
-      const receiverAddress = polkadotAddresses.get()[accountIndex].address;
-
-      const transferAmount = account.balance;
-      if (!transferAmount) {
-        return { error: 'there is no amount to transfer' };
-      }
-
-      // Find the ticker for the given appId
-      const appConfig = appsConfigs.get(appId);
-      if (!appConfig) {
-        return { error: `App configuration for ${appId} not found.` };
-      }
-      const ticker = appConfig.ticker;
-
-      const polkadotConfig = appsConfigs.get(AppIds.POLKADOT);
-      if (!polkadotConfig?.rpcEndpoint) {
-        throw new Error('Polkadot configuration not found');
-      }
-      const genericApp =
-        ledgerWalletState$.deviceConnection.connection.genericApp.get();
-      if (!genericApp) {
-        throw new Error('Generic app not found');
-      }
-
-      try {
-        // Perform the transfer
-        await createTransfer(
-          genericApp as unknown as PolkadotGenericApp,
-          senderAddress,
-          receiverAddress,
-          transferAmount,
-          polkadotConfig,
-          ticker,
-          accountIndex
-        );
-      } catch (e) {
-        const errorMessage =
-          e instanceof Error ? e.message : 'An unknown error occurred';
-        return { error: errorMessage };
-      }
-
-      // Wait for 5 seconds before responding
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      return { migrated: true };
-    } catch (e) {
-      return { error: (e as Error).message };
+    // Define sender and receiver addresses and the amount to transfer
+    const senderAddress = account.address;
+    if (!polkadotAddresses.get() || !polkadotAddresses.get()[accountIndex]) {
+      return { error: 'there is no polkadot address to migrate to.' };
     }
+    const receiverAddress = polkadotAddresses.get()[accountIndex].address;
+
+    const transferAmount = account.balance;
+    if (!transferAmount) {
+      return { error: 'there is no amount to transfer' };
+    }
+
+    // Find the ticker for the given appId
+    const appConfig = appsConfigs.get(appId);
+    if (!appConfig) {
+      return { error: `App configuration for ${appId} not found.` };
+    }
+
+    const polkadotConfig = appsConfigs.get(AppIds.POLKADOT);
+    if (!polkadotConfig?.rpcEndpoint) {
+      throw new Error('Polkadot configuration not found');
+    }
+    const genericApp =
+      ledgerWalletState$.deviceConnection.connection.genericApp.get();
+    if (!genericApp) {
+      throw new Error('Generic app not found');
+    }
+
+    try {
+      // Perform the transfer
+      await createTransfer(
+        genericApp as unknown as PolkadotGenericApp,
+        senderAddress,
+        receiverAddress,
+        transferAmount,
+        polkadotConfig,
+        appConfig,
+        accountIndex
+      );
+    } catch (e) {
+      const errorMessage =
+        e instanceof Error ? e.message : 'An unknown error occurred';
+      return { error: errorMessage };
+    }
+
+    return { migrated: true };
   },
   clearConnection() {
     ledgerWalletState$.deviceConnection.connection.set(undefined);

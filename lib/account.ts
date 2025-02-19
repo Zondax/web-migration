@@ -5,78 +5,66 @@ import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { AppConfig } from 'app/config/apps';
 import { POLKADOT_GENERIC_API_METADATA_HASH } from 'app/config/config';
 import { errorDetails } from 'app/config/errors';
+import { errorAddresses, mockBalances } from 'app/config/mockData';
 import axios from 'axios';
 
-const mockBalances = [
-  {
-    address: 'obPSGcVmQPZzgWZrVM4fPMYAjJYuduNCYckAqqnnDDHf4Wr',
-    balance: 2
-  },
-  {
-    address: 'DzdDXY4xGGsPSYBf4Fv8kbaS3kdZNb9PX8DpKRsM3UuRhJ4',
-    balance: 1
-  },
-  {
-    address: 'WVDmu85CwmEDHwyfVCfEX1WMeJc2ziRZBEi8WRPZU68GNbs', // ASTAR
-    balance: 3
-  },
-  // {
-  //   address: '13M7fitxMYMVNfeG3e6mP4pcCteG4Wyf8kcew5TRN7PGm84C', // POLKADOT
-  //   balance: 4
-  // },
-  {
-    address: '4hZ5p8eBqpynqxCZGYhaX22YX9a4XWDa3PUUXZKtTUQ38qrL',
-    error: true
-  }
-];
-
-const errorAddresses = ['4hZ5p8eBqpynqxCZGYhaX22YX9a4XWDa3PUUXZKtTUQ38qrL'];
+// Return type for the getBalance function
+interface GetBalanceResult {
+  result?: number;
+  error?: string;
+}
 
 /**
  * Retrieves the balance of a given address from a specified RPC endpoint.
  *
  * @param {string} address - The address for which the balance is to be retrieved.
  * @param {string} rpcEndpoint - The WebSocket endpoint of the blockchain node.
- * @returns {Promise<number | undefined>} - The balance of the address or undefined if not found.
+ * @returns {Promise<GetBalanceResult>} - The balance of the address or undefined if not found.
  */
 export async function getBalance(
   address: string,
   rpcEndpoint: string
-): Promise<{ result?: number; error?: string }> {
-  const provider = new WsProvider(rpcEndpoint);
-  const api = await ApiPromise.create({ provider });
+): Promise<GetBalanceResult> {
+  let provider: WsProvider | undefined;
+  let api: ApiPromise | undefined;
 
   try {
+    provider = new WsProvider(rpcEndpoint);
+    api = await ApiPromise.create({ provider });
+
     const balance = await api.query.system.account(address);
-    console.log(
-      'the balance for ',
-      address,
-      ': ',
+
+    // The `as any` is a bit of a hack.  A better solution would involve
+    // defining types for the balance data.  But this works for now.
+    const freeBalance =
       'data' in balance && 'free' in (balance as any).data
         ? parseFloat((balance.data as any).free.toString())
-        : ' not found '
-    );
+        : undefined;
+
     // TODO: Delete mock balance when there are accounts with tokens
     if (errorAddresses.includes(address)) {
-      throw Error();
+      throw new Error('Address in error list'); // More specific error
     }
     const mockBalance = mockBalances.find(
       (balance) => balance.address === address
     )?.balance;
 
     return {
-      result: mockBalance
-        ? mockBalance
-        : 'data' in balance && 'free' in (balance as any).data
-          ? parseFloat((balance.data as any).free.toString())
-          : undefined
+      result: mockBalance ?? freeBalance
     };
   } catch (e) {
+    console.error('Error getting balance:', e);
     return {
       error: errorDetails.balance_not_gotten.description
     };
   } finally {
-    await api.disconnect();
+    // Check if api exists before disconnecting.
+    if (api) {
+      await api.disconnect();
+    } else if (provider) {
+      // If ApiPromise creation failed, disconnect the provider directly.
+      await provider.disconnect();
+    }
   }
 }
 
@@ -101,16 +89,16 @@ export const createTransfer = async (
   senderAddress: string,
   receiverAddress: string,
   amount: number,
-  config: AppConfig,
-  ticker: string,
+  polkadotConfig: AppConfig,
+  appConfig: AppConfig,
   index: number
 ) => {
-  const provider = new WsProvider(config.rpcEndpoint);
+  const provider = new WsProvider(appConfig.rpcEndpoint);
   const api = await ApiPromise.create({ provider });
 
   try {
     // Define sender and receiver addresses and the amount to transfer
-    const amount = 1_000_000_000_000;
+    const amount = 1_000_000_000_000; // TODO: delete it when we have amount in any account
 
     console.log('sender address ' + senderAddress);
     console.log('receiver address ' + receiverAddress);
@@ -120,9 +108,9 @@ export const createTransfer = async (
 
     // Create the transfer transaction
     const transfer = api.tx.balances.transferKeepAlive(receiverAddress, amount);
-    console.log('ticker ', ticker.toLowerCase());
+    console.log('ticker ', appConfig.ticker.toLowerCase());
     const resp = await axios.post(POLKADOT_GENERIC_API_METADATA_HASH, {
-      id: ticker.toLowerCase()
+      id: appConfig.ticker.toLowerCase()
     });
 
     console.log('metadata hash ' + resp.data.metadataHash);
@@ -148,10 +136,10 @@ export const createTransfer = async (
       'payload to sign[human] ' + JSON.stringify(payload.toHuman(true))
     );
 
-    const bip44Path = getBip44Path(config.bip44Path, index);
+    const bip44Path = getBip44Path(polkadotConfig.bip44Path, index);
     // Request signature from Ledger
     // Remove first byte as it indicates the length, and it is not supported by shortener and ledger app
-    genericApp.txMetadataChainId = ticker.toLowerCase();
+    genericApp.txMetadataChainId = appConfig.ticker.toLowerCase();
     const { signature } = await genericApp.sign(
       bip44Path,
       Buffer.from(payload.toU8a(true))
