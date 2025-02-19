@@ -16,13 +16,15 @@ import {
 } from '@/components/ui/tooltip';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
-import { Address, uiState$ } from 'app/state/ui';
+import { AppIds } from 'app/config/apps';
+import { Address } from 'app/state/types/ledger';
+import { uiState$ } from 'app/state/ui';
 import { useCallback } from 'react';
 
 interface AccountActionButtonProps {
   account: Observable<Address>;
   index: number;
-  appId: string;
+  appId: AppIds;
 }
 
 const AccountActionButton: React.FC<AccountActionButtonProps> = ({
@@ -66,7 +68,7 @@ function accounts({
   appId
 }: {
   accounts: Observable<Address[] | undefined>;
-  appId: string;
+  appId: AppIds;
 }) {
   return (
     <TableRow>
