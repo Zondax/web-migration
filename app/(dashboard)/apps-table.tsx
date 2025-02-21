@@ -91,7 +91,7 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
       } else if (app.accounts) {
         for (const account of app.accounts) {
           if (account.error) {
-            await uiState$.synchronizeBalance(app.id, account.address);
+            await uiState$.synchronizeBalance(app.id, account);
           }
         }
       }

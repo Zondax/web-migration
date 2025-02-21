@@ -20,6 +20,25 @@ export interface DeviceConnectionProps {
 
 export type AddressStatus = 'synchronized' | 'migrated';
 
+export type TransactionStatus =
+  | 'pending'
+  | 'inBlock'
+  | 'finalized'
+  | 'success'
+  | 'failed'
+  | 'error'
+  | 'warning'
+  | 'unknown'
+  | 'completed'; // Add other statuses as needed
+
+export interface Transaction {
+  status?: TransactionStatus;
+  statusMessage?: string;
+  hash?: string;
+  blockHash?: string;
+  blockNumber?: string;
+}
+
 export interface Address extends GenericeResponseAddress {
   balance?: number;
   status?: AddressStatus;
@@ -28,4 +47,5 @@ export interface Address extends GenericeResponseAddress {
     source: 'migration' | 'balance_fetch';
     description: string;
   };
+  transaction?: Transaction;
 }

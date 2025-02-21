@@ -502,7 +502,7 @@
     "@ledgerhq/logs" "^6.12.0"
     events "^3.3.0"
 
-"@ledgerhq/hw-transport@^6.31.4":
+"@ledgerhq/hw-transport@6.31.4", "@ledgerhq/hw-transport@^6.31.4":
   version "6.31.4"
   resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport/-/hw-transport-6.31.4.tgz#9b23a6de4a4caaa5c24b149c2dea8adde46f0eb1"
   integrity sha512-6c1ir/cXWJm5dCWdq55NPgCJ3UuKuuxRvf//Xs36Bq9BwkV2YaRQhZITAkads83l07NAdR16hkTWqqpwFMaI6A==
@@ -1498,6 +1498,13 @@
   integrity sha512-Y+hbuIVIT+QcIrZgJZN8BjpvmLJ9v2+yQtbpYVTtosAw/NNOg/NI6QKMxP4fwomW/6SEK6jaIqsLhTvTZP7qDA==
   dependencies:
     "@ledgerhq/hw-transport" "6.30.6"
+
+"@zondax/ledger-js@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@zondax/ledger-js/-/ledger-js-1.2.0.tgz#13fb6b4ac1b395f39d05d1efb23dfe97d6011463"
+  integrity sha512-HGvDU0s4zg0scu8ebGenFHFB6g5SLDqmrctncZUY9ie5pGibOU8C0VdjZSHbttSOCyh+IloLi/a4jyMPOEQGuQ==
+  dependencies:
+    "@ledgerhq/hw-transport" "6.31.4"
 
 "@zondax/ledger-substrate@^1.0.1":
   version "1.0.1"

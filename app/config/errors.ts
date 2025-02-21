@@ -14,6 +14,7 @@ export enum InternalErrors {
   'CONNECTION_ERROR' = 'connection_error',
   'DISCONNECTION_ERROR' = 'disconnection_error',
   'BALANCE_NOT_GOTTEN' = 'balance_not_gotten',
+  'SYNC_ERROR' = 'sync_error',
   'DEFAULT' = 'default'
 }
 
@@ -64,6 +65,11 @@ export const errorDetails: ErrorDetailsMap = {
   balance_not_gotten: {
     title: 'Balance Not Retrieved',
     description: 'The balance could not be retrieved. Please try again later.'
+  },
+  sync_error: {
+    title: 'Synchronization Error',
+    description:
+      'The accounts could not be synchronized. Please try again later.'
   },
   default: {
     title: 'An unknown error happens, please try again.'
