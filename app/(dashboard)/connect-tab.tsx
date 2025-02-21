@@ -15,6 +15,7 @@ import { useCallback } from 'react';
 function ConnectTab() {
   const handleConnect = useCallback(async () => {
     await uiState$.connectLedger();
+    uiState$.synchronizeAccounts();
   }, []);
 
   return (
