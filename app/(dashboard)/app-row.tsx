@@ -63,7 +63,7 @@ function AppRow({
       ?.reduce((total, account) => total + (account.balance || 0), 0);
 
     return balance !== undefined
-      ? formatBalance(balance, app.ticker.get())
+      ? formatBalance(balance, app.ticker.get(), app.decimals.get())
       : '-';
   };
 
@@ -115,7 +115,11 @@ function AppRow({
         </TableCell>
       </TableRow>
       {isExpanded ? (
-        <Accounts accounts={app.accounts} ticker={app.ticker.get()} />
+        <Accounts
+          accounts={app.accounts}
+          ticker={app.ticker.get()}
+          decimals={app.decimals.get()}
+        />
       ) : null}
     </>
   );

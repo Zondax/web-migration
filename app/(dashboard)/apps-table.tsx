@@ -91,7 +91,7 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
       } else if (app.accounts) {
         for (const account of app.accounts) {
           if (account.error) {
-            await uiState$.synchronizeBalance(app.id, account.address);
+            await uiState$.synchronizeBalance(app.id, account);
           }
         }
       }
@@ -158,7 +158,7 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
                 <TableHead className="w-[25%]">Name</TableHead>
                 <TableHead className="w-[25%]">Addresses</TableHead>
                 <TableHead className="w-[25%]">Total Balance</TableHead>
-                <TableHead></TableHead>
+                <TableHead className="w-[100px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -4,7 +4,8 @@
  */
 export const truncateMaxCharacters = 16;
 
-export const POLKADOT_GENERIC_API_METADATA_HASH =
-  'https://api.zondax.ch/polkadot/node/metadata/hash';
-export const POLKADOT_GENERIC_API_TRANSACTION_METADATA =
-  'https://api.zondax.ch/polkadot/transaction/metadata';
+/**
+ * @constant maxAddressesToFetch
+ * @description Maximum number of addresses to fetch from the Ledger device.
+ */
+export const maxAddressesToFetch = 5;

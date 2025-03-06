@@ -1,3 +1,4 @@
+import { ResponseVersion } from '@zondax/ledger-js';
 import {
   decodeLedgerResponseCode,
   errorDetails,
@@ -5,8 +6,9 @@ import {
   LedgerErrorDetails,
   LedgerErrors
 } from 'app/config/errors';
-import { notifications$ } from 'app/state/layout';
+import { notifications$ } from 'app/state/notifications';
 import { ledgerWalletState$ } from 'app/state/wallet/ledger';
+import axios from 'axios';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -86,15 +88,42 @@ export const truncateMiddleOfString = (str: string, maxLength: number) => {
  * @param {number} balance - The balance to format.
  * @returns {string} The formatted balance.
  */
-export const formatBalance = (balance: number, ticker: string): string => {
+export const formatBalance = (
+  balance: number,
+  ticker: string,
+  decimals?: number
+): string => {
   if (balance === 0) {
     return `0 ${ticker}`;
   }
 
-  const formattedBalance = balance.toLocaleString(undefined, {
+  const adjustedBalance = decimals ? balance / Math.pow(10, decimals) : balance;
+
+  const formattedBalance = adjustedBalance.toLocaleString(undefined, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 5
   });
 
   return `${formattedBalance} ${ticker}`;
+};
+
+export const formatVersion = (version: ResponseVersion): string => {
+  const { major, minor, patch } = version;
+  return `${major}.${minor}.${patch}`;
+};
+
+export const getAppLightIcon = async (appId: string) => {
+  try {
+    const hubUrl = process.env.NEXT_PUBLIC_HUB_BACKEND_URL;
+
+    if (!hubUrl) {
+      return;
+    }
+
+    const response = await axios.get(hubUrl + `/app/${appId}/icon/light`);
+    return { data: response.data, error: undefined };
+  } catch (error) {
+    // TODO: capture exception
+    return { data: [], error: 'error' };
+  }
 };

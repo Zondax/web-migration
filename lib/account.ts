@@ -1,15 +1,27 @@
-import { merkleizeMetadata } from '@polkadot-api/merkleize-metadata';
+import {
+  merkleizeMetadata,
+  MetadataMerkleizer
+} from '@polkadot-api/merkleize-metadata';
 import { ApiPromise, WsProvider } from '@polkadot/api';
+import { SubmittableExtrinsic } from '@polkadot/api/types';
+import { GenericExtrinsicPayload } from '@polkadot/types';
 import { Option } from '@polkadot/types-codec';
-import { OpaqueMetadata } from '@polkadot/types/interfaces';
-import { ExtrinsicPayloadValue } from '@polkadot/types/types/extrinsic';
+import { Hash, OpaqueMetadata } from '@polkadot/types/interfaces';
+import {
+  ExtrinsicPayloadValue,
+  ISubmittableResult
+} from '@polkadot/types/types/extrinsic';
 import { hexToU8a } from '@polkadot/util';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
+import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
 import { AppConfig } from 'app/config/apps';
-import { POLKADOT_GENERIC_API_METADATA_HASH } from 'app/config/config';
 import { errorDetails } from 'app/config/errors';
-import { errorAddresses, mockBalances } from 'app/config/mockData';
-import axios from 'axios';
+import {
+  errorAddresses,
+  MINIMUM_AMOUNT,
+  mockBalances
+} from 'app/config/mockData';
+import { Address, TransactionStatus } from 'app/state/types/ledger';
 
 // Return type for the getBalance function
 interface GetBalanceResult {
@@ -17,290 +29,344 @@ interface GetBalanceResult {
   error?: string;
 }
 
-/**
- * Retrieves the balance of a given address from a specified RPC endpoint.
- *
- * @param {string} address - The address for which the balance is to be retrieved.
- * @param {string} rpcEndpoint - The WebSocket endpoint of the blockchain node.
- * @returns {Promise<GetBalanceResult>} - The balance of the address or undefined if not found.
- */
+// Get API and Provider
+async function getApiAndProvider(
+  rpcEndpoint?: string
+): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
+  try {
+    const provider = new WsProvider(rpcEndpoint);
+    const api = await ApiPromise.create({ provider });
+    return { api, provider };
+  } catch (e) {
+    console.error('Error creating API:', e);
+    return { error: 'Failed to connect to the blockchain.' };
+  }
+}
+
+// Get Balance (simplified error handling)
 export async function getBalance(
-  address: string,
+  address: GenericeResponseAddress,
   rpcEndpoint: string
-): Promise<GetBalanceResult> {
-  let provider: WsProvider | undefined;
-  let api: ApiPromise | undefined;
+): Promise<Address> {
+  const { api, provider, error } = await getApiAndProvider(rpcEndpoint);
+  const { address: addressString } = address;
+
+  if (error) {
+    return {
+      ...address,
+      balance: undefined,
+      status: 'synchronized',
+      error: { source: 'balance_fetch', description: error }
+    };
+  }
 
   try {
-    provider = new WsProvider(rpcEndpoint);
-    api = await ApiPromise.create({ provider });
-
-    const balance = await api.query.system.account(address);
-
-    // The `as any` is a bit of a hack.  A better solution would involve
-    // defining types for the balance data.  But this works for now.
+    const balance = await api?.query.system.account(addressString);
     const freeBalance =
-      'data' in balance && 'free' in (balance as any).data
+      balance && 'data' in balance && 'free' in (balance as any).data
         ? parseFloat((balance.data as any).free.toString())
         : undefined;
 
     // TODO: Delete mock balance when there are accounts with tokens
-    if (errorAddresses.includes(address)) {
-      throw new Error('Address in error list'); // More specific error
+    if (errorAddresses.includes(addressString)) {
+      throw new Error('Address in error list');
     }
     const mockBalance = mockBalances.find(
-      (balance) => balance.address === address
+      (balance) => balance.address === addressString
     )?.balance;
 
     return {
-      result: mockBalance ?? freeBalance
+      ...address,
+      balance: mockBalance ?? freeBalance,
+      status: 'synchronized',
+      error: undefined
     };
   } catch (e) {
     console.error('Error getting balance:', e);
     return {
-      error: errorDetails.balance_not_gotten.description
+      ...address,
+      balance: undefined,
+      status: 'synchronized',
+      error: {
+        source: 'balance_fetch',
+        description: errorDetails.balance_not_gotten.description ?? ''
+      }
     };
   } finally {
-    // Check if api exists before disconnecting.
     if (api) {
       await api.disconnect();
     } else if (provider) {
-      // If ApiPromise creation failed, disconnect the provider directly.
       await provider.disconnect();
     }
   }
 }
 
-export const getAppLightIcon = async (appId: string) => {
-  try {
-    const hubUrl = process.env.NEXT_PUBLIC_HUB_BACKEND_URL;
+/**
+ * Updates the transaction status with optional details.
+ */
+export interface UpdateTransactionStatus {
+  (
+    status: TransactionStatus,
+    message?: string,
+    txDetails?: { txHash?: string; blockHash?: string; blockNumber?: string }
+  ): void;
+}
 
-    if (!hubUrl) {
-      return;
-    }
-
-    const response = await axios.get(hubUrl + `/app/${appId}/icon/light`);
-    return { data: response.data, error: undefined };
-  } catch (error) {
-    // TODO: capture exception
-    return { data: [], error: 'error' };
-  }
-};
-
-export const createGenericApiTransfer = async (
-  genericApp: PolkadotGenericApp,
+// Prepare Transaction
+async function prepareTransaction(
+  api: ApiPromise,
   senderAddress: string,
   receiverAddress: string,
-  amount: number,
-  polkadotConfig: AppConfig,
-  appConfig: AppConfig,
-  index: number
-) => {
-  const provider = new WsProvider(appConfig.rpcEndpoint);
-  const api = await ApiPromise.create({ provider });
+  appConfig: AppConfig
+) {
+  const nonceResp = await api.query.system.account(senderAddress);
+  const { nonce } = nonceResp.toHuman() as any;
 
-  try {
-    // Define sender and receiver addresses and the amount to transfer
-    const amount = 1_000_000_000_000; // TODO: delete it when we have amount in any account
-
-    console.log('sender address ' + senderAddress);
-    console.log('receiver address ' + receiverAddress);
-    const nonceResp = await api.query.system.account(senderAddress);
-    const { nonce } = nonceResp.toHuman() as any;
-    console.log('nonce ' + nonce);
-
-    // Create the transfer transaction
-    const transfer = api.tx.balances.transferKeepAlive(receiverAddress, amount);
-    console.log('ticker ', appConfig.ticker.toLowerCase());
-    const resp = await axios.post(POLKADOT_GENERIC_API_METADATA_HASH, {
-      id: appConfig.ticker.toLowerCase()
+  const metadataV15 = await api.call.metadata
+    .metadataAtVersion<Option<OpaqueMetadata>>(15)
+    .then((m) => {
+      if (!m.isNone) {
+        return m.unwrap();
+      }
     });
+  if (!metadataV15) return;
 
-    console.log('metadata hash ' + resp.data.metadataHash);
+  const merkleizedMetadata = merkleizeMetadata(metadataV15, {
+    decimals: appConfig.decimals,
+    tokenSymbol: appConfig.ticker
+  });
 
-    // Create the payload for signing
-    const payload = api.createType('ExtrinsicPayload', {
-      method: transfer.method.toHex(),
-      nonce: nonce as unknown as number,
-      genesisHash: api.genesisHash,
-      blockHash: api.genesisHash,
-      transactionVersion: api.runtimeVersion.transactionVersion,
-      specVersion: api.runtimeVersion.specVersion,
-      runtimeVersion: api.runtimeVersion,
-      version: api.extrinsicVersion,
-      mode: 1,
-      metadataHash: hexToU8a('01' + resp.data.metadataHash) // "01" indicates the field is sent, "00" indicated the field is not sent.
-    });
+  const metadataHash = merkleizedMetadata.digest();
+  const transfer = api.tx.balances.transferKeepAlive(
+    receiverAddress,
+    MINIMUM_AMOUNT
+  ); // TODO: Replace MINIMUM_AMOUNT by amount
 
-    console.log(
-      'payload to sign[hex] ' + Buffer.from(payload.toU8a(true)).toString('hex')
-    );
-    console.log(
-      'payload to sign[human] ' + JSON.stringify(payload.toHuman(true))
-    );
+  // Create the payload for signing
+  const payload = api.createType('ExtrinsicPayload', {
+    method: transfer.method.toHex(),
+    nonce: nonce as unknown as number,
+    genesisHash: api.genesisHash,
+    blockHash: api.genesisHash,
+    transactionVersion: api.runtimeVersion.transactionVersion,
+    specVersion: api.runtimeVersion.specVersion,
+    runtimeVersion: api.runtimeVersion,
+    version: api.extrinsicVersion,
+    mode: 1,
+    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex'))
+  });
 
-    const bip44Path = getBip44Path(polkadotConfig.bip44Path, index);
-    // Request signature from Ledger
-    // Remove first byte as it indicates the length, and it is not supported by shortener and ledger app
-    genericApp.txMetadataChainId = appConfig.ticker.toLowerCase();
-    const { signature } = await genericApp.sign(
-      bip44Path,
-      Buffer.from(payload.toU8a(true))
-    );
+  return { transfer, payload, metadataHash, merkleizedMetadata, nonce };
+}
 
-    console.log('signature ' + signature.toString('hex'));
+interface SignTransactionMetadata extends MetadataMerkleizer {
+  chainId: string;
+}
 
-    const payloadValue: ExtrinsicPayloadValue = {
-      era: payload.era,
-      genesisHash: api.genesisHash,
-      blockHash: api.genesisHash,
-      method: transfer.method.toHex(),
-      nonce: nonce as unknown as number,
-      specVersion: api.runtimeVersion.specVersion,
-      tip: 0,
-      transactionVersion: api.runtimeVersion.transactionVersion,
-      mode: 1,
-      metadataHash: hexToU8a('01' + resp.data.metadataHash)
-    };
+// Sign Transaction
+async function signTransaction(
+  genericApp: PolkadotGenericApp,
+  bip44Path: string,
+  payloadBytes: Uint8Array,
+  metadata: SignTransactionMetadata
+) {
+  genericApp.txMetadataChainId = metadata.chainId;
+  const proof1: Uint8Array = metadata.getProofForExtrinsicPayload(payloadBytes);
+  const { signature } = await genericApp.signWithMetadata(
+    bip44Path,
+    Buffer.from(payloadBytes),
+    Buffer.from(proof1)
+  );
+  return signature;
+}
 
-    // Combine the payload and signature to create a signed extrinsic
-    const signedExtrinsic = transfer.addSignature(
-      senderAddress,
-      signature,
-      payloadValue
-    );
+// Create Signed Extrinsic
+function createSignedExtrinsic(
+  api: ApiPromise,
+  transfer: SubmittableExtrinsic<'promise', ISubmittableResult>,
+  senderAddress: string,
+  signature: Uint8Array,
+  payload: GenericExtrinsicPayload,
+  nonce: number,
+  metadataHash: Uint8Array
+) {
+  const payloadValue: ExtrinsicPayloadValue = {
+    era: payload.era,
+    genesisHash: api.genesisHash,
+    blockHash: api.genesisHash,
+    method: transfer.method.toHex(),
+    nonce,
+    specVersion: api.runtimeVersion.specVersion,
+    tip: 0,
+    transactionVersion: api.runtimeVersion.transactionVersion,
+    mode: 1,
+    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex'))
+  };
 
-    console.log(
-      'signedTx to broadcast[hex] ' +
-        Buffer.from(signedExtrinsic.toU8a()).toString('hex')
-    );
-    console.log(
-      'signedTx to broadcast[human] ' +
-        JSON.stringify(signedExtrinsic.toHuman(true))
-    );
+  return transfer.addSignature(senderAddress, signature, payloadValue);
+}
 
-    // Submit the signed transaction
-    await transfer.send((status) => {
-      console.log(`Tx status: ${JSON.stringify(status)}`);
-    });
-  } catch (error) {
-    console.error('Error during transfer:', error);
-    throw new Error(
-      'Transfer failed: ' +
-        (error instanceof Error ? error.message : 'Unknown error')
-    );
-  } finally {
-    await api.disconnect();
-  }
-};
+// Submit Transaction and Handle Status
+async function submitAndHandleTransaction(
+  transfer: SubmittableExtrinsic<'promise', ISubmittableResult>,
+  updateStatus: UpdateTransactionStatus,
+  api: ApiPromise
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      updateStatus(
+        'unknown',
+        'Transaction timed out, check the transaction status in the explorer.'
+      );
+      reject(new Error('Transaction timed out'));
+    }, 120000); // 2-minute timeout
 
+    transfer
+      .send(async (status: ISubmittableResult) => {
+        let blockNumber: string | undefined;
+        let blockHash: string | undefined;
+        let txHash: string | undefined;
+
+        if (status.isInBlock) {
+          blockHash = status.status.asInBlock.toHex();
+          txHash = status.txHash.toHex();
+          blockNumber =
+            'blockNumber' in status
+              ? (status.blockNumber as Hash)?.toHex()
+              : undefined;
+          updateStatus('inBlock', `In block: ${blockHash}`, {
+            txHash,
+            blockHash,
+            blockNumber
+          });
+        }
+        if (status.isFinalized) {
+          clearTimeout(timeoutId);
+          blockHash = status.status.asFinalized.toHex();
+          txHash = status.txHash.toHex();
+          blockNumber =
+            'blockNumber' in status
+              ? (status.blockNumber as Hash)?.toHex()
+              : undefined;
+
+          console.log(`Transaction finalized in block: ${blockHash}`);
+          updateStatus('finalized', `Finalized in block: ${blockHash}`, {
+            txHash,
+            blockHash,
+            blockNumber
+          });
+
+          if (!status.txIndex) {
+            updateStatus('unknown', 'The status is unknown', {
+              txHash,
+              blockHash,
+              blockNumber
+            });
+            resolve();
+            return; // Resolve here, as we have a final status
+          }
+
+          const result = await getTransactionDetails(
+            api,
+            blockHash,
+            status.txIndex
+          );
+          if (result?.success) {
+            console.log(
+              `Transaction successful: ${txHash}, ${blockHash}, ${blockNumber}`
+            );
+            updateStatus('success', 'Successful Transaction', {
+              txHash,
+              blockHash,
+              blockNumber
+            });
+            resolve();
+          } else if (result?.error) {
+            updateStatus('failed', result.error, {
+              txHash,
+              blockHash,
+              blockNumber
+            });
+            reject(new Error(result.error)); // Reject with the specific error
+          } else {
+            // Handle cases where result is undefined or doesn't have success/error
+            updateStatus('error', 'Unknown transaction status', {
+              txHash,
+              blockHash,
+              blockNumber
+            });
+            reject(new Error('Unknown transaction status'));
+          }
+        } else if (status.isError) {
+          clearTimeout(timeoutId);
+          console.error('Transaction is error ', status.dispatchError);
+          updateStatus('error', 'Transaction is error');
+          reject(new Error('Transaction is error'));
+        } else if (status.isWarning) {
+          console.log('Transaction is warning');
+          updateStatus('warning', 'Transaction is warning');
+        } else if (status.isCompleted) {
+          console.log('Transaction is completed');
+          updateStatus('completed', 'Transaction is completed');
+        }
+      })
+      .catch((error: any) => {
+        clearTimeout(timeoutId);
+        console.error('Error sending transaction:', error);
+        updateStatus('error', 'Error sending transaction');
+        reject(error);
+      });
+  });
+}
+
+// Main createTransfer function (simplified)
 export const createTransfer = async (
   genericApp: PolkadotGenericApp,
   senderAddress: string,
   receiverAddress: string,
   amount: number,
-  polkadotConfig: AppConfig,
   appConfig: AppConfig,
-  index: number
+  index: number,
+  updateStatus: UpdateTransactionStatus
 ) => {
-  const provider = new WsProvider(appConfig.rpcEndpoint);
-  const api = await ApiPromise.create({ provider });
+  const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint);
+  if (error || !api) {
+    // updateStatus('error', error); // Report connection error
+    throw new Error(error ?? 'Failed to connect to the blockchain.');
+  }
 
   try {
-    console.log('sender address ' + senderAddress);
-    console.log('receiver address ' + receiverAddress);
-    // Define nonce and the amount to transfer
-    const nonceResp = await api.query.system.account(senderAddress);
-    const { nonce } = nonceResp.toHuman() as any;
-    console.log('nonce ' + nonce);
-    const amount = 1_000_000_000_000; // TODO: delete it when we have amount in any account
+    const preparedTx = await prepareTransaction(
+      api,
+      senderAddress,
+      receiverAddress,
+      appConfig
+    );
+    if (!preparedTx) {
+      throw new Error('Prepare transaction failed');
+    }
+    const { transfer, payload, metadataHash, merkleizedMetadata, nonce } =
+      preparedTx;
 
-    const metadataV15 = await api.call.metadata
-      .metadataAtVersion<Option<OpaqueMetadata>>(15)
-      .then((m) => {
-        if (!m.isNone) {
-          return m.unwrap();
-        }
-      });
-    if (!metadataV15) return;
-
-    const merkleizedMetadata = merkleizeMetadata(metadataV15, {
-      decimals: appConfig.decimals,
-      tokenSymbol: appConfig.ticker
-    });
-
-    const metadataHash = merkleizedMetadata.digest();
-    // Create the transfer transaction
-    const transfer = api.tx.balances.transferKeepAlive(receiverAddress, amount);
-
-    // Create the payload for signing
-    const payload = api.createType('ExtrinsicPayload', {
-      method: transfer.method.toHex(),
-      nonce: nonce as unknown as number,
-      genesisHash: api.genesisHash,
-      blockHash: api.genesisHash,
-      transactionVersion: api.runtimeVersion.transactionVersion,
-      specVersion: api.runtimeVersion.specVersion,
-      runtimeVersion: api.runtimeVersion,
-      version: api.extrinsicVersion,
-      mode: 1,
-      metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex'))
-    });
-
-    // Request signature from Ledger
-    // Remove first byte as it indicates the length, and it is not supported by shortener and ledger app
-    const bip44Path = getBip44Path(polkadotConfig.bip44Path, index);
-    const payloadBytes = payload.toU8a(true);
-    genericApp.txMetadataChainId = appConfig.ticker.toLowerCase();
-    const proof1: Uint8Array =
-      merkleizedMetadata.getProofForExtrinsicPayload(payloadBytes);
-    const { signature } = await genericApp.signWithMetadata(
+    const bip44Path = getBip44Path(appConfig.bip44Path, index);
+    const signature = await signTransaction(
+      genericApp,
       bip44Path,
-      Buffer.from(payloadBytes),
-      Buffer.from(proof1)
+      payload.toU8a(true),
+      { ...merkleizedMetadata, chainId: appConfig.ticker.toLowerCase() }
     );
 
-    console.log('signature ' + signature.toString('hex'));
-
-    const payloadValue: ExtrinsicPayloadValue = {
-      era: payload.era,
-      genesisHash: api.genesisHash,
-      blockHash: api.genesisHash,
-      method: transfer.method.toHex(),
-      nonce: nonce as unknown as number,
-      specVersion: api.runtimeVersion.specVersion,
-      tip: 0,
-      transactionVersion: api.runtimeVersion.transactionVersion,
-      mode: 1,
-      metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex'))
-    };
-
-    // Combine the payload and signature to create a signed extrinsic
-    const signedExtrinsic = transfer.addSignature(
+    const signedExtrinsic = createSignedExtrinsic(
+      api,
+      transfer,
       senderAddress,
       signature,
-      payloadValue
+      payload,
+      nonce,
+      metadataHash
     );
 
-    console.log(
-      'signedTx to broadcast[hex] ' +
-        Buffer.from(signedExtrinsic.toU8a()).toString('hex')
-    );
-    console.log(
-      'signedTx to broadcast[human] ' +
-        JSON.stringify(signedExtrinsic.toHuman(true))
-    );
-
-    // Submit the signed transaction
-    await transfer.send((status) => {
-      console.log(`Tx status: ${JSON.stringify(status)}`);
-    });
-  } catch (error) {
-    console.error('Error during transfer:', error);
-    throw new Error(
-      'Transfer failed: ' +
-        (error instanceof Error ? error.message : 'Unknown error')
-    );
+    await submitAndHandleTransaction(transfer, updateStatus, api);
   } finally {
     await api.disconnect();
   }
@@ -308,3 +374,64 @@ export const createTransfer = async (
 
 export const getBip44Path = (bip44Path: string, index: number) =>
   bip44Path.replace(/\/0'$/, `/${index}'`);
+
+// Get Transaction Details
+export async function getTransactionDetails(
+  api: ApiPromise,
+  blockHash: string,
+  txIndex: number
+): Promise<{ success: boolean; error?: string } | undefined> {
+  // Use api.at(blockHash) to get the API for that block
+  const apiAt = await api.at(blockHash);
+  // Get the events and filter the ones related to this extrinsic.
+  const records = await apiAt.query.system.events();
+
+  // Find events related to the specific extrinsic
+  const relatedEvents = (records as any).filter(
+    ({
+      phase
+    }: {
+      phase: {
+        isApplyExtrinsic: any;
+        asApplyExtrinsic: { eq: (arg0: any) => any };
+      };
+    }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(txIndex)
+  );
+
+  let success = false;
+  let errorInfo: string | undefined;
+
+  relatedEvents.forEach(({ event }: { event: any }) => {
+    if (apiAt.events.system.ExtrinsicSuccess.is(event)) {
+      success = true;
+    } else if (apiAt.events.system.ExtrinsicFailed.is(event)) {
+      console.log('Transaction failed!');
+      const [dispatchError] = event.data;
+
+      if ((dispatchError as any).isModule) {
+        // for module errors, we have the section indexed, lookup
+        const decoded = apiAt.registry.findMetaError(
+          (dispatchError as any).asModule
+        );
+        errorInfo = `${decoded.section}.${decoded.name}: ${decoded.docs.join(
+          ' '
+        )}`;
+      } else {
+        // Other, CannotLookup, BadOrigin, no extra info
+        errorInfo = dispatchError.toString();
+      }
+    }
+  });
+
+  if (success) {
+    console.log('Transaction successful!');
+    return { success: true };
+  } else if (errorInfo) {
+    return {
+      success: false,
+      error: `Transaction failed on-chain: ${errorInfo}`
+    };
+  }
+  // Important:  Handle the case where neither success nor failure is found.
+  return undefined;
+}
