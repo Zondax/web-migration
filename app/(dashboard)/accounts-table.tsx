@@ -75,7 +75,7 @@ function AccountsTable({
           statusIcon = <AlertCircle className="h-4 w-4 text-yellow-500" />;
           break;
         case 'completed':
-          statusIcon = <CheckCircle className="h-4 w-4 text-green-500" />;
+          statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />;
           break;
         default:
           statusIcon = null;

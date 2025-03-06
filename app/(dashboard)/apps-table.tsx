@@ -158,7 +158,7 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
                 <TableHead className="w-[25%]">Name</TableHead>
                 <TableHead className="w-[25%]">Addresses</TableHead>
                 <TableHead className="w-[25%]">Total Balance</TableHead>
-                <TableHead></TableHead>
+                <TableHead className="w-[100px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -15,6 +15,7 @@ interface AddressLinkProps {
   tooltipText?: string;
   disableTooltip?: boolean;
   hasCopyButton?: boolean;
+  url?: string;
   className?: string;
 }
 
@@ -23,6 +24,7 @@ export function AddressLink({
   tooltipText,
   disableTooltip = false,
   hasCopyButton = true,
+  url,
   className
 }: AddressLinkProps) {
   const [copied, setCopied] = useState(false);
@@ -34,12 +36,23 @@ export function AddressLink({
     setTimeout(() => setCopied(false), 2000);
   }, [value]);
 
+  const renderContent = () => {
+    if (url) {
+      return (
+        <a href={url} target="_blank" rel="noopener noreferrer" className={className}>
+          {shortAddress}
+        </a>
+      );
+    }
+    return <span className={className}>{shortAddress}</span>;
+  };
+
   return (
     <div className="flex items-center gap-2">
       <TooltipProvider>
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild disabled={disableTooltip}>
-            <span className={className}>{shortAddress}</span>
+            {renderContent()}
           </TooltipTrigger>
           <TooltipContent>
             <p>{tooltipText || value}</p>
