@@ -6,7 +6,7 @@ import {
   LedgerErrorDetails,
   LedgerErrors
 } from 'app/config/errors';
-import { notifications$ } from 'app/state/layout';
+import { notifications$ } from 'app/state/notifications';
 import { ledgerWalletState$ } from 'app/state/wallet/ledger';
 import axios from 'axios';
 import { type ClassValue, clsx } from 'clsx';
