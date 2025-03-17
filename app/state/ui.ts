@@ -1,7 +1,12 @@
 import { getBalance } from '@/lib/account';
 import { getAppLightIcon } from '@/lib/utils';
 import { observable } from '@legendapp/state';
-import { AppConfig, AppIds, appsConfigs } from 'app/config/apps';
+import {
+  AppConfig,
+  AppIds,
+  appsConfigs,
+  polkadotAppConfig
+} from 'app/config/apps';
 import { Address, TransactionStatus } from './types/ledger';
 import { ledgerWalletState$ } from './wallet/ledger';
 
@@ -33,6 +38,7 @@ interface UIState {
   };
   apps: {
     apps: App[];
+    polkadotApp: App;
     status?: AppStatus;
     error?: string;
     icons: Partial<{ [key in AppIds]: any }>;
@@ -47,6 +53,7 @@ const initialUIState: UIState = {
   },
   apps: {
     apps: [],
+    polkadotApp: polkadotAppConfig,
     status: undefined,
     error: undefined,
     icons: {}
@@ -130,8 +137,14 @@ export const uiState$ = observable({
   async synchronizeAccount(appId: AppIds) {
     updateAppUI(appId, { status: 'loading' });
 
+    const app = appsConfigs.get(appId);
+    if (!app) {
+      console.error(`App with id ${appId} not found.`);
+      return;
+    }
+
     try {
-      const response = await ledgerWalletState$.synchronizeAccounts(appId);
+      const response = await ledgerWalletState$.synchronizeAccounts(app);
 
       if (response.error) {
         updateAppUI(appId, { status: 'error' });
@@ -148,10 +161,11 @@ export const uiState$ = observable({
 
   // Fetch and Process Accounts for a Single App
   async fetchAndProcessAccountsForApp(
-    app: AppConfig
+    app: AppConfig,
+    filterByBalance: boolean = true
   ): Promise<App | undefined> {
     try {
-      const response = await ledgerWalletState$.synchronizeAccounts(app.id);
+      const response = await ledgerWalletState$.synchronizeAccounts(app);
 
       if (response.error || !response.result || !app.rpcEndpoint) {
         return {
@@ -163,17 +177,34 @@ export const uiState$ = observable({
         };
       }
 
+      const polkadotAccounts = uiState$.apps.polkadotApp.get().accounts || [];
+
       const accounts: Address[] = await Promise.all(
-        response.result.map(async (address) => {
-          return await getBalance(address, app.rpcEndpoint!);
+        response.result.map(async (address, index) => {
+          const accountWithBalance = await getBalance(
+            address,
+            app.rpcEndpoint!
+          );
+
+          // Set corresponding Polkadot address at same index if it exists
+          if (polkadotAccounts[index]) {
+            accountWithBalance.destinationAddress = polkadotAccounts[index]
+              ? polkadotAccounts[index].address
+              : polkadotAccounts[0].address;
+          }
+
+          return accountWithBalance;
         })
       );
 
       const filteredAccounts = accounts.filter(
-        (account) => (account.balance && account.balance > 0) || account.error
+        (account) =>
+          !filterByBalance ||
+          (account.balance && account.balance > 0) ||
+          account.error
       );
 
-      // Only set the app if there are accounts with non-zero balance
+      // Only set the app if there are accounts after filtering
       if (filteredAccounts.length > 0) {
         return {
           name: app.name,
@@ -184,7 +215,7 @@ export const uiState$ = observable({
           accounts: filteredAccounts
         };
       }
-      return undefined; // No accounts with balance
+      return undefined; // No accounts after filtering
     } catch (error) {
       console.error(
         `Failed to synchronize accounts for app ${app.name}:`,
@@ -209,6 +240,17 @@ export const uiState$ = observable({
       if (!connection) {
         uiState$.apps.assign({ status: undefined, apps: [] });
         return;
+      }
+
+      const polkadotApp = await uiState$.fetchAndProcessAccountsForApp(
+        polkadotAppConfig,
+        false
+      );
+      if (polkadotApp) {
+        uiState$.apps.polkadotApp.set({
+          ...polkadotApp,
+          status: 'synchronized'
+        });
       }
 
       // request and save the accounts of each app synchronously

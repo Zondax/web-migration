@@ -226,7 +226,7 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
                   <AppRow
                     key={app.id.toString()}
                     app={observable(app)}
-                    hideBalance
+                    failedSync
                   />
                 ))}
               </TableBody>

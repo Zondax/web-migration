@@ -19,8 +19,6 @@ import {
   TransactionStatus
 } from '../types/ledger';
 
-const polkadotAddresses = observable<Address[]>([]);
-
 interface LedgerWalletState {
   deviceConnection: {
     connection?: DeviceConnectionProps;
@@ -143,8 +141,8 @@ export const ledgerWalletState$ = observable({
     } catch (e) {
       const error = handleWalletError(e, InternalErrors.CONNECTION_ERROR);
       return {
-        error: error.title,
-        connected: false
+        connected: false,
+        error: error.title
       };
     }
   },
@@ -178,8 +176,7 @@ export const ledgerWalletState$ = observable({
 
   // Fetch and Save Addresses (using a for loop)
   async fetchAndSaveAddresses(
-    app: AppConfig,
-    appId: AppIds
+    app: AppConfig
   ): Promise<GenericeResponseAddress[]> {
     const addresses: (GenericeResponseAddress | undefined)[] = [];
     for (let i = 0; i < maxAddressesToFetch; i++) {
@@ -196,26 +193,17 @@ export const ledgerWalletState$ = observable({
       (address): address is GenericeResponseAddress => address !== undefined
     ); // Type guard
 
-    if (appId === 'polkadot') {
-      polkadotAddresses.set(filteredAddresses);
-    }
-
     return filteredAddresses;
   },
 
   // Synchronize Accounts
   async synchronizeAccounts(
-    appId: AppIds
+    app: AppConfig
   ): Promise<{ result?: GenericeResponseAddress[]; error?: boolean }> {
     const connection = ledgerWalletState$.deviceConnection.connection.get();
-    const app = appsConfigs.get(appId);
 
     // TODO: Delete mock
-    if (errorApps.includes(appId)) {
-      return { error: true };
-    }
-    if (!app) {
-      console.error(`The appId ${appId} is not supported.`);
+    if (errorApps.includes(app.id)) {
       return { error: true };
     }
 
@@ -224,10 +212,7 @@ export const ledgerWalletState$ = observable({
     }
 
     try {
-      const addresses = await ledgerWalletState$.fetchAndSaveAddresses(
-        app,
-        appId
-      );
+      const addresses = await ledgerWalletState$.fetchAndSaveAddresses(app);
       return { result: addresses };
     } catch (e) {
       handleWalletError(e, InternalErrors.SYNC_ERROR); // More specific error
@@ -238,8 +223,7 @@ export const ledgerWalletState$ = observable({
   // Prepare Migration
   prepareMigration(
     appId: AppIds,
-    account: Address,
-    accountIndex: number
+    account: Address
   ):
     | {
         senderAddress: string;
@@ -250,7 +234,10 @@ export const ledgerWalletState$ = observable({
     | { error: string } {
     // Define sender and receiver addresses and the amount to transfer
     const senderAddress = account.address;
-    const receiverAddress = polkadotAddresses.get()[accountIndex]?.address;
+
+    // Use the selected destination address if available, otherwise fall back to default behavior
+    const receiverAddress = account.destinationAddress;
+
     const transferAmount = account.balance;
     const appConfig = appsConfigs.get(appId);
 
@@ -273,11 +260,7 @@ export const ledgerWalletState$ = observable({
     account: Address,
     accountIndex: number
   ): Promise<{ migrated?: boolean; error?: string }> {
-    const migrationData = ledgerWalletState$.prepareMigration(
-      appId,
-      account,
-      accountIndex
-    );
+    const migrationData = ledgerWalletState$.prepareMigration(appId, account);
     if (!migrationData || 'error' in migrationData) {
       return { error: migrationData?.error ?? 'Migration preparation failed.' };
     }

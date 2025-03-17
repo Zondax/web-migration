@@ -19,10 +19,10 @@ import Accounts from './accounts-table';
 
 function AppRow({
   app,
-  hideBalance
+  failedSync
 }: {
   app: Observable<App>;
-  hideBalance?: boolean;
+  failedSync?: boolean;
 }) {
   const name = app.name.get();
   const id = app.id.get();
@@ -38,7 +38,7 @@ function AppRow({
   };
 
   const renderAction = useCallback(() => {
-    if (hideBalance || !status) {
+    if (failedSync || !status) {
       return null;
     }
     if (status === 'loading') {
@@ -57,7 +57,7 @@ function AppRow({
   }, [status, isSynchronizationLoading]);
 
   const renderBalance = () => {
-    if (hideBalance) return null;
+    if (failedSync) return null;
     const balance = app.accounts
       .get()
       ?.reduce((total, account) => total + (account.balance || 0), 0);

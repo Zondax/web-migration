@@ -39,7 +39,12 @@ export function AddressLink({
   const renderContent = () => {
     if (url) {
       return (
-        <a href={url} target="_blank" rel="noopener noreferrer" className={className}>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={className}
+        >
           {shortAddress}
         </a>
       );
@@ -49,16 +54,18 @@ export function AddressLink({
 
   return (
     <div className="flex items-center gap-2">
-      <TooltipProvider>
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild disabled={disableTooltip}>
-            {renderContent()}
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{tooltipText || value}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      {disableTooltip ? (
+        renderContent()
+      ) : (
+        <TooltipProvider>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
+            <TooltipContent>
+              <p>{tooltipText || value}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
 
       {hasCopyButton && (
         <Button

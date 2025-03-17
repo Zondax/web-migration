@@ -24,6 +24,7 @@ import { formatBalance } from '@/lib/utils';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
 import { Address } from 'app/state/types/ledger';
+import { uiState$ } from 'app/state/ui';
 import {
   AlertCircle,
   CheckCircle,
@@ -31,6 +32,7 @@ import {
   Clock,
   XCircle
 } from 'lucide-react';
+import DestinationAddressSelect from './destination-address-select';
 
 function AccountsTable({
   accounts,
@@ -41,6 +43,13 @@ function AccountsTable({
   ticker: string;
   decimals: number;
 }) {
+  // Get Polkadot addresses for the destination selector
+  const polkadotAddresses = uiState$.apps.polkadotApp.accounts?.get();
+
+  const handleDestinationChange = (value: string, accountIndex: number) => {
+    accounts[accountIndex].destinationAddress.set(value);
+  };
+
   const renderStatusIcon = (account: Observable<Address>) => {
     const txStatus = account.transaction.get()?.status;
     const txStatusMessage = account.transaction.get()?.statusMessage;
@@ -104,6 +113,9 @@ function AccountsTable({
                 <TableHead className="text-left py-2">Address</TableHead>
                 <TableHead className="text-left py-2">Public Key</TableHead>
                 <TableHead className="text-right py-2">Balance</TableHead>
+                <TableHead className="text-left py-2">
+                  Destination Address
+                </TableHead>
                 <TableHead className="w-[100px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -111,21 +123,21 @@ function AccountsTable({
               {accounts.length > 0 ? (
                 accounts.map((account, index) => (
                   <TableRow key={account.address.get() || index}>
-                    <TableCell className="py-2 text-sm w-1/3">
+                    <TableCell className="py-2 text-sm w-1/4">
                       <AddressLink
                         value={account.address.get()}
                         tooltipText={account.address.get()}
                         className="break-all"
                       />
                     </TableCell>
-                    <TableCell className="py-2 text-sm w-1/3">
+                    <TableCell className="py-2 text-sm w-1/4">
                       <AddressLink
                         value={account.pubKey.get()}
                         tooltipText={account.pubKey.get()}
                         className="break-all"
                       />
                     </TableCell>
-                    <TableCell className="py-2 text-sm text-right w-1/3">
+                    <TableCell className="py-2 text-sm text-right w-1/4">
                       {account.balance.get() !== undefined
                         ? formatBalance(
                             account.balance.get()!,
@@ -133,6 +145,14 @@ function AccountsTable({
                             decimals
                           )
                         : '-'}
+                    </TableCell>
+                    <TableCell className="py-2 text-sm w-1/4">
+                      <DestinationAddressSelect
+                        account={account}
+                        index={index}
+                        polkadotAddresses={polkadotAddresses}
+                        onDestinationChange={handleDestinationChange}
+                      />
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2 justify-end items-center">
@@ -210,7 +230,7 @@ function AccountsTable({
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="text-center text-muted-foreground"
                   >
                     No accounts to migrate
