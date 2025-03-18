@@ -21,7 +21,7 @@ import {
   MINIMUM_AMOUNT,
   mockBalances
 } from 'app/config/mockData';
-import { Address, TransactionStatus } from 'app/state/types/ledger';
+import { Address, NftsInfo, TransactionStatus } from 'app/state/types/ledger';
 
 // Return type for the getBalance function
 interface GetBalanceResult {
@@ -434,4 +434,121 @@ export async function getTransactionDetails(
   }
   // Important:  Handle the case where neither success nor failure is found.
   return undefined;
+}
+
+/**
+ * Gets all NFTs owned by a given address, across all collections.
+ * @param address The address to check.
+ * @param rpcEndpoint The RPC endpoint.
+ * @returns An array of NFTDisplayInfo objects, or an empty array on error.
+ */
+export async function getAllNFTsOwnedByAccount(
+  address: GenericeResponseAddress,
+  rpcEndpoint: string
+): Promise<NftsInfo> {
+  const { api, error } = await getApiAndProvider(rpcEndpoint);
+  const { address: addressString } = address;
+
+  if (error || !api) {
+    return {
+      nfts: [],
+      error: {
+        source: 'nft_info_fetch',
+        description: error ?? 'Failed to connect to the blockchain.'
+      }
+    }; // Return empty array on error
+  }
+
+  const allNFTs: NftsInfo = { nfts: [] };
+
+  // Check if nfts pallet is available
+  if (!api.query.nfts) {
+    console.log('NFTs pallet is not available on this chain');
+    return { nfts: [] };
+  }
+
+  try {
+    const entries = await api.query.nfts.account.entries(addressString);
+
+    console.log(
+      `Found ${entries.length} NFT entries for address ${addressString}`
+    );
+
+    const itemsInfo = entries.map(([key, _info]) => {
+      const info = key.args.map((k) => k.toPrimitive());
+      info.shift(); // first item is the address which we do not need it to fetch the item information
+      return info;
+    });
+
+    const itemsInformation = await Promise.all(
+      itemsInfo.map(async (itemInfo) => await api.query.nfts.item(...itemInfo))
+    );
+
+    const myItems = itemsInformation.map((item, index) => {
+      const [collectionId, itemId] = itemsInfo[index];
+      return { ids: { collectionId, itemId }, itemInfo: item.toPrimitive() };
+    });
+
+    console.log(`Processed ${myItems.length} NFTs with metadata`);
+
+    if (myItems.length === 0) {
+      return { nfts: [] };
+    }
+
+    // Fetch metadata for all items
+    const metadataPromises = myItems.map(({ ids }) =>
+      api.query.nfts.itemMetadataOf(ids.collectionId, ids.itemId)
+    );
+    const metadataRequests = await Promise.all(metadataPromises);
+    const metadata = metadataRequests.map((metadata) => {
+      const mdPrimitive = metadata.toPrimitive();
+      const data =
+        mdPrimitive && typeof mdPrimitive === 'object' && 'data' in mdPrimitive
+          ? mdPrimitive.data
+          : null;
+      return data ? data.toString() : null;
+    });
+
+    return {
+      nfts: myItems.map((item, index) => {
+        const itemInfo = item.itemInfo;
+
+        // Add proper type checks
+        let creator = '';
+        let owner = '';
+
+        if (itemInfo && typeof itemInfo === 'object') {
+          if (
+            'deposit' in itemInfo &&
+            itemInfo.deposit &&
+            typeof itemInfo.deposit === 'object' &&
+            'account' in itemInfo.deposit
+          ) {
+            creator = String(itemInfo.deposit.account);
+          }
+
+          if ('owner' in itemInfo) {
+            owner = String(itemInfo.owner);
+          }
+        }
+
+        return {
+          collectionId: Number(item.ids.collectionId),
+          itemId: Number(item.ids.itemId),
+          creator,
+          data: metadata[index],
+          owner
+        };
+      })
+    };
+  } catch (error) {
+    console.error(`Error fetching NFTs for address ${addressString}:`, error);
+    return {
+      nfts: [],
+      error: {
+        source: 'nft_info_fetch',
+        description: `Failed to fetch NFTs: ${String(error)}`
+      }
+    };
+  }
 }

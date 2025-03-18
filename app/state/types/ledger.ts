@@ -49,3 +49,25 @@ export interface Address extends GenericeResponseAddress {
   };
   transaction?: Transaction;
 }
+
+/**
+ * Essential NFT Information
+ */
+export interface Nft {
+  collectionId: number | string;
+  itemId: number | string;
+  creator: string;
+  data: string | null;
+  owner: string;
+}
+
+/**
+ * All NFTs owned by an address
+ */
+export interface NftsInfo{
+  nfts: Nft[];
+  error?: {
+    source: 'nft_info_fetch';
+    description: string;
+  };
+}
