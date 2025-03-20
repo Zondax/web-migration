@@ -48,4 +48,5 @@ export interface Address extends GenericeResponseAddress {
     description: string;
   };
   transaction?: Transaction;
+  destinationAddress?: string;
 }

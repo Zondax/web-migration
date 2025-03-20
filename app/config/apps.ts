@@ -59,6 +59,18 @@ export interface AppConfig {
   decimals: number;
 }
 
+// Polkadot app config
+export const polkadotAppConfig: AppConfig = {
+  name: 'Polkadot',
+  id: AppIds.POLKADOT,
+  cla: 0x90,
+  bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
+  ss58Prefix: 0,
+  rpcEndpoint: 'wss://rpc.polkadot.io',
+  ticker: 'DOT',
+  decimals: 10
+};
+
 // Create the Map with app configs
 export const appsConfigs = new Map<AppIds, AppConfig>([
   [
@@ -482,19 +494,6 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       rpcEndpoint: 'wss://polkadex.api.onfinality.io/public-ws',
       ticker: 'PDEX',
       decimals: 12
-    }
-  ],
-  [
-    AppIds.POLKADOT,
-    {
-      name: 'Polkadot',
-      id: AppIds.POLKADOT,
-      cla: 0x90,
-      bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
-      ss58Prefix: 0,
-      rpcEndpoint: 'wss://rpc.polkadot.io',
-      ticker: 'DOT',
-      decimals: 10
     }
   ],
   [
