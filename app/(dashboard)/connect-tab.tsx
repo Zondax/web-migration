@@ -9,13 +9,13 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { observer } from '@legendapp/state/react';
-import { uiState$ } from 'app/state/ui';
+import { ledgerState$ } from 'app/state/ledger';
 import { useCallback } from 'react';
 
 function ConnectTab() {
   const handleConnect = useCallback(async () => {
-    await uiState$.connectLedger();
-    uiState$.synchronizeAccounts();
+    await ledgerState$.connectLedger();
+    ledgerState$.synchronizeAccounts();
   }, []);
 
   return (
@@ -37,7 +37,7 @@ function ConnectTab() {
         </CardHeader>
         <CardContent className="flex justify-center">
           <Button onClick={handleConnect}>
-            {uiState$.device.isLoading.get()
+            {ledgerState$.device.isLoading.get()
               ? 'Connecting...'
               : 'Connect Ledger'}
           </Button>

@@ -23,8 +23,8 @@ import {
 import { formatBalance } from '@/lib/utils';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
+import { ledgerState$ } from 'app/state/ledger';
 import { Address } from 'app/state/types/ledger';
-import { uiState$ } from 'app/state/ui';
 import {
   AlertCircle,
   CheckCircle,
@@ -44,7 +44,7 @@ function AccountsTable({
   decimals: number;
 }) {
   // Get Polkadot addresses for the destination selector
-  const polkadotAddresses = uiState$.apps.polkadotApp.accounts?.get();
+  const polkadotAddresses = ledgerState$.apps.polkadotApp.accounts?.get();
 
   const handleDestinationChange = (value: string, accountIndex: number) => {
     accounts[accountIndex].destinationAddress.set(value);

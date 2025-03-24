@@ -12,7 +12,8 @@ import { muifyHtml } from '@/lib/muifyHtml';
 import { formatBalance } from '@/lib/utils';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
-import { App, uiState$ } from 'app/state/ui';
+import { App, ledgerState$ } from 'app/state/ledger';
+import { uiState$ } from 'app/state/ui';
 import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import Accounts from './accounts-table';
@@ -30,8 +31,8 @@ function AppRow({
 
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const isSynchronizationLoading = uiState$.apps.status.get();
-  const icon = uiState$.apps.icons.get()[id];
+  const isSynchronizationLoading = ledgerState$.apps.status.get();
+  const icon = uiState$.icons.get()[id];
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);

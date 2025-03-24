@@ -1,0 +1,9 @@
+# Project Rules and Guidelines
+
+## Lessons
+
+- When refactoring code with observable state, separate business logic from state management by creating dedicated service classes that are agnostic of state management libraries
+- Use clean architecture principles to improve code scalability, reusability, and maintainability
+- Keep state management in a thin layer that delegates to core business logic services
+- Export service instances as singletons to ensure consistent state across the application
+- Place interfaces and core business logic in separate files to maintain a clean separation of concerns 

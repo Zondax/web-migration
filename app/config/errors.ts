@@ -7,7 +7,6 @@ export interface LedgerErrorDetails {
 export enum InternalErrors {
   'ADDRESS_NOT_SELECTED' = 'address_not_selected',
   'APP_NOT_OPEN' = 'app_not_open',
-  'WRONG_APP' = 'wrong_app',
   'UNKNOWN_ERROR' = 'unknown_error',
   'LOCKED_DEVICE' = 'locked_device',
   'DEVICE_NOT_SELECTED' = 'device_not_selected',
@@ -15,7 +14,12 @@ export enum InternalErrors {
   'DISCONNECTION_ERROR' = 'disconnection_error',
   'BALANCE_NOT_GOTTEN' = 'balance_not_gotten',
   'SYNC_ERROR' = 'sync_error',
-  'DEFAULT' = 'default'
+  'DEFAULT' = 'default',
+  'GET_ADDRESS_ERROR' = 'get_address_error',
+  'NO_RECEIVER_ADDRESS' = 'no_receiver_address',
+  'NO_TRANSFER_AMOUNT' = 'no_transfer_amount',
+  'APP_CONFIG_NOT_FOUND' = 'app_config_not_found',
+  'MIGRATION_ERROR' = 'migration_error'
 }
 
 export enum LedgerErrors {
@@ -24,7 +28,9 @@ export enum LedgerErrors {
   'TransportOpenUserCancelled' = 'TransportOpenUserCancelled',
   'TransportRaceCondition' = 'TransportRaceCondition',
   'InvalidStateError' = 'InvalidStateError',
-  'TransportInterfaceNotAvailable' = 'TransportInterfaceNotAvailable'
+  'TransportInterfaceNotAvailable' = 'TransportInterfaceNotAvailable',
+  'ClaNotSupported' = 'ClaNotSupported',
+  'AppDoesNotSeemToBeOpen' = 'AppDoesNotSeemToBeOpen'
 }
 
 export type ErrorDetailsMap = {
@@ -33,6 +39,10 @@ export type ErrorDetailsMap = {
 
 export const errorDetails: ErrorDetailsMap = {
   app_not_open: {
+    title: 'App does not seem to be open.',
+    description: 'Please open Polkadot Migration App in your device.'
+  },
+  AppDoesNotSeemToBeOpen: {
     title: 'App does not seem to be open.',
     description: 'Please open Polkadot Migration App in your device.'
   },
@@ -59,7 +69,7 @@ export const errorDetails: ErrorDetailsMap = {
     title: 'Address not selected',
     description: 'Please select an address to continue.'
   },
-  wrong_app: {
+  ClaNotSupported: {
     title: 'Wrong app.'
   },
   balance_not_gotten: {
@@ -70,6 +80,28 @@ export const errorDetails: ErrorDetailsMap = {
     title: 'Synchronization Error',
     description:
       'The accounts could not be synchronized. Please try again later.'
+  },
+  get_address_error: {
+    title: 'Get Address Error',
+    description: 'Failed to get account address from Ledger device.',
+    content: 'Please ensure the device is connected and try again.'
+  },
+  no_receiver_address: {
+    title: 'No Receiver Address',
+    description: 'No Polkadot address to migrate to.'
+  },
+  no_transfer_amount: {
+    title: 'No Transfer Amount',
+    description: 'There is no amount to transfer.'
+  },
+  app_config_not_found: {
+    title: 'App Configuration Not Found',
+    description: 'The app configuration could not be found.'
+  },
+  migration_error: {
+    title: 'Migration Error',
+    description: 'Failed to migrate found of an account.',
+    content: 'Please try again later or contact support if the issue persists.'
   },
   default: {
     title: 'An unknown error happens, please try again.'
@@ -106,17 +138,15 @@ export const errorDetails: ErrorDetailsMap = {
   }
 };
 
-export const decodeLedgerResponseCode = (
-  errorCode: number
-): LedgerErrorDetails | undefined => {
-  switch (errorCode) {
-    case 21781:
-      return errorDetails.LockedDeviceError;
-    case 28161:
-      return errorDetails.app_not_open;
-    case 28160:
-      return errorDetails.wrong_app;
-    default:
-      return undefined;
-  }
-};
+// export const decodeLedgerResponseCode = (
+//   errorCode: number
+// ): LedgerErrorDetails | undefined => {
+//   switch (errorCode) {
+//     case 21781:
+//       return errorDetails.LockedDeviceError;
+//     case 28161:
+//       return errorDetails.app_not_open;
+//     default:
+//       return undefined;
+//   }
+// };

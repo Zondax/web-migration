@@ -1,13 +1,14 @@
 import Transport from '@ledgerhq/hw-transport';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
+import { AppIds } from 'app/config/apps';
 
 /**
  * Represents a response object from a connection request.
  */
 export interface ConnectionResponse {
   error?: string;
-  connected?: boolean;
+  connection?: DeviceConnectionProps;
 }
 
 /**
@@ -38,6 +39,20 @@ export interface Transaction {
   blockHash?: string;
   blockNumber?: string;
 }
+
+export interface TransactionDetails {
+  txHash?: string;
+  blockHash?: string;
+  blockNumber?: string;
+}
+
+export type UpdateMigratedStatusFn = (
+  appId: AppIds,
+  accountIndex: number,
+  status: TransactionStatus,
+  message?: string,
+  txDetails?: TransactionDetails
+) => void;
 
 export interface Address extends GenericeResponseAddress {
   balance?: number;

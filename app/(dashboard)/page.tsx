@@ -1,36 +1,33 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { observer } from '@legendapp/state/react';
+import { observer, use$ } from '@legendapp/state/react';
+import { ledgerState$ } from 'app/state/ledger';
+import { StepValue } from 'app/state/types/ui';
 import { uiState$ } from 'app/state/ui';
-import { Step, StepValue } from 'app/types/steps';
 import { Check } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import AppsTable from './apps-table';
 import ConnectTab from './connect-tab';
 
 function ProductsPage() {
-  const [steps, setSteps] = useState<Step[]>([
-    { value: 'connect-device', label: 'Connect Device', isComplete: false },
-    {
-      value: 'synchronize-accounts',
-      label: 'Synchronize Accounts',
-      isComplete: false
-    },
-    { value: 'migrate', label: 'Migrate', isComplete: false }
-  ]);
+  const steps = use$(uiState$.steps);
   const [activeStep, setActiveStep] = useState<StepValue>('connect-device');
 
-  const isDeviceConnected = uiState$.device.isConnected.get();
-  const isSynchronized = uiState$.apps.status.get() === 'synchronized';
+  const isDeviceConnected = ledgerState$.device.connection.get();
+  const isAppOpen = ledgerState$.device.connection?.genericApp?.get();
+  const isSynchronized = ledgerState$.apps.status.get() === 'synchronized';
 
   // Update steps completion status
   useEffect(() => {
-    setSteps((prev) =>
+    uiState$.steps.set((prev) =>
       prev.map((step) => {
         switch (step.value) {
           case 'connect-device':
-            return { ...step, isComplete: isDeviceConnected };
+            return {
+              ...step,
+              isComplete: Boolean(isDeviceConnected && isAppOpen)
+            };
           case 'synchronize-accounts':
             return { ...step, isComplete: isSynchronized };
           case 'migrate':
@@ -40,7 +37,7 @@ function ProductsPage() {
         }
       })
     );
-  }, [isDeviceConnected, isSynchronized]);
+  }, [isDeviceConnected, isAppOpen, isSynchronized]);
 
   // Auto-advance to next step when current step is completed
   useEffect(() => {

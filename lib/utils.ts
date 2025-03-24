@@ -1,13 +1,12 @@
 import { ResponseVersion } from '@zondax/ledger-js';
 import {
-  decodeLedgerResponseCode,
   errorDetails,
   InternalErrors,
   LedgerErrorDetails,
   LedgerErrors
 } from 'app/config/errors';
+import { LedgerClientError } from 'app/state/client/base';
 import { notifications$ } from 'app/state/notifications';
-import { ledgerWalletState$ } from 'app/state/wallet/ledger';
 import axios from 'axios';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -16,28 +15,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function handleWalletError(
-  error: unknown,
+export function handleLedgerError(
+  error: LedgerClientError,
   defaultError: InternalErrors | LedgerErrors
 ): LedgerErrorDetails {
   let resolvedError: LedgerErrorDetails | undefined;
 
-  if (error instanceof Error) {
-    const errorDetail = errorDetails[error.name as keyof typeof errorDetails];
-    if (errorDetail) {
-      resolvedError = errorDetail;
-    } else if ('returnCode' in error) {
-      resolvedError = decodeLedgerResponseCode(error.returnCode as number);
-    }
-  }
-
-  if (!resolvedError) {
+  const errorDetail = errorDetails[error.name as keyof typeof errorDetails];
+  if (errorDetail) {
+    resolvedError = errorDetail;
+  } else {
     resolvedError = errorDetails[defaultError] || errorDetails.default;
   }
-
-  // Update wallet state
-  ledgerWalletState$.deviceConnection.error.set(resolvedError);
-  ledgerWalletState$.deviceConnection.isLoading.set(false);
 
   notifications$.push({
     title: resolvedError.title,

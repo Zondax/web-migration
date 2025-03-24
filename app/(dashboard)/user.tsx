@@ -9,22 +9,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { observer } from '@legendapp/state/react';
-import { uiState$ } from 'app/state/ui';
+import { observer, useObservable } from '@legendapp/state/react';
+import { ledgerState$ } from 'app/state/ledger';
 import Image from 'next/image';
 import { useCallback } from 'react';
 
 function User() {
   const user = { image: null }; // Placeholder for user object
 
-  const isLedgerConnected = uiState$.device.isConnected.get();
+  const isLedgerConnected$ = useObservable(() =>
+    Boolean(
+      ledgerState$.device.connection?.transport &&
+        ledgerState$.device.connection?.genericApp
+    )
+  );
 
   const connectDevice = useCallback(() => {
-    uiState$.connectLedger();
+    ledgerState$.connectLedger();
   }, []);
 
   const disconnectDevice = useCallback(() => {
-    uiState$.disconnectLedger();
+    ledgerState$.disconnectLedger();
   }, []);
 
   return (
@@ -49,9 +54,11 @@ function User() {
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={isLedgerConnected ? disconnectDevice : connectDevice}
+          onClick={isLedgerConnected$.get() ? disconnectDevice : connectDevice}
         >
-          {isLedgerConnected ? 'Disconnect wallet' : 'Connect your wallet'}
+          {isLedgerConnected$.get()
+            ? 'Disconnect wallet'
+            : 'Connect your wallet'}
         </DropdownMenuItem>
         <DropdownMenuItem disabled>Settings</DropdownMenuItem>
         <DropdownMenuItem disabled>Support</DropdownMenuItem>

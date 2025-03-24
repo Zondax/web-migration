@@ -1,7 +1,4 @@
-import {
-  merkleizeMetadata,
-  MetadataMerkleizer
-} from '@polkadot-api/merkleize-metadata';
+import { merkleizeMetadata } from '@polkadot-api/merkleize-metadata';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { GenericExtrinsicPayload } from '@polkadot/types';
@@ -12,7 +9,6 @@ import {
   ISubmittableResult
 } from '@polkadot/types/types/extrinsic';
 import { hexToU8a } from '@polkadot/util';
-import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
 import { AppConfig } from 'app/config/apps';
 import { errorDetails } from 'app/config/errors';
@@ -23,14 +19,8 @@ import {
 } from 'app/config/mockData';
 import { Address, TransactionStatus } from 'app/state/types/ledger';
 
-// Return type for the getBalance function
-interface GetBalanceResult {
-  result?: number;
-  error?: string;
-}
-
 // Get API and Provider
-async function getApiAndProvider(
+export async function getApiAndProvider(
   rpcEndpoint?: string
 ): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
   try {
@@ -112,8 +102,15 @@ export interface UpdateTransactionStatus {
   ): void;
 }
 
-// Prepare Transaction
-async function prepareTransaction(
+/**
+ * Prepares a transaction by:
+ * 1. Getting the sender's nonce
+ * 2. Retrieving and merkleizing metadata
+ * 3. Creating the transfer extrinsic
+ * 4. Building the payload for signing
+ * 5. Generating the merkle proof
+ */
+export async function prepareTransaction(
   api: ApiPromise,
   senderAddress: string,
   receiverAddress: string,
@@ -156,32 +153,19 @@ async function prepareTransaction(
     metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex'))
   });
 
-  return { transfer, payload, metadataHash, merkleizedMetadata, nonce };
-}
+  const payloadBytes = payload.toU8a(true);
 
-interface SignTransactionMetadata extends MetadataMerkleizer {
-  chainId: string;
-}
+  const metadata = {
+    ...merkleizedMetadata,
+    chainId: appConfig.ticker.toLowerCase()
+  };
 
-// Sign Transaction
-async function signTransaction(
-  genericApp: PolkadotGenericApp,
-  bip44Path: string,
-  payloadBytes: Uint8Array,
-  metadata: SignTransactionMetadata
-) {
-  genericApp.txMetadataChainId = metadata.chainId;
   const proof1: Uint8Array = metadata.getProofForExtrinsicPayload(payloadBytes);
-  const { signature } = await genericApp.signWithMetadata(
-    bip44Path,
-    Buffer.from(payloadBytes),
-    Buffer.from(proof1)
-  );
-  return signature;
-}
 
+  return { transfer, payload, metadataHash, nonce, proof1, payloadBytes };
+}
 // Create Signed Extrinsic
-function createSignedExtrinsic(
+export function createSignedExtrinsic(
   api: ApiPromise,
   transfer: SubmittableExtrinsic<'promise', ISubmittableResult>,
   senderAddress: string,
@@ -207,7 +191,7 @@ function createSignedExtrinsic(
 }
 
 // Submit Transaction and Handle Status
-async function submitAndHandleTransaction(
+export async function submitAndHandleTransaction(
   transfer: SubmittableExtrinsic<'promise', ISubmittableResult>,
   updateStatus: UpdateTransactionStatus,
   api: ApiPromise
@@ -318,62 +302,6 @@ async function submitAndHandleTransaction(
       });
   });
 }
-
-// Main createTransfer function (simplified)
-export const createTransfer = async (
-  genericApp: PolkadotGenericApp,
-  senderAddress: string,
-  receiverAddress: string,
-  amount: number,
-  appConfig: AppConfig,
-  index: number,
-  updateStatus: UpdateTransactionStatus
-) => {
-  const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint);
-  if (error || !api) {
-    // updateStatus('error', error); // Report connection error
-    throw new Error(error ?? 'Failed to connect to the blockchain.');
-  }
-
-  try {
-    const preparedTx = await prepareTransaction(
-      api,
-      senderAddress,
-      receiverAddress,
-      appConfig
-    );
-    if (!preparedTx) {
-      throw new Error('Prepare transaction failed');
-    }
-    const { transfer, payload, metadataHash, merkleizedMetadata, nonce } =
-      preparedTx;
-
-    const bip44Path = getBip44Path(appConfig.bip44Path, index);
-    const signature = await signTransaction(
-      genericApp,
-      bip44Path,
-      payload.toU8a(true),
-      { ...merkleizedMetadata, chainId: appConfig.ticker.toLowerCase() }
-    );
-
-    const signedExtrinsic = createSignedExtrinsic(
-      api,
-      transfer,
-      senderAddress,
-      signature,
-      payload,
-      nonce,
-      metadataHash
-    );
-
-    await submitAndHandleTransaction(transfer, updateStatus, api);
-  } finally {
-    await api.disconnect();
-  }
-};
-
-export const getBip44Path = (bip44Path: string, index: number) =>
-  bip44Path.replace(/\/0'$/, `/${index}'`);
 
 // Get Transaction Details
 export async function getTransactionDetails(

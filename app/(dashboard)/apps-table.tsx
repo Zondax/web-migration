@@ -18,9 +18,9 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { observable } from '@legendapp/state';
-import { observer, use$ } from '@legendapp/state/react';
+import { observer, use$, useObservable } from '@legendapp/state/react';
+import { App, ledgerState$ } from 'app/state/ledger';
 import { Address } from 'app/state/types/ledger';
-import { App, uiState$ } from 'app/state/ui';
 import { useCallback, useState } from 'react';
 import AppRow from './app-row';
 
@@ -57,17 +57,22 @@ const filterAppsWithErrors = (apps: App[]): App[] => {
 };
 
 function AppsTable({ mode = 'migrate' }: AppsTableProps) {
-  const apps$ = uiState$.apps.apps;
-  const status = use$(uiState$.apps.status);
+  const apps$ = ledgerState$.apps.apps;
+  const status = use$(ledgerState$.apps.status);
   const [isRescaning, setIsRescaning] = useState<boolean>(false);
-  const isLedgerConnected = uiState$.device.isConnected.get();
+  const isLedgerConnected$ = useObservable(() =>
+    Boolean(
+      ledgerState$.device.connection?.transport &&
+        ledgerState$.device.connection?.genericApp
+    )
+  );
 
   const handleMigrateAll = useCallback(() => {
-    uiState$.migrateAll();
+    ledgerState$.migrateAll();
   }, []);
 
   const handleSynchronize = useCallback(() => {
-    uiState$.synchronizeAccounts();
+    ledgerState$.synchronizeAccounts();
   }, []);
 
   // Compute if there are any accounts with errors
@@ -87,11 +92,11 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
   const rescan = async () => {
     for (const app of filteredAppsWithErrors$) {
       if (app.status === 'error') {
-        await uiState$.synchronizeAccount(app.id);
+        await ledgerState$.synchronizeAccount(app.id);
       } else if (app.accounts) {
         for (const account of app.accounts) {
           if (account.error) {
-            await uiState$.synchronizeBalance(app.id, account);
+            await ledgerState$.getAccountBalance(app.id, account);
           }
         }
       }
@@ -111,7 +116,7 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
           variant="default"
           size="sm"
           onClick={handleSynchronize}
-          disabled={!isLedgerConnected || status === 'loading'}
+          disabled={!isLedgerConnected$.get() || status === 'loading'}
         >
           {status === 'loading'
             ? 'Synchronizing...'
