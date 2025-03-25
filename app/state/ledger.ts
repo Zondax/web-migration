@@ -1,4 +1,4 @@
-import { getBalance } from '@/lib/account';
+import { getApiAndProvider, getBalance } from '@/lib/account';
 import { handleLedgerError } from '@/lib/utils';
 import { observable } from '@legendapp/state';
 import {
@@ -7,9 +7,10 @@ import {
   appsConfigs,
   polkadotAppConfig
 } from 'app/config/apps';
-import { InternalErrors } from 'app/config/errors';
+import { errorDetails, InternalErrors } from 'app/config/errors';
 import { LedgerClientError } from './client/base';
 import { ledgerClient } from './client/ledger';
+import { notifications$ } from './notifications';
 import {
   Address,
   DeviceConnectionProps,
@@ -63,8 +64,6 @@ const initialLedgerState: LedgerState = {
   }
 };
 
-let iconsStatus: 'loading' | 'loaded' | 'unloaded' = 'unloaded';
-
 // Update App
 function updateApp(appId: AppIds, update: Partial<App>) {
   const apps = ledgerState$.apps.apps.get();
@@ -75,7 +74,6 @@ function updateApp(appId: AppIds, update: Partial<App>) {
     ledgerState$.apps.apps[appIndex].set(updatedApp);
   } else {
     console.warn(`App with id ${appId} not found for UI update.`);
-    // Consider throwing an error, or handling this case more explicitly
   }
 }
 
@@ -113,7 +111,7 @@ function updateAccount(
 // Update Migrated Status
 const updateMigratedStatus: UpdateMigratedStatusFn = (
   appId: AppIds,
-  accountIndex: number,
+  accountPath: string,
   status,
   message,
   txDetails
@@ -125,6 +123,10 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (
     const accounts = apps[appIndex]?.accounts
       ? [...apps[appIndex].accounts]
       : [];
+
+    const accountIndex = accounts.findIndex(
+      (account) => account.path === accountPath
+    );
 
     if (accounts[accountIndex]) {
       // Update the account's transaction details
@@ -154,11 +156,7 @@ export const ledgerState$ = observable({
 
     try {
       const response = await ledgerClient.connectDevice();
-      console.log(
-        'response',
-        response,
-        response?.connection && !response?.error
-      );
+
       ledgerState$.device.connection.set(response?.connection);
       ledgerState$.device.error.set(response?.error); // Set error even if not connected
       return { connected: Boolean(response?.connection && !response?.error) };
@@ -226,12 +224,26 @@ export const ledgerState$ = observable({
       const polkadotAccounts =
         ledgerState$.apps.polkadotApp.get().accounts || [];
 
+      const { api, provider, error } = await getApiAndProvider(app.rpcEndpoint);
+
+      if (error || !api) {
+        return {
+          name: app.name,
+          id: app.id,
+          ticker: app.ticker,
+          decimals: app.decimals,
+          status: 'error',
+          error: {
+            source: 'synchronization',
+            description:
+              errorDetails.blockchain_connection_error.description ?? ''
+          }
+        };
+      }
+
       const accounts: Address[] = await Promise.all(
         response.result.map(async (address, index) => {
-          const accountWithBalance = await getBalance(
-            address,
-            app.rpcEndpoint!
-          );
+          const accountWithBalance = await getBalance(address, api);
 
           // Set corresponding Polkadot address at same index if it exists
           if (polkadotAccounts[index]) {
@@ -261,7 +273,22 @@ export const ledgerState$ = observable({
           status: 'synchronized',
           accounts: filteredAccounts
         };
+      } else {
+        notifications$.push({
+          title: `No funds found`,
+          description: `No accounts with balance to migrate for ${app.id.charAt(0).toUpperCase() + app.id.slice(1)}`,
+          appId: app.id,
+          type: 'info',
+          autoHideDuration: 5000
+        });
       }
+
+      if (api) {
+        await api.disconnect();
+      } else if (provider) {
+        await provider.disconnect();
+      }
+
       return undefined; // No accounts after filtering
     } catch (error) {
       return {
@@ -295,16 +322,9 @@ export const ledgerState$ = observable({
           status: 'synchronized'
         });
       }
-
+      
       // request and save the accounts of each app synchronously
-      // TODO: Change to Array.from(appsConfigs.values()) when the web is ready
-      for (const appConfig of [
-        appsConfigs.get(AppIds.ASTAR),
-        appsConfigs.get(AppIds.POLKADOT),
-        appsConfigs.get(AppIds.KUSAMA),
-        appsConfigs.get(AppIds.EQUILIBRIUM),
-        appsConfigs.get(AppIds.NODLE)
-      ]) {
+      for (const appConfig of Array.from(appsConfigs.values())) {
         // Skip apps that do not have an rpcEndpoint defined
         if (!appConfig || !appConfig.rpcEndpoint) continue;
         const app = await ledgerState$.fetchAndProcessAccountsForApp(appConfig);
@@ -337,8 +357,21 @@ export const ledgerState$ = observable({
       return;
     }
 
+    const { api, provider, error } = await getApiAndProvider(rpcEndpoint);
+
+    if (error || !api) {
+      updateAccount(appId, address.address, {
+        isLoading: false,
+        error: {
+          source: 'balance_fetch',
+          description: errorDetails.balance_not_gotten.description ?? ''
+        }
+      });
+      return;
+    }
+
     try {
-      const accountWithBalance = await getBalance(address, rpcEndpoint);
+      const accountWithBalance = await getBalance(address, api);
       updateAccount(appId, address.address, {
         ...accountWithBalance,
         isLoading: false
@@ -355,6 +388,12 @@ export const ledgerState$ = observable({
           description: 'Failed to fetch balance'
         }
       });
+    } finally {
+      if (api) {
+        await api.disconnect();
+      } else if (provider) {
+        await provider.disconnect();
+      }
     }
   },
 
@@ -374,13 +413,15 @@ export const ledgerState$ = observable({
       return;
     }
 
-    updateAccount(appId, account.address, { isLoading: true });
+    updateAccount(appId, account.address, {
+      isLoading: true,
+      error: undefined
+    });
 
     try {
       const response = await ledgerClient.migrateAccount(
         appId,
         account,
-        accountIndex,
         updateMigratedStatus
       );
 
@@ -393,7 +434,7 @@ export const ledgerState$ = observable({
           isLoading: false
         });
         console.log(
-          `Account at index ${accountIndex} in app ${appId} migration failed:`,
+          `Account at path ${account.path} in app ${appId} migration failed:`,
           InternalErrors.MIGRATION_ERROR
         );
       } else if (response.migrated) {
@@ -425,9 +466,7 @@ export const ledgerState$ = observable({
     if (!app.accounts || app.accounts.length === 0) return;
 
     // Set app status to loading before starting migration
-    ledgerState$.apps.apps
-      .find((a) => a.id.get() === app.id)
-      ?.status.set('loading');
+    updateApp(app.id, { status: 'loading' });
 
     try {
       // Migrate each account in the app
@@ -454,9 +493,7 @@ export const ledgerState$ = observable({
         InternalErrors.MIGRATION_ERROR
       );
     } finally {
-      ledgerState$.apps.apps
-        .find((a) => a.id.get() === app.id)
-        ?.status.set('synchronized');
+      updateApp(app.id, { status: 'synchronized' });
     }
   },
 

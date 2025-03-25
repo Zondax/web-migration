@@ -9,14 +9,9 @@ import {
   ISubmittableResult
 } from '@polkadot/types/types/extrinsic';
 import { hexToU8a } from '@polkadot/util';
-import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
 import { AppConfig } from 'app/config/apps';
 import { errorDetails } from 'app/config/errors';
-import {
-  errorAddresses,
-  MINIMUM_AMOUNT,
-  mockBalances
-} from 'app/config/mockData';
+import { MINIMUM_AMOUNT } from 'app/config/mockData';
 import { Address, TransactionStatus } from 'app/state/types/ledger';
 
 // Get API and Provider
@@ -24,31 +19,30 @@ export async function getApiAndProvider(
   rpcEndpoint?: string
 ): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
   try {
+    // Create provider with timeout options to prevent repeated connection attempts
     const provider = new WsProvider(rpcEndpoint);
-    const api = await ApiPromise.create({ provider });
-    return { api, provider };
+    const api = await ApiPromise.create({
+      provider,
+      throwOnConnect: true,
+      throwOnUnknown: true
+    });
+
+    return { api: api as ApiPromise, provider };
   } catch (e) {
     console.error('Error creating API:', e);
     return { error: 'Failed to connect to the blockchain.' };
   }
 }
 
+export const getBip44Path = (bip44Path: string, index: number) =>
+  bip44Path.replace(/\/0'$/, `/${index}'`);
+
 // Get Balance (simplified error handling)
 export async function getBalance(
-  address: GenericeResponseAddress,
-  rpcEndpoint: string
+  address: Address,
+  api: ApiPromise
 ): Promise<Address> {
-  const { api, provider, error } = await getApiAndProvider(rpcEndpoint);
   const { address: addressString } = address;
-
-  if (error) {
-    return {
-      ...address,
-      balance: undefined,
-      status: 'synchronized',
-      error: { source: 'balance_fetch', description: error }
-    };
-  }
 
   try {
     const balance = await api?.query.system.account(addressString);
@@ -57,17 +51,9 @@ export async function getBalance(
         ? parseFloat((balance.data as any).free.toString())
         : undefined;
 
-    // TODO: Delete mock balance when there are accounts with tokens
-    if (errorAddresses.includes(addressString)) {
-      throw new Error('Address in error list');
-    }
-    const mockBalance = mockBalances.find(
-      (balance) => balance.address === addressString
-    )?.balance;
-
     return {
       ...address,
-      balance: mockBalance ?? freeBalance,
+      balance: freeBalance,
       status: 'synchronized',
       error: undefined
     };
@@ -82,12 +68,6 @@ export async function getBalance(
         description: errorDetails.balance_not_gotten.description ?? ''
       }
     };
-  } finally {
-    if (api) {
-      await api.disconnect();
-    } else if (provider) {
-      await provider.disconnect();
-    }
   }
 }
 

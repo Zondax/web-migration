@@ -1,9 +1,11 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { muifyHtml } from '@/lib/muifyHtml';
 import { observer } from '@legendapp/state/react';
 import * as Toast from '@radix-ui/react-toast';
 import { notifications$ } from 'app/state/notifications';
+import { uiState$ } from 'app/state/ui';
 
 function Snackbar() {
   const activeNotifications = notifications$.active?.get() ?? [];
@@ -17,6 +19,11 @@ function Snackbar() {
     }
   };
 
+  // Get the icon if appId exists
+  const appIcon = lastNotification?.appId
+    ? uiState$.icons.get()[lastNotification.appId]
+    : null;
+
   return (
     <Toast.Provider swipeDirection="right">
       <Toast.Root
@@ -24,9 +31,16 @@ function Snackbar() {
         onOpenChange={onOpenChange}
         className="bg-white rounded-md shadow-lg p-4 border border-gray-200"
       >
-        <Toast.Title className="font-semibold">
-          {lastNotification?.title}
-        </Toast.Title>
+        <div className="flex justify-between items-start">
+          <Toast.Title className="font-semibold">
+            {lastNotification?.title}
+          </Toast.Title>
+          {appIcon && (
+            <div className="ml-2 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8">
+              {muifyHtml(appIcon)}
+            </div>
+          )}
+        </div>
         <Toast.Description className="text-sm text-muted-foreground">
           {new Date().toLocaleTimeString([], {
             hour: '2-digit',
@@ -34,9 +48,11 @@ function Snackbar() {
           })}
         </Toast.Description>
         <div className="border-t border-gray-300 my-2"></div>
-        <Toast.Description className="text-sm text-muted-foreground mb-2">
-          {lastNotification?.description}
-        </Toast.Description>
+        <div className="flex justify-between items-start">
+          <Toast.Description className="text-sm text-muted-foreground mb-2">
+            {lastNotification?.description}
+          </Toast.Description>
+        </div>
         <Toast.Action asChild altText="Dismiss">
           <div className="flex justify-end">
             <Button aria-haspopup="true" variant="secondary" size="sm">

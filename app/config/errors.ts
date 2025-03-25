@@ -19,7 +19,8 @@ export enum InternalErrors {
   'NO_RECEIVER_ADDRESS' = 'no_receiver_address',
   'NO_TRANSFER_AMOUNT' = 'no_transfer_amount',
   'APP_CONFIG_NOT_FOUND' = 'app_config_not_found',
-  'MIGRATION_ERROR' = 'migration_error'
+  'MIGRATION_ERROR' = 'migration_error',
+  'BLOCKCHAIN_CONNECTION_ERROR' = 'blockchain_connection_error'
 }
 
 export enum LedgerErrors {
@@ -102,6 +103,11 @@ export const errorDetails: ErrorDetailsMap = {
     title: 'Migration Error',
     description: 'Failed to migrate found of an account.',
     content: 'Please try again later or contact support if the issue persists.'
+  },
+  blockchain_connection_error: {
+    title: 'Blockchain Connection Error',
+    description: 'Failed to connect to the blockchain network.',
+    content: 'Please check your internet connection and try again later.'
   },
   default: {
     title: 'An unknown error happens, please try again.'

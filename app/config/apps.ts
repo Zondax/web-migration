@@ -278,7 +278,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       name: 'Equilibrium',
       id: AppIds.EQUILIBRIUM,
       cla: 0x95,
-      bip44Path: "m/44'/2242269181'/0'/0'/0'", // 2242269181 = 0x85f5e0fd
+      bip44Path: "m/44'/57597'/0'/0'/0'", // 2242269181 = 0x85f5e0fd
       ss58Prefix: 67,
       rpcEndpoint: 'wss://equilibrium.api.onfinality.io/public-ws',
       ticker: 'EQ',
