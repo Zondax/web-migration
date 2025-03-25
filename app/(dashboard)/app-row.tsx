@@ -11,7 +11,7 @@ import {
 import { muifyHtml } from '@/lib/muifyHtml';
 import { formatBalance } from '@/lib/utils';
 import { Observable } from '@legendapp/state';
-import { observer } from '@legendapp/state/react';
+import { observer, use$ } from '@legendapp/state/react';
 import { App, ledgerState$ } from 'app/state/ledger';
 import { uiState$ } from 'app/state/ui';
 import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
@@ -25,9 +25,10 @@ function AppRow({
   app: Observable<App>;
   failedSync?: boolean;
 }) {
-  const name = app.name.get();
-  const id = app.id.get();
-  const status = app.status.get();
+  const name = use$(app.name);
+  const id = use$(app.id);
+  const status = use$(app.status);
+  const accounts = use$(app.accounts);
 
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -59,9 +60,10 @@ function AppRow({
 
   const renderBalance = () => {
     if (failedSync) return null;
-    const balance = app.accounts
-      .get()
-      ?.reduce((total, account) => total + (account.balance || 0), 0);
+    const balance = accounts?.reduce(
+      (total, account) => total + (account.balance || 0),
+      0
+    );
 
     return balance !== undefined
       ? formatBalance(balance, app.ticker.get(), app.decimals.get())
@@ -72,7 +74,7 @@ function AppRow({
     <>
       <TableRow>
         <TableCell>
-          {app.accounts.get()?.length !== 0 && (
+          {accounts?.length !== 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -94,7 +96,7 @@ function AppRow({
         </TableCell>
         <TableCell className="font-medium">{name}</TableCell>
         <TableCell className="font-medium">
-          {app.accounts.get()?.length ?? '-'}
+          {accounts && accounts.length !== 0 ? accounts.length : '-'}
         </TableCell>
         <TableCell className="font-medium">{renderBalance()}</TableCell>
         <TableCell>
