@@ -1,10 +1,11 @@
 import {
   createSignedExtrinsic,
   getApiAndProvider,
+  getBip44Path,
   prepareTransaction,
   submitAndHandleTransaction
 } from '@/lib/account';
-import { getBip44Path, ledgerService } from '@/lib/ledger/ledgerService';
+import { ledgerService } from '@/lib/ledger/ledgerService';
 import { formatVersion } from '@/lib/utils';
 import Transport from '@ledgerhq/hw-transport';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
@@ -12,7 +13,6 @@ import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
 import { AppConfig, AppIds, appsConfigs } from 'app/config/apps';
 import { maxAddressesToFetch } from 'app/config/config';
 import { InternalErrors } from 'app/config/errors';
-import { errorApps } from 'app/config/mockData';
 import {
   Address,
   ConnectionResponse,
@@ -79,28 +79,33 @@ export const ledgerClient = {
     );
   },
 
-  async synchronizeAccounts(
-    app: AppConfig
-  ): Promise<{ result?: GenericeResponseAddress[] }> {
-    // TODO: Delete mock error handling
-    if (errorApps.includes(app.id)) {
-      throw new Error(InternalErrors.SYNC_ERROR);
-    }
-    return withErrorHandling(
-      () =>
-        ledgerService.synchronizeAccounts(
-          app.bip44Path,
-          app.ss58Prefix,
-          maxAddressesToFetch
-        ),
-      InternalErrors.SYNC_ERROR
-    );
+  async synchronizeAccounts(app: AppConfig): Promise<{ result?: Address[] }> {
+    return withErrorHandling(async () => {
+      // fetch addresses
+      const addresses: (GenericeResponseAddress | undefined)[] = [];
+      for (let i = 0; i < maxAddressesToFetch; i++) {
+        const derivedPath = getBip44Path(app.bip44Path, i);
+        // If it's Polkadot, use Kusama's SS58 prefix (2) instead
+        const ss58Prefix = app.id === AppIds.POLKADOT ? 2 : app.ss58Prefix;
+        const address = await ledgerService.getAccountAddress(
+          derivedPath,
+          ss58Prefix,
+          false
+        );
+        addresses.push({ ...address, path: derivedPath } as Address);
+      }
+
+      const filteredAddresses = addresses.filter(
+        (address): address is Address => address !== undefined
+      );
+
+      return { result: filteredAddresses };
+    }, InternalErrors.SYNC_ERROR);
   },
 
   async migrateAccount(
     appId: AppIds,
     account: Address,
-    accountIndex: number,
     updateStatus: UpdateMigratedStatusFn
   ): Promise<{ migrated?: boolean }> {
     const senderAddress = account.address;
@@ -137,11 +142,10 @@ export const ledgerClient = {
         const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } =
           preparedTx;
 
-        const bip44Path = getBip44Path(appConfig.bip44Path, accountIndex);
         const chainId = appConfig.ticker.toLowerCase();
 
         const { signature } = await ledgerService.signTransaction(
-          bip44Path,
+          account.path,
           payloadBytes,
           chainId,
           proof1
@@ -169,7 +173,7 @@ export const ledgerClient = {
           ) => {
             updateStatus(
               appConfig.id,
-              accountIndex,
+              account.path,
               status,
               message,
               txDetails

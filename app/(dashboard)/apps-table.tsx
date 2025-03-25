@@ -79,7 +79,9 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
   const hasAccountsWithErrors = use$(() => {
     return apps$
       .get()
-      .some((app) => app.accounts?.some((account) => account.error));
+      .some((app) =>
+        app.accounts?.some((account) => account.error?.source !== 'migration')
+      );
   });
 
   // Inside your component:

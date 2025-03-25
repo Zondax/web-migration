@@ -9,9 +9,6 @@ import {
 } from 'app/state/types/ledger';
 import { openApp } from './openApp';
 
-export const getBip44Path = (bip44Path: string, index: number) =>
-  bip44Path.replace(/\/0'$/, `/${index}'`);
-
 /**
  * Interface for the Ledger service that manages device interaction
  */
@@ -31,10 +28,6 @@ export interface ILedgerService {
     ss58prefix: number,
     showAddrInDevice: boolean
   ): Promise<GenericeResponseAddress | undefined>;
-  synchronizeAccounts(
-    basePath: string,
-    ss58Prefix: number
-  ): Promise<{ result?: GenericeResponseAddress[] }>;
   signTransaction(
     bip44Path: string,
     payloadBytes: Uint8Array,
@@ -154,37 +147,6 @@ export class LedgerService implements ILedgerService {
   }
 
   /**
-   * Synchronizes accounts for an app
-   */
-  async synchronizeAccounts(
-    basePath: string,
-    ss58Prefix: number,
-    maxAddressesToFetch: number = 5
-  ): Promise<{ result?: GenericeResponseAddress[] }> {
-    if (!this.deviceConnection) {
-      throw new Error('TransportStatusError');
-    }
-
-    // fetch addresses
-    const addresses: (GenericeResponseAddress | undefined)[] = [];
-    for (let i = 0; i < maxAddressesToFetch; i++) {
-      const derivedPath = getBip44Path(basePath, i);
-      const address = await this.getAccountAddress(
-        derivedPath,
-        ss58Prefix,
-        false
-      );
-      addresses.push(address);
-    }
-
-    const filteredAddresses = addresses.filter(
-      (address): address is GenericeResponseAddress => address !== undefined
-    );
-
-    return { result: filteredAddresses };
-  }
-
-  /**
    * Migrates an account
    */
   async signTransaction(
@@ -207,24 +169,6 @@ export class LedgerService implements ILedgerService {
       Buffer.from(proof1)
     );
     return { signature };
-    // const updateMigratedStatus = (
-    //   status: TransactionStatus,
-    //   message?: string,
-    //   txDetails?: { txHash?: string; blockHash?: string; blockNumber?: string }
-    // ) => {
-    //   updateStatus(appConfig.id, accountIndex, status, message, txDetails);
-    // };
-
-    // await createTransfer(
-    //   genericApp,
-    //   senderAddress,
-    //   receiverAddress,
-    //   transferAmount,
-    //   appConfig,
-    //   accountIndex,
-    //   updateMigratedStatus
-    // );
-    // return { migrated: true };
   }
 
   /**

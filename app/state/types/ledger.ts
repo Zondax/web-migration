@@ -19,8 +19,14 @@ export interface DeviceConnectionProps {
   genericApp?: PolkadotGenericApp;
 }
 
+/**
+ * Status of an address in the migration process
+ */
 export type AddressStatus = 'synchronized' | 'migrated';
 
+/**
+ * Status of a transaction through its lifecycle
+ */
 export type TransactionStatus =
   | 'pending'
   | 'inBlock'
@@ -30,8 +36,11 @@ export type TransactionStatus =
   | 'error'
   | 'warning'
   | 'unknown'
-  | 'completed'; // Add other statuses as needed
+  | 'completed';
 
+/**
+ * Details of a blockchain transaction
+ */
 export interface Transaction {
   status?: TransactionStatus;
   statusMessage?: string;
@@ -48,12 +57,15 @@ export interface TransactionDetails {
 
 export type UpdateMigratedStatusFn = (
   appId: AppIds,
-  accountIndex: number,
+  accountPath: string,
   status: TransactionStatus,
   message?: string,
   txDetails?: TransactionDetails
 ) => void;
 
+/**
+ * Extended address information including balance, status and transaction details
+ */
 export interface Address extends GenericeResponseAddress {
   balance?: number;
   status?: AddressStatus;
@@ -64,4 +76,5 @@ export interface Address extends GenericeResponseAddress {
   };
   transaction?: Transaction;
   destinationAddress?: string;
+  path: string;
 }
