@@ -1,4 +1,5 @@
 import { getApiAndProvider, getBalance } from '@/lib/account';
+import { convertSS58Format } from '@/lib/addresses';
 import { handleLedgerError } from '@/lib/utils';
 import { observable } from '@legendapp/state';
 import {
@@ -48,6 +49,7 @@ interface LedgerState {
     status?: AppStatus;
     error?: string;
   };
+  polkadotAddresses: Partial<Record<AppIds, string[]>>;
 }
 
 const initialLedgerState: LedgerState = {
@@ -61,7 +63,8 @@ const initialLedgerState: LedgerState = {
     polkadotApp: polkadotAppConfig,
     status: undefined,
     error: undefined
-  }
+  },
+  polkadotAddresses: {}
 };
 
 // Update App
@@ -242,17 +245,8 @@ export const ledgerState$ = observable({
       }
 
       const accounts: Address[] = await Promise.all(
-        response.result.map(async (address, index) => {
-          const accountWithBalance = await getBalance(address, api);
-
-          // Set corresponding Polkadot address at same index if it exists
-          if (polkadotAccounts[index]) {
-            accountWithBalance.destinationAddress = polkadotAccounts[index]
-              ? polkadotAccounts[index].address
-              : polkadotAccounts[0].address;
-          }
-
-          return accountWithBalance;
+        response.result.map(async (address) => {
+          return await getBalance(address, api);
         })
       );
 
@@ -265,13 +259,22 @@ export const ledgerState$ = observable({
 
       // Only set the app if there are accounts after filtering
       if (filteredAccounts.length > 0) {
+        const polkadotAddresses = polkadotAccounts.map((account) =>
+          convertSS58Format(account.address, app.ss58Prefix || 0)
+        );
+
+        ledgerState$.polkadotAddresses[app.id].set(polkadotAddresses);
+
         return {
           name: app.name,
           id: app.id,
           ticker: app.ticker,
           decimals: app.decimals,
           status: 'synchronized',
-          accounts: filteredAccounts
+          accounts: filteredAccounts.map((account) => ({
+            ...account,
+            destinationAddress: polkadotAddresses[0]
+          }))
         };
       } else {
         notifications$.push({
@@ -322,7 +325,7 @@ export const ledgerState$ = observable({
           status: 'synchronized'
         });
       }
-      
+
       // request and save the accounts of each app synchronously
       for (const appConfig of Array.from(appsConfigs.values())) {
         // Skip apps that do not have an rpcEndpoint defined

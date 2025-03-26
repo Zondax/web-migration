@@ -13,11 +13,6 @@ export const withErrorHandling = async <T>(
   try {
     return await operation();
   } catch (error: any) {
-    console.error(
-      `[withErrorHandling] error: ${error.message} ${error.name}`,
-      error
-    );
-
     // Map the error to a LedgerError
     const ledgerError: LedgerClientError = {
       name:
@@ -27,6 +22,7 @@ export const withErrorHandling = async <T>(
       message: error.message || 'An unexpected error occurred'
     };
 
+    // consider to add sentry logging here
     throw ledgerError;
   }
 };

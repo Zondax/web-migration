@@ -13,7 +13,7 @@ import { Address } from 'app/state/types/ledger';
 interface DestinationAddressSelectProps {
   account: Observable<Address>;
   index: number;
-  polkadotAddresses: { address: string }[] | undefined;
+  polkadotAddresses: string[] | undefined;
   onDestinationChange: (value: string, index: number) => void;
 }
 
@@ -46,11 +46,11 @@ function DestinationAddressSelect({
       </SelectTrigger>
       <SelectContent>
         {polkadotAddresses?.map((polkadotAddress, addrIndex) => (
-          <SelectItem key={addrIndex} value={polkadotAddress.address}>
+          <SelectItem key={addrIndex} value={polkadotAddress}>
             <div className="flex items-center gap-2">
               <span>Polkadot {addrIndex + 1}:</span>
               <AddressLink
-                value={polkadotAddress.address}
+                value={polkadotAddress}
                 disableTooltip
                 className="break-all"
                 hasCopyButton={false}

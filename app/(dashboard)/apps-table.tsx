@@ -80,7 +80,9 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
     return apps$
       .get()
       .some((app) =>
-        app.accounts?.some((account) => account.error?.source !== 'migration')
+        app.accounts?.some(
+          (account) => account.error && account.error?.source !== 'migration'
+        )
       );
   });
 
