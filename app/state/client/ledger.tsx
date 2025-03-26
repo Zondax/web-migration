@@ -184,9 +184,6 @@ export const ledgerClient = {
           return { migrated: true };
         }
         return { migrated: false };
-      } catch (error) {
-        console.error('Error migrating account:', error);
-        throw error;
       } finally {
         await api.disconnect();
       }

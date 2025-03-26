@@ -15,7 +15,7 @@ import { observer, use$ } from '@legendapp/state/react';
 import { App, ledgerState$ } from 'app/state/ledger';
 import { uiState$ } from 'app/state/ui';
 import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Accounts from './accounts-table';
 
 function AppRow({
@@ -34,6 +34,11 @@ function AppRow({
 
   const isSynchronizationLoading = ledgerState$.apps.status.get();
   const icon = uiState$.icons.get()[id];
+
+  const polkadotAddresses = useMemo(
+    () => ledgerState$.polkadotAddresses[id].get(),
+    [id]
+  );
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -122,6 +127,7 @@ function AppRow({
           accounts={app.accounts}
           ticker={app.ticker.get()}
           decimals={app.decimals.get()}
+          polkadotAddresses={polkadotAddresses ?? []}
         />
       ) : null}
     </>
