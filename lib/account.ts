@@ -16,21 +16,58 @@ import { Address, TransactionStatus } from 'app/state/types/ledger';
 
 // Get API and Provider
 export async function getApiAndProvider(
-  rpcEndpoint?: string
+  rpcEndpoint: string
 ): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
   try {
-    // Create provider with timeout options to prevent repeated connection attempts
+    // Create a provider with default settings (will allow first connection)
     const provider = new WsProvider(rpcEndpoint);
-    const api = await ApiPromise.create({
-      provider,
-      throwOnConnect: true,
-      throwOnUnknown: true
+
+    // Add an error handler to prevent the automatic reconnection loops
+    provider.on('error', (error) => {
+      console.error('WebSocket error:', error);
     });
 
-    return { api: api as ApiPromise, provider };
+    // Set a timeout for the connection attempt
+    const connectionPromise = new Promise<ApiPromise>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Connection timeout: The node is not responding.'));
+      }, 15000); // 15 second timeout
+
+      ApiPromise.create({
+        provider,
+        throwOnConnect: true,
+        throwOnUnknown: true
+      })
+        .then((api) => {
+          clearTimeout(timeoutId);
+          resolve(api);
+        })
+        .catch((err) => {
+          clearTimeout(timeoutId);
+          reject(err);
+        });
+    });
+
+    const api = await connectionPromise;
+
+    // If connection is successful, return the API and provider
+    return { api, provider };
   } catch (e) {
-    console.error('Error creating API:', e);
-    return { error: 'Failed to connect to the blockchain.' };
+    console.error('Error creating API for RPC endpoint:', rpcEndpoint, e);
+
+    // More specific error messages based on the error
+    const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+
+    if (errorMessage.includes('timeout')) {
+      return { error: 'Connection timeout: The node is not responding.' };
+    } else if (
+      errorMessage.includes('refused') ||
+      errorMessage.includes('WebSocket')
+    ) {
+      return { error: 'Connection refused: The node endpoint is unreachable.' };
+    } else {
+      return { error: `Failed to connect to the blockchain: ${errorMessage}` };
+    }
   }
 }
 
@@ -342,4 +379,31 @@ export async function getTransactionDetails(
   }
   // Important:  Handle the case where neither success nor failure is found.
   return undefined;
+}
+
+/**
+ * Safely disconnects the API and WebSocket provider to prevent memory leaks
+ * and ongoing connection attempts.
+ */
+export async function disconnectSafely(
+  api?: ApiPromise,
+  provider?: WsProvider
+): Promise<void> {
+  try {
+    // First disconnect the API if it exists
+    if (api) {
+      console.log('Disconnecting API...');
+      await api.disconnect();
+    }
+
+    // Then disconnect the provider if it exists
+    if (provider) {
+      console.log('Disconnecting WebSocket provider...');
+      await provider.disconnect();
+    }
+
+    console.log('Disconnection complete');
+  } catch (error) {
+    console.error('Error during disconnection:', error);
+  }
 }

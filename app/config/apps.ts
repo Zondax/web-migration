@@ -3,8 +3,6 @@ export enum AppIds {
   AJUNA = 'ajuna',
   ALEPHZERO = 'alephzero',
   ASTAR = 'astar',
-  AVAIL = 'avail',
-  AVAILRECOVERY = 'availrecovery',
   BIFROST = 'bifrost',
   BIFROSTKUSAMA = 'bifrostkusama',
   BITTENSOR = 'bittensor',
@@ -15,7 +13,6 @@ export enum AppIds {
   EDGEWARE = 'edgeware',
   ENJIN = 'enjin',
   ENTROPY = 'entropy',
-  EQUILIBRIUM = 'equilibrium',
   GENSHIRO = 'genshiro',
   HYDRADX = 'hydradx',
   INTERLAY = 'interlay',
@@ -27,7 +24,6 @@ export enum AppIds {
   NODLE = 'nodle',
   ORIGINTRAIL = 'origintrail',
   PARALLEL = 'parallel',
-  PEAQ = 'peaq',
   PEER = 'peer',
   PENDULUM = 'pendulum',
   PHALA = 'phala',
@@ -94,7 +90,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xb3,
       bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
       ss58Prefix: 1328,
-      // rpcEndpoint: 'wss://ajuna.api.onfinality.io/public-ws',
+      rpcEndpoint: 'wss://ajuna.ibp.network',
       ticker: 'AJUN',
       decimals: 12
     }
@@ -107,7 +103,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xa4,
       bip44Path: "m/44'/643'/0'/0'/0'", // 643 = 0x80000283
       ss58Prefix: 42,
-      rpcEndpoint: 'wss://aleph-zero.api.onfinality.io/public-ws',
+      // rpcEndpoint: 'wss://aleph-zero.api.onfinality.io/public-ws',
       ticker: 'AZERO',
       decimals: 12
     }
@@ -120,33 +116,8 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xa9,
       bip44Path: "m/44'/810'/0'/0'/0'", // 810 = 0x8000032a
       ss58Prefix: 5,
-      rpcEndpoint: 'wss://astar.api.onfinality.io/public-ws',
+      rpcEndpoint: 'wss://rpc.astar.network',
       ticker: 'ASTR',
-      decimals: 18
-    }
-  ],
-  [
-    AppIds.AVAIL,
-    {
-      name: 'Avail',
-      id: AppIds.AVAIL,
-      cla: 0xbc,
-      bip44Path: "m/44'/709'/0'/0'/0'", // 709 = 0x800002c5
-      ss58Prefix: 42,
-      rpcEndpoint: 'wss://avail.api.onfinality.io/public-ws',
-      ticker: 'AVAIL',
-      decimals: 18
-    }
-  ],
-  [
-    AppIds.AVAILRECOVERY,
-    {
-      name: 'AvailRecovery',
-      id: AppIds.AVAILRECOVERY,
-      cla: 0xbe,
-      bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
-      ss58Prefix: 42,
-      ticker: 'AVAIL',
       decimals: 18
     }
   ],
@@ -158,9 +129,9 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xa1,
       bip44Path: "m/44'/788'/0'/0'/0'", // 788 = 0x80000314
       ss58Prefix: 6,
+      // rpcEndpoint: 'wss://hk.p.bifrost-rpc.liebi.com/ws',
       ticker: 'BNC',
       decimals: 12
-      // rpcEndpoint: 'wss://bifrost-polkadot.api.onfinality.io/public-ws',
     }
   ],
   [
@@ -171,6 +142,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xae,
       bip44Path: "m/44'/788'/0'/0'/0'", // 788 = 0x80000314
       ss58Prefix: 6,
+      rpcEndpoint: 'wss://bifrost-rpc.liebi.com/ws',
       ticker: 'BNC',
       decimals: 12
     }
@@ -183,7 +155,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xb4,
       bip44Path: "m/44'/1005'/0'/0'/0'", // 1005 = 0x800003ed
       ss58Prefix: 42,
-      rpcEndpoint: 'wss://bittensor-finney.api.onfinality.io/public-ws',
+      // rpcEndpoint: 'wss://bittensor-finney.api.onfinality.io/public-ws',
       ticker: 'TAO',
       decimals: 9
     }
@@ -196,6 +168,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0x93,
       bip44Path: "m/44'/747'/0'/0'/0'", // 747 = 0x800002eb
       ss58Prefix: 36,
+      rpcEndpoint: 'wss://centrifuge-rpc.dwellir.com',
       ticker: 'CFG',
       decimals: 18
     }
@@ -208,6 +181,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xa8,
       bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
       ss58Prefix: 49,
+      rpcEndpoint: 'wss://composable-rpc.dwellir.com',
       ticker: 'LAYR',
       decimals: 12
     }
@@ -220,6 +194,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xb2,
       bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
       ss58Prefix: 18,
+      rpcEndpoint: 'wss://darwinia-rpc.dwellir.com',
       ticker: 'RING',
       decimals: 9
     }
@@ -256,6 +231,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xb9,
       bip44Path: "m/44'/1155'/0'/0'/0'", // 1155 = 0x80000483
       ss58Prefix: 2135,
+      rpcEndpoint: 'wss://enjin-matrix-rpc-1.dwellir.com',
       ticker: 'ENJ',
       decimals: 18
     }
@@ -270,19 +246,6 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       ss58Prefix: 42,
       ticker: 'ENT',
       decimals: 12
-    }
-  ],
-  [
-    AppIds.EQUILIBRIUM,
-    {
-      name: 'Equilibrium',
-      id: AppIds.EQUILIBRIUM,
-      cla: 0x95,
-      bip44Path: "m/44'/57597'/0'/0'/0'", // 2242269181 = 0x85f5e0fd
-      ss58Prefix: 67,
-      rpcEndpoint: 'wss://equilibrium.api.onfinality.io/public-ws',
-      ticker: 'EQ',
-      decimals: 9
     }
   ],
   [
@@ -305,6 +268,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xab,
       bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
       ss58Prefix: 63,
+      rpcEndpoint: 'wss://hydradx-rpc.dwellir.com',
       ticker: 'HDX',
       decimals: 12
     }
@@ -317,6 +281,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xa5,
       bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
       ss58Prefix: 2032,
+      rpcEndpoint: 'wss://interlay-rpc.dwellir.com',
       ticker: 'INTR',
       decimals: 10
     }
@@ -392,7 +357,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0x98,
       bip44Path: "m/44'/1003'/0'/0'/0'", // 1003 = 0x800003eb
       ss58Prefix: 37,
-      rpcEndpoint: 'wss://nodle-parachain.api.onfinality.io/public-ws',
+      rpcEndpoint: 'wss://nodle-rpc.dwellir.com',
       ticker: 'NODL',
       decimals: 11
     }
@@ -417,21 +382,9 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xa6,
       bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
       ss58Prefix: 172,
+      rpcEndpoint: 'wss://parallel.gatotech.network',
       ticker: 'PARA',
       decimals: 12
-    }
-  ],
-  [
-    AppIds.PEAQ,
-    {
-      name: 'Peaq',
-      id: AppIds.PEAQ,
-      cla: 0x61,
-      bip44Path: "m/44'/60'/0'/0'/0'", // 60 = 0x8000003c
-      ss58Prefix: 42,
-      rpcEndpoint: 'wss://peaq.api.onfinality.io/public-ws',
-      ticker: 'PQT',
-      decimals: 18
     }
   ],
   [
@@ -454,6 +407,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xb6,
       bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
       ss58Prefix: 56,
+      rpcEndpoint: 'wss://rpc-pendulum.prd.pendulumchain.tech',
       ticker: 'PEN',
       decimals: 12
     }
@@ -466,7 +420,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xaf,
       bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
       ss58Prefix: 30,
-      rpcEndpoint: 'wss://phala.api.onfinality.io/public-ws',
+      rpcEndpoint: 'wss://phala-rpc.dwellir.com',
       ticker: 'PHA',
       decimals: 12
     }
@@ -479,6 +433,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xa7,
       bip44Path: "m/44'/434'/0'/0'/0'", // 434 = 0x800001b2
       ss58Prefix: 49,
+      rpcEndpoint: 'wss://rpc.composablenodes.tech',
       ticker: 'PICA',
       decimals: 12
     }
@@ -491,7 +446,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xa0,
       bip44Path: "m/44'/799'/0'/0'/0'", // 799 = 0x8000031f
       ss58Prefix: 88,
-      rpcEndpoint: 'wss://polkadex.api.onfinality.io/public-ws',
+      rpcEndpoint: 'wss://polkadex-parachain.public.curie.radiumblock.co/ws',
       ticker: 'PDEX',
       decimals: 12
     }
@@ -540,7 +495,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0x9f,
       bip44Path: "m/44'/617'/0'/0'/0'", // 617 = 0x80000269
       ss58Prefix: 69,
-      rpcEndpoint: 'wss://sora.api.onfinality.io/public-ws',
+      rpcEndpoint: 'wss://ws.parachain-collator-3.pc3.sora2.soramitsu.co.jp',
       ticker: 'XOR',
       decimals: 18
     }
@@ -565,6 +520,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0x97,
       bip44Path: "m/44'/434'/0'/0'/0'", // 434 = 0x800001b2
       ss58Prefix: 2,
+      rpcEndpoint: 'wss://kusama-asset-hub-rpc.polkadot.io',
       ticker: 'STATEMINE',
       decimals: 12 // Assuming 12 as it's a common asset hub
     }
@@ -577,6 +533,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0x96,
       bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
       ss58Prefix: 0,
+      rpcEndpoint: 'wss://polkadot-asset-hub-rpc.polkadot.io',
       ticker: 'STATEMINT',
       decimals: 12 //Assuming 12 as it's a common asset hub
     }
@@ -625,6 +582,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xa3,
       bip44Path: "m/44'/1955'/0'/0'/0'", // 1955 = 0x800007a3
       ss58Prefix: 55,
+      rpcEndpoint: 'wss://xxnetwork-rpc.dwellir.com',
       ticker: 'XX',
       decimals: 9
     }
@@ -637,7 +595,7 @@ export const appsConfigs = new Map<AppIds, AppConfig>([
       cla: 0xb7,
       bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
       ss58Prefix: 73,
-      rpcEndpoint: 'wss://zeitgeist.api.onfinality.io/public-ws',
+      // rpcEndpoint: 'wss://zeitgeist.api.onfinality.io/public-ws',
       ticker: 'ZTG',
       decimals: 10
     }
