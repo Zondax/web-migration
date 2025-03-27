@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import {
   Table,
   TableBody,
@@ -59,6 +60,7 @@ const filterAppsWithErrors = (apps: App[]): App[] => {
 function AppsTable({ mode = 'migrate' }: AppsTableProps) {
   const apps$ = ledgerState$.apps.apps;
   const status = use$(ledgerState$.apps.status);
+  const syncProgress = use$(ledgerState$.apps.syncProgress);
   const [isRescaning, setIsRescaning] = useState<boolean>(false);
   const isLedgerConnected$ = useObservable(() =>
     Boolean(
@@ -156,6 +158,20 @@ function AppsTable({ mode = 'migrate' }: AppsTableProps) {
             <CardAction>{renderActionButton()}</CardAction>
           </div>
         </CardHeader>
+        {status === 'loading' && (
+          <div className="px-6 pb-2">
+            <div className="mb-1 flex justify-between items-center text-sm text-muted-foreground">
+              <span>Synchronizing apps</span>
+              <span>{syncProgress}%</span>
+            </div>
+            <Progress
+              value={syncProgress}
+              color="blue"
+              size="md"
+              className="mb-4"
+            />
+          </div>
+        )}
         <CardContent>
           <Table>
             <TableHeader>
