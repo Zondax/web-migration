@@ -10,7 +10,7 @@ import { formatVersion } from '@/lib/utils';
 import Transport from '@ledgerhq/hw-transport';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
-import { AppConfig, AppIds, appsConfigs } from 'app/config/apps';
+import { AppConfig, AppId, appsConfigs } from 'app/config/apps';
 import { maxAddressesToFetch } from 'app/config/config';
 import { InternalErrors } from 'app/config/errors';
 import {
@@ -85,11 +85,9 @@ export const ledgerClient = {
       const addresses: (GenericeResponseAddress | undefined)[] = [];
       for (let i = 0; i < maxAddressesToFetch; i++) {
         const derivedPath = getBip44Path(app.bip44Path, i);
-        // If it's Polkadot, use Kusama's SS58 prefix (2) instead
-        const ss58Prefix = app.id === AppIds.POLKADOT ? 2 : app.ss58Prefix;
         const address = await ledgerService.getAccountAddress(
           derivedPath,
-          ss58Prefix,
+          app.ss58Prefix,
           false
         );
         addresses.push({ ...address, path: derivedPath } as Address);
@@ -104,7 +102,7 @@ export const ledgerClient = {
   },
 
   async migrateAccount(
-    appId: AppIds,
+    appId: AppId,
     account: Address,
     updateStatus: UpdateMigratedStatusFn
   ): Promise<{ migrated?: boolean }> {

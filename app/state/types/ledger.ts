@@ -1,7 +1,7 @@
 import Transport from '@ledgerhq/hw-transport';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
-import { AppIds } from 'app/config/apps';
+import { AppId } from 'app/config/apps';
 
 /**
  * Represents a response object from a connection request.
@@ -56,7 +56,7 @@ export interface TransactionDetails {
 }
 
 export type UpdateMigratedStatusFn = (
-  appId: AppIds,
+  appId: AppId,
   accountPath: string,
   status: TransactionStatus,
   message?: string,
