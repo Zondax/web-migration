@@ -1,7 +1,7 @@
 import Transport from '@ledgerhq/hw-transport';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
-import { AppId } from 'app/config/apps';
+import { AppId } from 'config/apps';
 
 /**
  * Represents a response object from a connection request.

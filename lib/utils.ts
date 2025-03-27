@@ -1,14 +1,14 @@
 import { ResponseVersion } from '@zondax/ledger-js';
+import axios from 'axios';
+import { type ClassValue, clsx } from 'clsx';
 import {
   errorDetails,
   InternalErrors,
   LedgerErrorDetails,
   LedgerErrors
-} from 'app/config/errors';
-import { LedgerClientError } from 'app/state/client/base';
-import { notifications$ } from 'app/state/notifications';
-import axios from 'axios';
-import { type ClassValue, clsx } from 'clsx';
+} from 'config/errors';
+import { LedgerClientError } from 'state/client/base';
+import { notifications$ } from 'state/notifications';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {

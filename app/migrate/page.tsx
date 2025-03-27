@@ -2,11 +2,11 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { observer, use$ } from '@legendapp/state/react';
-import { ledgerState$ } from 'app/state/ledger';
-import { StepValue } from 'app/state/types/ui';
-import { uiState$ } from 'app/state/ui';
 import { Check } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { ledgerState$ } from 'state/ledger';
+import { StepValue } from 'state/types/ui';
+import { uiState$ } from 'state/ui';
 import AppsTable from './apps-table';
 import ConnectTab from './connect-tab';
 

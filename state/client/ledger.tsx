@@ -10,9 +10,9 @@ import { formatVersion } from '@/lib/utils';
 import Transport from '@ledgerhq/hw-transport';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
-import { AppConfig, AppId, appsConfigs } from 'app/config/apps';
-import { maxAddressesToFetch } from 'app/config/config';
-import { InternalErrors } from 'app/config/errors';
+import { AppConfig, AppId, appsConfigs } from 'config/apps';
+import { maxAddressesToFetch } from 'config/config';
+import { InternalErrors } from 'config/errors';
 import {
   Address,
   ConnectionResponse,

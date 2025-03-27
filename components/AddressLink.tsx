@@ -6,7 +6,7 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip';
 import { copyContent, truncateMiddleOfString } from '@/lib/utils';
-import { truncateMaxCharacters } from 'app/config/config';
+import { truncateMaxCharacters } from 'config/config';
 import { Check, Copy } from 'lucide-react';
 import { useCallback, useState } from 'react';
 

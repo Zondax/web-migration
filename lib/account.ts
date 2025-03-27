@@ -9,10 +9,10 @@ import {
   ISubmittableResult
 } from '@polkadot/types/types/extrinsic';
 import { hexToU8a } from '@polkadot/util';
-import { AppConfig } from 'app/config/apps';
-import { errorDetails } from 'app/config/errors';
-import { MINIMUM_AMOUNT } from 'app/config/mockData';
-import { Address, TransactionStatus } from 'app/state/types/ledger';
+import { AppConfig } from 'config/apps';
+import { errorDetails } from 'config/errors';
+import { MINIMUM_AMOUNT } from 'config/mockData';
+import { Address, TransactionStatus } from 'state/types/ledger';
 
 // Get API and Provider
 export async function getApiAndProvider(

@@ -2,13 +2,8 @@ import { getApiAndProvider, getBalance } from '@/lib/account';
 import { convertSS58Format } from '@/lib/addresses';
 import { handleLedgerError } from '@/lib/utils';
 import { observable } from '@legendapp/state';
-import {
-  AppConfig,
-  AppId,
-  appsConfigs,
-  polkadotAppConfig
-} from 'app/config/apps';
-import { errorDetails, InternalErrors } from 'app/config/errors';
+import { AppConfig, AppId, appsConfigs, polkadotAppConfig } from 'config/apps';
+import { errorDetails, InternalErrors } from 'config/errors';
 import { LedgerClientError } from './client/base';
 import { ledgerClient } from './client/ledger';
 import { notifications$ } from './notifications';

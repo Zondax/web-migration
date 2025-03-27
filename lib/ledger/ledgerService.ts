@@ -3,10 +3,7 @@ import TransportWebUSB from '@ledgerhq/hw-transport-webhid';
 import { LedgerError, ResponseVersion } from '@zondax/ledger-js';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
-import {
-  ConnectionResponse,
-  DeviceConnectionProps
-} from 'app/state/types/ledger';
+import { ConnectionResponse, DeviceConnectionProps } from 'state/types/ledger';
 import { openApp } from './openApp';
 
 /**

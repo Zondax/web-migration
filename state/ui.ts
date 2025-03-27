@@ -1,6 +1,6 @@
 import { getAppLightIcon } from '@/lib/utils';
 import { observable } from '@legendapp/state';
-import { AppConfig, AppId, appsConfigs } from 'app/config/apps';
+import { AppConfig, AppId, appsConfigs } from 'config/apps';
 import { AppIcons } from './ledger';
 import { Step } from './types/ui';
 

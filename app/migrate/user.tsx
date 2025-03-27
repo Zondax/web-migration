@@ -10,9 +10,9 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { observer, useObservable } from '@legendapp/state/react';
-import { ledgerState$ } from 'app/state/ledger';
 import Image from 'next/image';
 import { useCallback } from 'react';
+import { ledgerState$ } from 'state/ledger';
 
 function User() {
   const user = { image: null }; // Placeholder for user object

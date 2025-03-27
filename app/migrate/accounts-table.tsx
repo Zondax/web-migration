@@ -23,7 +23,6 @@ import {
 import { formatBalance } from '@/lib/utils';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
-import { Address } from 'app/state/types/ledger';
 import {
   AlertCircle,
   CheckCircle,
@@ -31,6 +30,7 @@ import {
   Clock,
   XCircle
 } from 'lucide-react';
+import { Address } from 'state/types/ledger';
 import DestinationAddressSelect from './destination-address-select';
 
 function AccountsTable({
