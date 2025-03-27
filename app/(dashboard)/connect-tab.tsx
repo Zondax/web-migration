@@ -27,13 +27,13 @@ function ConnectTab() {
           </CardTitle>
           <CardDescription className="w-fit self-center text-center pt-5">
             To begin the migration process, please follow these steps:
-            <ol className="mt-2 list-decimal list-inside space-y-1">
-              <li>Connect your Ledger device to your computer</li>
-              <li>Enter your PIN code on the device</li>
-              <li>Open the Migration App on your Ledger</li>
-              <li>Click the Connect button below</li>
-            </ol>
           </CardDescription>
+          <ol className="mt-2 list-decimal list-inside space-y-1 text-sm text-center text-muted-foreground">
+            <li>Connect your Ledger device to your computer</li>
+            <li>Enter your PIN code on the device</li>
+            <li>Open the Migration App on your Ledger</li>
+            <li>Click the Connect button below</li>
+          </ol>
         </CardHeader>
         <CardContent className="flex justify-center">
           <Button onClick={handleConnect}>
