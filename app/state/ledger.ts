@@ -48,6 +48,7 @@ interface LedgerState {
     polkadotApp: App;
     status?: AppStatus;
     error?: string;
+    syncProgress: number;
   };
   polkadotAddresses: Partial<Record<AppId, string[]>>;
 }
@@ -62,7 +63,8 @@ const initialLedgerState: LedgerState = {
     apps: [],
     polkadotApp: polkadotAppConfig,
     status: undefined,
-    error: undefined
+    error: undefined,
+    syncProgress: 0
   },
   polkadotAddresses: {}
 };
@@ -307,12 +309,16 @@ export const ledgerState$ = observable({
 
   // Synchronize Accounts
   async synchronizeAccounts() {
-    ledgerState$.apps.assign({ status: 'loading', apps: [] });
+    ledgerState$.apps.assign({ status: 'loading', apps: [], syncProgress: 0 });
 
     try {
       const connection = ledgerState$.device.connection.get();
       if (!connection) {
-        ledgerState$.apps.assign({ status: undefined, apps: [] });
+        ledgerState$.apps.assign({
+          status: undefined,
+          apps: [],
+          syncProgress: 0
+        });
         return;
       }
 
@@ -327,14 +333,24 @@ export const ledgerState$ = observable({
         });
       }
 
+      // Get the total number of apps to synchronize
+      const appsToSync = Array.from(appsConfigs.values()).filter(
+        (appConfig) => appConfig && appConfig.rpcEndpoint
+      );
+      const totalApps = appsToSync.length;
+      let syncedApps = 0;
+
       // request and save the accounts of each app synchronously
-      for (const appConfig of Array.from(appsConfigs.values())) {
-        // Skip apps that do not have an rpcEndpoint defined
-        if (!appConfig || !appConfig.rpcEndpoint) continue;
+      for (const appConfig of appsToSync) {
         const app = await ledgerState$.fetchAndProcessAccountsForApp(appConfig);
         if (app) {
           ledgerState$.apps.apps.push(app);
         }
+
+        // Update sync progress
+        syncedApps++;
+        const progress = Math.round((syncedApps / totalApps) * 100);
+        ledgerState$.apps.syncProgress.set(progress);
       }
 
       ledgerState$.apps.status.set('synchronized');
