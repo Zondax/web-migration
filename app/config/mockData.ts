@@ -1,4 +1,4 @@
-import { AppIds } from './apps';
+import { AppId } from './apps';
 
 export const mockBalances = [
   {
@@ -23,6 +23,6 @@ export const errorAddresses = [
   '4hZ5p8eBqpynqxCZGYhaX22YX9a4XWDa3PUUXZKtTUQ38qrL'
 ];
 
-export const errorApps = [AppIds.ACALA];
+export const errorApps = ['acala' as AppId];
 
 export const MINIMUM_AMOUNT = 100;

@@ -4,7 +4,7 @@ import { handleLedgerError } from '@/lib/utils';
 import { observable } from '@legendapp/state';
 import {
   AppConfig,
-  AppIds,
+  AppId,
   appsConfigs,
   polkadotAppConfig
 } from 'app/config/apps';
@@ -21,12 +21,12 @@ import {
 export type AppStatus = 'migrated' | 'synchronized' | 'loading' | 'error';
 
 export type AppIcons = {
-  [key in AppIds]: string;
+  [key in AppId]: string;
 };
 
 export interface App {
   name: string;
-  id: AppIds;
+  id: AppId;
   accounts?: Address[];
   ticker: string;
   decimals: number;
@@ -49,7 +49,7 @@ interface LedgerState {
     status?: AppStatus;
     error?: string;
   };
-  polkadotAddresses: Partial<Record<AppIds, string[]>>;
+  polkadotAddresses: Partial<Record<AppId, string[]>>;
 }
 
 const initialLedgerState: LedgerState = {
@@ -68,7 +68,7 @@ const initialLedgerState: LedgerState = {
 };
 
 // Update App
-function updateApp(appId: AppIds, update: Partial<App>) {
+function updateApp(appId: AppId, update: Partial<App>) {
   const apps = ledgerState$.apps.apps.get();
   const appIndex = apps.findIndex((app) => app.id === appId);
 
@@ -82,7 +82,7 @@ function updateApp(appId: AppIds, update: Partial<App>) {
 
 // Update Account
 function updateAccount(
-  appId: AppIds,
+  appId: AppId,
   address: string,
   update: Partial<Address>
 ) {
@@ -113,7 +113,7 @@ function updateAccount(
 
 // Update Migrated Status
 const updateMigratedStatus: UpdateMigratedStatusFn = (
-  appId: AppIds,
+  appId: AppId,
   accountPath: string,
   status,
   message,
@@ -187,7 +187,7 @@ export const ledgerState$ = observable({
   },
 
   // Synchronize Single Account
-  async synchronizeAccount(appId: AppIds) {
+  async synchronizeAccount(appId: AppId) {
     updateApp(appId, { status: 'loading' });
 
     const app = appsConfigs.get(appId);
@@ -345,7 +345,7 @@ export const ledgerState$ = observable({
   },
 
   // Synchronize Balance
-  async getAccountBalance(appId: AppIds, address: Address) {
+  async getAccountBalance(appId: AppId, address: Address) {
     updateAccount(appId, address.address, { isLoading: true });
     const rpcEndpoint = appsConfigs.get(appId)?.rpcEndpoint;
 
@@ -402,7 +402,7 @@ export const ledgerState$ = observable({
   },
 
   // Migrate Single Account
-  async migrateAccount(appId: AppIds, accountIndex: number) {
+  async migrateAccount(appId: AppId, accountIndex: number) {
     const apps = ledgerState$.apps.apps.get();
     const app = apps.find((app) => app.id === appId);
     const account = app?.accounts?.[accountIndex];

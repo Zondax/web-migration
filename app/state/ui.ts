@@ -1,11 +1,11 @@
 import { getAppLightIcon } from '@/lib/utils';
 import { observable } from '@legendapp/state';
-import { AppConfig, AppIds, appsConfigs } from 'app/config/apps';
+import { AppConfig, AppId, appsConfigs } from 'app/config/apps';
 import { AppIcons } from './ledger';
 import { Step } from './types/ui';
 
 interface UIState {
-  icons: Partial<{ [key in AppIds]: any }>;
+  icons: Partial<{ [key in AppId]: any }>;
   steps: Step[];
 }
 

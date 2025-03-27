@@ -1,4 +1,4 @@
-import { AppIds } from 'app/config/apps';
+import { AppId } from 'app/config/apps';
 
 /**
  * Notification Type Definition
@@ -9,7 +9,7 @@ export interface Notification {
   description: string;
   type: 'info' | 'success' | 'warning' | 'error';
   /** The ID of the app that the notification is related to */
-  appId?: AppIds;
+  appId?: AppId;
   createdAt: Date;
   dismissedAt?: Date;
   action?: {
