@@ -23,6 +23,6 @@ export const errorAddresses = [
   '4hZ5p8eBqpynqxCZGYhaX22YX9a4XWDa3PUUXZKtTUQ38qrL'
 ];
 
-export const errorApps = [AppIds.EQUILIBRIUM];
+export const errorApps = [AppIds.ACALA];
 
 export const MINIMUM_AMOUNT = 100;

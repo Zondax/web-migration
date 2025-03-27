@@ -294,6 +294,7 @@ export const ledgerState$ = observable({
 
       return undefined; // No accounts after filtering
     } catch (error) {
+      console.log('Error fetching and processing accounts for app:', app.id);
       return {
         name: app.name,
         id: app.id,
