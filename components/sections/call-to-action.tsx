@@ -1,7 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 export default function CallToAction() {
@@ -25,8 +25,7 @@ export default function CallToAction() {
             Ready to Upgrade Your Ledger Experience?
           </h2>
           <p className="text-xl text-white/90 max-w-3xl mx-auto mb-10">
-            Join the waitlist to be the first to access our Migration Assistant
-            when it launches.
+            Start migrating to benefit from the Universal Ledger Polkadot App.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -47,7 +46,7 @@ export default function CallToAction() {
                 style={{ color: '#FF2670' }}
               >
                 <span className="opacity-90 group-hover:opacity-100 transition-opacity">
-                  Join Waitlist
+                  Start Migration
                 </span>
                 <ArrowRight className="ml-2 h-5 w-5 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
               </Button>
@@ -76,7 +75,7 @@ export default function CallToAction() {
           </div>
 
           <p className="mt-8 text-white/70 text-sm">
-            No commitment required. We'll notify you when the tool is ready.
+            This application is currently under development.
           </p>
         </motion.div>
       </div>

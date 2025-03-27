@@ -1,7 +1,9 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import React from 'react';
 
 function FloatingPaths({ position }: { position: number }) {
   const paths = Array.from({ length: 36 }, (_, i) => ({
@@ -51,14 +53,17 @@ function FloatingPaths({ position }: { position: number }) {
 
 const Blob = ({
   className,
-  animate = true
+  animate = true,
+  style
 }: {
   className: string;
   animate?: boolean;
+  style?: React.CSSProperties;
 }) => {
   return (
     <motion.div
       className={`absolute rounded-full ${className}`}
+      style={style}
       initial={animate ? { scale: 0.8, opacity: 0.8 } : {}}
       animate={
         animate
@@ -178,24 +183,26 @@ export default function BackgroundPaths({
                   'linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1))'
               }}
             >
-              <Button
-                variant="ghost"
-                className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md 
-                          bg-white/95 hover:bg-white/100 
-                          border border-white/20 hover:shadow-md
-                          group-hover:-translate-y-0.5 transition-all duration-300"
-                style={{ color: '#FF2670' }}
-              >
-                <span className="opacity-90 group-hover:opacity-100 transition-opacity">
-                  Start Migration
-                </span>
-                <span
-                  className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 
-                            transition-all duration-300"
+              <Link href="/migrate">
+                <Button
+                  variant="ghost"
+                  className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md 
+                            bg-white/95 hover:bg-white/100 
+                            border border-white/20 hover:shadow-md
+                            group-hover:-translate-y-0.5 transition-all duration-300"
+                  style={{ color: '#FF2670' }}
                 >
-                  →
-                </span>
-              </Button>
+                  <span className="opacity-90 group-hover:opacity-100 transition-opacity">
+                    Start Migration
+                  </span>
+                  <span
+                    className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 
+                              transition-all duration-300"
+                  >
+                    →
+                  </span>
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </motion.div>

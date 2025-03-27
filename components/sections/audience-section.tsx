@@ -7,23 +7,23 @@ export default function AudienceSection() {
   const audiences = [
     {
       icon: Wallet,
-      title: 'Users with Polkadot Ledger accounts',
+      title: 'Users with Ledger Wallet devices',
       description:
-        'Anyone currently using a Ledger device to manage Polkadot assets',
+        'Anyone currently using a Ledger device to manage Substrate based assets',
       delay: 0.1
     },
     {
       icon: Zap,
       title: 'Holders across parachains',
       description:
-        'Users with assets on Moonbeam, Astar, and other Substrate-based chains',
+        'Users with assets on Kusama, Astar, and other Substrate-based chains',
       delay: 0.2
     },
     {
       icon: Users,
-      title: 'Universal app adopters',
+      title: 'Universal App adopters',
       description:
-        'Anyone looking to move to the new Polkadot Universal app without the headache',
+        'Anyone looking to move to the new Polkadot Universal App without the headache',
       delay: 0.3
     }
   ];

@@ -39,9 +39,16 @@ export default function FeatureSection() {
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl transform rotate-1 scale-105" />
             <div className="relative bg-white p-8 md:p-10 rounded-2xl shadow-xl border border-purple-100">
               <div className="flex items-center justify-center mb-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
-                  <ArrowRight className="w-8 h-8 text-white" />
-                </div>
+                <a
+                  href="https://zondax.ch/blog/all-in-one-polkadot-app-is-here-2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center hover:scale-105 transition-transform">
+                    <ArrowRight className="w-8 h-8 text-white" />
+                  </div>
+                </a>
               </div>
               <h3 className="text-2xl font-bold text-center mb-4 text-gray-800">
                 The Universal Ledger App Advantage

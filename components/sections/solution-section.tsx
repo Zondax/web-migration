@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Link2, Search, CheckCircle, Lock } from 'lucide-react';
+import { CheckCircle, Link2, Lock, Search } from 'lucide-react';
 
 export default function SolutionSection() {
   const features = [
@@ -89,11 +89,11 @@ export default function SolutionSection() {
         >
           <div className="text-center">
             <h3 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-pink-600">
-              The Migration Assistant Difference
+              The Migration Assistant
             </h3>
             <p className="text-gray-700 text-lg">
-              No more guesswork. No more manual steps. Just a smooth, guided
-              transition to the future of Ledger on Polkadot.
+              No more manual steps. Just a smooth, guided transition to the
+              future of Ledger experience.
             </p>
           </div>
         </motion.div>
