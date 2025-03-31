@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 import { GradientBackground } from '../migrate/background';
 
@@ -66,10 +67,30 @@ export function HomePage({
               delay: 1.5 / animationSpeed,
               duration: 1 / animationSpeed
             }}
-            className="text-xl md:text-2xl text-white/90 mb-10 max-w-3xl mx-auto"
+            className="text-xl md:text-2xl text-white/90 mb-6 max-w-3xl mx-auto"
           >
             {subtitle}
           </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              delay: 1.8 / animationSpeed,
+              duration: 1 / animationSpeed
+            }}
+            className="mb-8"
+          >
+            <div className="flex flex-row items-center justify-center gap-2">
+              <p className="text-white/80">by</p>
+              <Image 
+                src="/zondax-white.svg" 
+                alt="Zondax Logo" 
+                width={105} 
+                height={48}
+              />
+            </div>
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
