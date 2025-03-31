@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { TabItem } from '../tabs';
+import { TabItem } from '../Tabs';
 
 interface UseTabsProps<T extends string> {
   tabs: TabItem<T>[];
