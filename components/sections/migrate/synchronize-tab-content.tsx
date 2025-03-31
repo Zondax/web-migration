@@ -90,7 +90,7 @@ export function SynchronizeTabContent({
           <TableRow>
             <TableHead className="w-[50px]"></TableHead>
             <TableHead className="hidden w-[50px] sm:table-cell"></TableHead>
-            <TableHead className="w-[25%]">Name</TableHead>
+            <TableHead className="w-[25%]">Chain</TableHead>
             <TableHead className="w-[25%]">Addresses</TableHead>
             <TableHead className="w-[25%]">Total Balance</TableHead>
             <TableHead className="w-[100px]"></TableHead>

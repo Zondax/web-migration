@@ -1,6 +1,5 @@
 import { Spinner } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { SimpleTooltip } from '@/components/ui/tooltip';
 import { muifyHtml } from '@/lib/muifyHtml';
@@ -72,20 +71,20 @@ function AppRow({
 
   return (
     <>
-      <TableRow>
-        <TableCell className="px-2 text-center">
-          {accounts?.length !== 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleExpand}
-              className="p-2 hover:bg-gray-200 mx-auto"
-            >
+      <TableRow
+        className={
+          accounts?.length !== 0 ? 'cursor-pointer hover:bg-gray-50' : ''
+        }
+        onClick={accounts?.length !== 0 ? toggleExpand : undefined}
+      >
+        <TableCell className="px-2">
+          <div className="flex justify-center items-center h-full">
+            {accounts?.length !== 0 && (
               <ChevronDown
                 className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
               />
-            </Button>
-          )}
+            )}
+          </div>
         </TableCell>
         <TableCell className="px-2 hidden sm:table-cell">
           <div className="max-h-8 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8">
