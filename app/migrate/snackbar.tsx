@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { muifyHtml } from '@/lib/muifyHtml';
 import { observer } from '@legendapp/state/react';
 import * as Toast from '@radix-ui/react-toast';
-import { notifications$ } from 'app/state/notifications';
-import { uiState$ } from 'app/state/ui';
+import { notifications$ } from 'state/notifications';
+import { uiState$ } from 'state/ui';
 
 function Snackbar() {
   const activeNotifications = notifications$.active?.get() ?? [];

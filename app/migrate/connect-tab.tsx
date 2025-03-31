@@ -9,8 +9,8 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { observer } from '@legendapp/state/react';
-import { ledgerState$ } from 'app/state/ledger';
 import { useCallback } from 'react';
+import { ledgerState$ } from 'state/ledger';
 
 function ConnectTab() {
   const handleConnect = useCallback(async () => {

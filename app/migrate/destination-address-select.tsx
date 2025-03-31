@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/select';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
-import { Address } from 'app/state/types/ledger';
+import { Address } from 'state/types/ledger';
 
 interface DestinationAddressSelectProps {
   account: Observable<Address>;

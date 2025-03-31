@@ -20,9 +20,9 @@ import {
 } from '@/components/ui/table';
 import { observable } from '@legendapp/state';
 import { observer, use$, useObservable } from '@legendapp/state/react';
-import { App, ledgerState$ } from 'app/state/ledger';
-import { Address } from 'app/state/types/ledger';
 import { useCallback, useState } from 'react';
+import { App, ledgerState$ } from 'state/ledger';
+import { Address } from 'state/types/ledger';
 import AppRow from './app-row';
 
 interface AppsTableProps {

@@ -12,10 +12,10 @@ import { muifyHtml } from '@/lib/muifyHtml';
 import { formatBalance } from '@/lib/utils';
 import { Observable } from '@legendapp/state';
 import { observer, use$ } from '@legendapp/state/react';
-import { App, ledgerState$ } from 'app/state/ledger';
-import { uiState$ } from 'app/state/ui';
 import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
+import { App, ledgerState$ } from 'state/ledger';
+import { uiState$ } from 'state/ui';
 import Accounts from './accounts-table';
 
 function AppRow({

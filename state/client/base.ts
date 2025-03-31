@@ -1,4 +1,4 @@
-import { InternalErrors, LedgerErrors } from 'app/config/errors';
+import { InternalErrors, LedgerErrors } from 'config/errors';
 
 export interface LedgerClientError {
   name: InternalErrors | LedgerErrors;
