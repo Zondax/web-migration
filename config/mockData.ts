@@ -6,17 +6,21 @@ export const mockBalances = [
     balance: 2000000000
   },
   // {
-  //   address: 'DzdDXY4xGGsPSYBf4Fv8kbaS3kdZNb9PX8DpKRsM3UuRhJ4', // KUSAMA
+  //   address: 'DzdDXY4xGGsPSYBf4Fv8kbaS3kdZNb9PX8DpKRsM3UuRhJ4', // KUSAMA 0
   //   balance: 1
   // },
+  {
+    address: 'Gq9CTYACKtgA1dyrM5yh7oDK6yh1P3ErjcxZvDmJu9YjdB5', // KUSAMA 1
+    balance: 10000000003
+  },
+  {
+    address: 'EfEKXK3qtfDwMMV9Tc63ADoUdHdM1XrgeubH1PHh3TGzKXH', // KUSAMA 3
+    balance: 30000000003
+  },
   {
     address: 'WVDmu85CwmEDHwyfVCfEX1WMeJc2ziRZBEi8WRPZU68GNbs', // ASTAR
     balance: 30000000003000000000
   }
-  // {
-  //   address: '13M7fitxMYMVNfeG3e6mP4pcCteG4Wyf8kcew5TRN7PGm84C', // POLKADOT
-  //   balance: 4
-  // },
 ];
 
 export const errorAddresses = [

@@ -1,10 +1,5 @@
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
+import { SimpleTooltip } from '@/components/ui/tooltip';
 import { copyContent, truncateMiddleOfString } from '@/lib/utils';
 import { truncateMaxCharacters } from 'config/config';
 import { Check, Copy } from 'lucide-react';
@@ -57,14 +52,9 @@ export function AddressLink({
       {disableTooltip ? (
         renderContent()
       ) : (
-        <TooltipProvider>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
-            <TooltipContent>
-              <p>{tooltipText || value}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <SimpleTooltip tooltipText={tooltipText || value}>
+          {renderContent()}
+        </SimpleTooltip>
       )}
 
       {hasCopyButton && (

@@ -14,15 +14,11 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
+import { SimpleTooltip } from '@/components/ui/tooltip';
 import { formatBalance } from '@/lib/utils';
 import { Observable } from '@legendapp/state';
 import { observer } from '@legendapp/state/react';
+import { motion } from 'framer-motion';
 import {
   AlertCircle,
   CheckCircle,
@@ -90,30 +86,27 @@ function AccountsTable({
     }
 
     return statusIcon ? (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>{statusIcon}</TooltipTrigger>
-          <TooltipContent>
-            <p>{tooltipContent}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <SimpleTooltip tooltipText={tooltipContent}>{statusIcon}</SimpleTooltip>
     ) : null;
   };
 
   return (
     <TableRow>
       <TableCell colSpan={6} className="p-0">
-        <div className="bg-muted/50">
+        <motion.div
+          className="bg-gray-100 px-4"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <Table className="w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-left py-2">Address</TableHead>
-                <TableHead className="text-left py-2">Public Key</TableHead>
-                <TableHead className="text-right py-2">Balance</TableHead>
-                <TableHead className="text-left py-2">
-                  Destination Address
-                </TableHead>
+                <TableHead className="text-left">Address</TableHead>
+                <TableHead className="text-left">Public Key</TableHead>
+                <TableHead className="text-right">Balance</TableHead>
+                <TableHead className="text-left">Destination Address</TableHead>
                 <TableHead className="w-[100px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -155,16 +148,11 @@ function AccountsTable({
                     <TableCell>
                       <div className="flex gap-2 justify-end items-center">
                         {account.error.get() && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <AlertCircle className="h-4 w-4 text-destructive cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{account.error.get()?.description}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <SimpleTooltip
+                            tooltipText={account.error.get()?.description}
+                          >
+                            <AlertCircle className="h-4 w-4 text-destructive cursor-help" />
+                          </SimpleTooltip>
                         )}
                         {renderStatusIcon(account)}
 
@@ -237,7 +225,7 @@ function AccountsTable({
               )}
             </TableBody>
           </Table>
-        </div>
+        </motion.div>
       </TableCell>
     </TableRow>
   );

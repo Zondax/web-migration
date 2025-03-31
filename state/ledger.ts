@@ -12,6 +12,7 @@ import {
   DeviceConnectionProps,
   UpdateMigratedStatusFn
 } from './types/ledger';
+import { Notification } from './types/notifications';
 
 export type AppStatus = 'migrated' | 'synchronized' | 'loading' | 'error';
 
@@ -44,6 +45,11 @@ interface LedgerState {
     status?: AppStatus;
     error?: string;
     syncProgress: number;
+    completedTransactions: number;
+    migrationResult: {
+      success: number;
+      fails: number;
+    };
   };
   polkadotAddresses: Partial<Record<AppId, string[]>>;
 }
@@ -59,7 +65,12 @@ const initialLedgerState: LedgerState = {
     polkadotApp: polkadotAppConfig,
     status: undefined,
     error: undefined,
-    syncProgress: 0
+    syncProgress: 0,
+    completedTransactions: 0,
+    migrationResult: {
+      success: 0,
+      fails: 0
+    }
   },
   polkadotAddresses: {}
 };
@@ -149,7 +160,7 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (
 
 export const ledgerState$ = observable({
   ...initialLedgerState,
-  async connectLedger() {
+  async connectLedger(): Promise<{ connected: boolean }> {
     // Set the loading state to true and clear any previous errors
     ledgerState$.device.isLoading.set(true);
     ledgerState$.device.error.set(undefined);
@@ -181,6 +192,23 @@ export const ledgerState$ = observable({
         InternalErrors.DISCONNECTION_ERROR
       );
     }
+  },
+
+  // Clear synchronization data
+  clearSynchronization() {
+    ledgerState$.apps.assign({
+      apps: [],
+      polkadotApp: polkadotAppConfig,
+      status: undefined,
+      error: undefined,
+      syncProgress: 0,
+      completedTransactions: 0,
+      migrationResult: {
+        success: 0,
+        fails: 0
+      }
+    });
+    ledgerState$.polkadotAddresses.set({});
   },
 
   // Synchronize Single Account
@@ -247,6 +275,9 @@ export const ledgerState$ = observable({
         })
       );
 
+      // Log accounts for debugging purposes
+      console.log(`Accounts for app ${app.id}:`, accounts);
+
       const filteredAccounts = accounts.filter(
         (account) =>
           !filterByBalance ||
@@ -302,6 +333,101 @@ export const ledgerState$ = observable({
     }
   },
 
+  // Fetch and Process Accounts for a Single App
+  async fetchAndProcessPolkadotAccounts(): Promise<App | undefined> {
+    try {
+      const app = polkadotAppConfig;
+      const response = await ledgerClient.synchronizeAccounts(app);
+
+      const noAccountsNotification: Omit<Notification, 'id' | 'createdAt'> = {
+        title: `No migration source`,
+        description: `No Polkadot accounts available to migrate from`,
+        appId: app.id,
+        type: 'info',
+        autoHideDuration: 5000
+      };
+
+      if (!response.result || !app.rpcEndpoint) {
+        notifications$.push(noAccountsNotification);
+        return {
+          name: app.name,
+          id: app.id,
+          ticker: app.ticker,
+          decimals: app.decimals,
+          status: 'error'
+        };
+      }
+
+      const { api, provider, error } = await getApiAndProvider(app.rpcEndpoint);
+
+      if (error || !api) {
+        return {
+          name: app.name,
+          id: app.id,
+          ticker: app.ticker,
+          decimals: app.decimals,
+          status: 'error',
+          error: {
+            source: 'synchronization',
+            description:
+              errorDetails.blockchain_connection_error.description ?? ''
+          }
+        };
+      }
+
+      // Check balance for each account, but stop processing if one returns zero
+      const accounts: Address[] = await Promise.all(
+        response.result.map(async (address) => {
+          return await getBalance(address, api);
+        })
+      );
+      // const accounts: Address[] = [];
+      // for (const address of response.result) {
+      //   const accountWithBalance = await getBalance(address, api);
+      //   accounts.push(accountWithBalance);
+
+      //   // If this account has zero balance, stop checking the rest
+      //   if ((!accountWithBalance.balance || accountWithBalance.balance === 0) && !accountWithBalance.error) {
+      //     console.log(`Found account with zero balance for ${app.id}, stopping further balance checks`);
+      //     break;
+      //   }
+      // }
+
+      // Log accounts for debugging purposes
+      console.log(`Accounts for app ${app.id}:`, accounts);
+
+      if (api) {
+        await api.disconnect();
+      } else if (provider) {
+        await provider.disconnect();
+      }
+
+      // Only set the app if there are accounts after filtering
+      if (accounts.length === 0) {
+        notifications$.push(noAccountsNotification);
+      }
+
+      return {
+        name: app.name,
+        id: app.id,
+        ticker: app.ticker,
+        decimals: app.decimals,
+        status: 'synchronized',
+        accounts
+      };
+    } catch (error) {
+      const app = polkadotAppConfig;
+      console.log('Error fetching and processing accounts for app:', app.id);
+      return {
+        name: app.name,
+        id: app.id,
+        ticker: app.ticker,
+        decimals: app.decimals,
+        status: 'error'
+      };
+    }
+  },
+
   // Synchronize Accounts
   async synchronizeAccounts() {
     ledgerState$.apps.assign({ status: 'loading', apps: [], syncProgress: 0 });
@@ -317,10 +443,7 @@ export const ledgerState$ = observable({
         return;
       }
 
-      const polkadotApp = await ledgerState$.fetchAndProcessAccountsForApp(
-        polkadotAppConfig,
-        false
-      );
+      const polkadotApp = await ledgerState$.fetchAndProcessPolkadotAccounts();
       if (polkadotApp) {
         ledgerState$.apps.polkadotApp.set({
           ...polkadotApp,
@@ -328,18 +451,24 @@ export const ledgerState$ = observable({
         });
       }
 
+      // Array.from(appsConfigs.values())
       // Get the total number of apps to synchronize
-      const appsToSync = Array.from(appsConfigs.values()).filter(
-        (appConfig) => appConfig && appConfig.rpcEndpoint
-      );
+      const appsToSync = [
+        appsConfigs.get('kusama'),
+        appsConfigs.get('astar')
+      ].filter((appConfig) => appConfig && appConfig.rpcEndpoint);
       const totalApps = appsToSync.length;
       let syncedApps = 0;
 
       // request and save the accounts of each app synchronously
       for (const appConfig of appsToSync) {
-        const app = await ledgerState$.fetchAndProcessAccountsForApp(appConfig);
-        if (app) {
-          ledgerState$.apps.apps.push(app);
+        if (appConfig) {
+          // Comment it later
+          const app =
+            await ledgerState$.fetchAndProcessAccountsForApp(appConfig);
+          if (app) {
+            ledgerState$.apps.apps.push(app);
+          }
         }
 
         // Update sync progress
@@ -452,10 +581,31 @@ export const ledgerState$ = observable({
           `Account at path ${account.path} in app ${appId} migration failed:`,
           InternalErrors.MIGRATION_ERROR
         );
+
+        // Increment fails counter
+        const currentMigrationResult = ledgerState$.apps.migrationResult.get();
+        ledgerState$.apps.migrationResult.set({
+          ...currentMigrationResult,
+          fails: currentMigrationResult.fails + 1
+        });
       } else if (response.migrated) {
         updateAccount(appId, account.address, {
           status: 'migrated',
           isLoading: false
+        });
+
+        // Increment completed transactions counter
+        const currentCompletedTransactions =
+          ledgerState$.apps.completedTransactions.get();
+        ledgerState$.apps.completedTransactions.set(
+          currentCompletedTransactions + 1
+        );
+
+        // Increment success counter
+        const currentMigrationResult = ledgerState$.apps.migrationResult.get();
+        ledgerState$.apps.migrationResult.set({
+          ...currentMigrationResult,
+          success: currentMigrationResult.success + 1
         });
 
         console.log(
@@ -472,6 +622,13 @@ export const ledgerState$ = observable({
             (error as LedgerClientError).message || 'Failed to migrate account'
         },
         isLoading: false
+      });
+
+      // Increment fails counter
+      const currentMigrationResult = ledgerState$.apps.migrationResult.get();
+      ledgerState$.apps.migrationResult.set({
+        ...currentMigrationResult,
+        fails: currentMigrationResult.fails + 1
       });
     }
   },
@@ -512,8 +669,13 @@ export const ledgerState$ = observable({
     }
   },
 
-  // Migrate All Accounts (refactored)
+  // Migrate All Accounts
   async migrateAll() {
+    // Reset completed transactions counter before starting
+    ledgerState$.apps.completedTransactions.set(0);
+    // Reset migration result
+    ledgerState$.apps.migrationResult.set({ success: 0, fails: 0 });
+
     try {
       const apps = ledgerState$.apps.apps.get();
       for (const app of apps) {

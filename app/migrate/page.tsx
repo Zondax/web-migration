@@ -1,107 +1,127 @@
 'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { observer, use$ } from '@legendapp/state/react';
+import { motion, useAnimation } from 'framer-motion';
+import { useEffect, useState } from 'react';
+
+// Import section components
+import { useLoadIcons } from '@/components/hooks/loadIcons';
+import { useTabs } from '@/components/hooks/useTabs';
+import { GradientBackground } from '@/components/sections/migrate/background';
+import { Header } from '@/components/sections/migrate/header';
+import Snackbar from '@/components/sections/migrate/snackbar';
+import { Tabs } from '@/components/Tabs';
+import { migrationTabs } from 'config/ui';
 import { Check } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
-import { ledgerState$ } from 'state/ledger';
-import { StepValue } from 'state/types/ui';
-import { uiState$ } from 'state/ui';
-import AppsTable from './apps-table';
-import ConnectTab from './connect-tab';
 
-function ProductsPage() {
-  const steps = use$(uiState$.steps);
-  const [activeStep, setActiveStep] = useState<StepValue>('connect-device');
+export default function MigratePage() {
+  const controls = useAnimation();
 
-  const isDeviceConnected = ledgerState$.device.connection.get();
-  const isAppOpen = ledgerState$.device.connection?.genericApp?.get();
-  const isSynchronized = ledgerState$.apps.status.get() === 'synchronized';
+  // Use our tab management hook
+  const { activeTab, handleTabChange, goToNextTab, goToPreviousTab } = useTabs({
+    tabs: migrationTabs
+  });
 
-  // Update steps completion status
+  useLoadIcons();
+
+  // State to track tabs with completion status and disabled state
+  const [tabsWithStatus, setTabsWithStatus] = useState(() =>
+    migrationTabs.map((tab, index) => ({
+      ...tab,
+      isComplete: false,
+      disabled: index > 0 // Initially only first tab is enabled
+    }))
+  );
+
+  // Update tabs status when active tab changes
   useEffect(() => {
-    uiState$.steps.set((prev) =>
-      prev.map((step) => {
-        switch (step.value) {
-          case 'connect-device':
-            return {
-              ...step,
-              isComplete: Boolean(isDeviceConnected && isAppOpen)
-            };
-          case 'synchronize-accounts':
-            return { ...step, isComplete: isSynchronized };
-          case 'migrate':
-            return { ...step, isComplete: false }; // TODO: Add migration completion check
-          default:
-            return step;
-        }
+    setTabsWithStatus((prevTabs) =>
+      prevTabs.map((tab, index) => {
+        return {
+          ...tab,
+          icon:
+            index < activeTab ? (
+              <Check className="h-4 w-4 text-green-500" />
+            ) : undefined,
+          disabled: index !== activeTab
+        };
       })
     );
-  }, [isDeviceConnected, isAppOpen, isSynchronized]);
+  }, [activeTab]);
 
-  // Auto-advance to next step when current step is completed
   useEffect(() => {
-    const currentStepIndex = steps.findIndex(
-      (step) => step.value === activeStep
-    );
-    const currentStep = steps[currentStepIndex];
-    const nextStep = steps[currentStepIndex + 1];
+    controls.start({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 }
+    });
+  }, [controls]);
 
-    if (currentStep?.isComplete && nextStep) {
-      setActiveStep(nextStep.value);
-    }
-  }, [steps, activeStep]);
-
-  const handleTabChange = useCallback((value: string) => {
-    setActiveStep(value as StepValue);
-  }, []);
-
-  const getStepStatus = (stepValue: StepValue) => {
-    const step = steps.find((s) => s.value === stepValue);
-    const currentIndex = steps.findIndex((s) => s.value === activeStep);
-    const stepIndex = steps.findIndex((s) => s.value === stepValue);
-
-    return {
-      disabled: stepIndex > currentIndex && !steps[stepIndex - 1]?.isComplete,
-      isComplete: step?.isComplete
-    };
+  // Prepare props for each tab component
+  const connectProps = {
+    onContinue: () => goToNextTab()
   };
 
-  useEffect(() => {
-    uiState$.loadInitialIcons();
-  }, []);
+  const synchronizeProps = {
+    onContinue: () => goToNextTab()
+  };
+
+  const migrateProps = {
+    onBack: () => goToPreviousTab()
+  };
+
+  // Get the active component with its props
+  const getActiveComponent = () => {
+    const TabComponent = tabsWithStatus[activeTab].component;
+
+    let props;
+    switch (activeTab) {
+      case 0:
+        props = connectProps;
+        break;
+      case 1:
+        props = synchronizeProps;
+        break;
+      case 2:
+        props = migrateProps;
+        break;
+      default:
+        props = {};
+    }
+
+    return <TabComponent {...props} />;
+  };
 
   return (
-    <Tabs value={activeStep} onValueChange={handleTabChange}>
-      <div className="flex items-center">
-        <TabsList>
-          {steps.map((step) => {
-            const { disabled, isComplete } = getStepStatus(step.value);
-            return (
-              <TabsTrigger
-                key={step.value}
-                value={step.value}
-                disabled={disabled}
-                className="flex items-center gap-2"
-              >
-                {step.label}
-                {isComplete && <Check className="h-4 w-4" />}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background */}
+      <GradientBackground showBlobs={true} animationSpeed={0.8} />
+
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        {/* Header */}
+        <Header />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={controls}
+          className="bg-white/90 backdrop-blur-md rounded-xl border border-white/20 shadow-xl p-0 mb-8 overflow-hidden"
+        >
+          <div className="bg-gradient-to-r from-[#F8F9FC]/90 to-white/90 border-b border-[#DCE2E9] px-4 py-3">
+            {/* Tabs */}
+            <Tabs
+              tabs={tabsWithStatus}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+            />
+
+            <div className="p-6 bg-white min-h-[500px]">
+              {/* Render active tab component */}
+              {getActiveComponent()}
+            </div>
+          </div>
+        </motion.div>
       </div>
-      <TabsContent value="connect-device">
-        <ConnectTab />
-      </TabsContent>
-      <TabsContent value="synchronize-accounts">
-        <AppsTable mode="synchronize" />
-      </TabsContent>
-      <TabsContent value="migrate">
-        <AppsTable mode="migrate" />
-      </TabsContent>
-    </Tabs>
+
+      <Snackbar />
+    </div>
   );
 }
-
-export default observer(ProductsPage);

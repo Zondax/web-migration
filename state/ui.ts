@@ -2,24 +2,13 @@ import { getAppLightIcon } from '@/lib/utils';
 import { observable } from '@legendapp/state';
 import { AppConfig, AppId, appsConfigs } from 'config/apps';
 import { AppIcons } from './ledger';
-import { Step } from './types/ui';
 
 interface UIState {
   icons: Partial<{ [key in AppId]: any }>;
-  steps: Step[];
 }
 
 const initialUIState: UIState = {
-  icons: {},
-  steps: [
-    { value: 'connect-device', label: 'Connect Device', isComplete: false },
-    {
-      value: 'synchronize-accounts',
-      label: 'Synchronize Accounts',
-      isComplete: false
-    },
-    { value: 'migrate', label: 'Migrate', isComplete: false }
-  ]
+  icons: {}
 };
 
 let iconsStatus: 'loading' | 'loaded' | 'unloaded' = 'unloaded';
@@ -30,7 +19,7 @@ export const uiState$ = observable({
   async loadInitialIcons() {
     if (iconsStatus !== 'unloaded') return;
     iconsStatus = 'loading';
-
+    console.log('Loading initial icons', appsConfigs.values());
     const appIcons: Partial<AppIcons> = {};
 
     const iconPromises = Array.from(appsConfigs.values())

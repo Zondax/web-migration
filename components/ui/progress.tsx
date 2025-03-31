@@ -1,64 +1,28 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import * as ProgressPrimitive from '@radix-ui/react-progress';
 import * as React from 'react';
 
-interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
-  value: number;
-  max?: number;
-  color?: 'red' | 'green' | 'blue' | 'default';
-  size?: 'sm' | 'md' | 'lg';
-  showValue?: boolean;
-}
+import { cn } from '@/lib/utils';
 
-const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
-  (
-    {
-      className,
-      value,
-      max = 100,
-      color = 'default',
-      size = 'md',
-      showValue = false,
-      ...props
-    },
-    ref
-  ) => {
-    const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
-
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          'relative w-full overflow-hidden rounded-full bg-secondary',
-          {
-            'h-2': size === 'sm',
-            'h-4': size === 'md',
-            'h-6': size === 'lg'
-          },
-          className
-        )}
-        {...props}
-      >
-        <div
-          className={cn('h-full w-full flex-1 transition-all', {
-            'bg-red-500': color === 'red',
-            'bg-green-500': color === 'green',
-            'bg-blue-500': color === 'blue',
-            'bg-primary': color === 'default'
-          })}
-          style={{ width: `${percentage}%` }}
-        />
-        {showValue && (
-          <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-white">
-            {Math.round(percentage)}%
-          </div>
-        )}
-      </div>
-    );
-  }
-);
-
-Progress.displayName = 'Progress';
+const Progress = React.forwardRef<
+  React.ElementRef<typeof ProgressPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
+>(({ className, value, ...props }, ref) => (
+  <ProgressPrimitive.Root
+    ref={ref}
+    className={cn(
+      'relative h-2 w-full overflow-hidden rounded-full bg-[#DCE2E9]',
+      className
+    )}
+    {...props}
+  >
+    <ProgressPrimitive.Indicator
+      className="h-full w-full flex-1 bg-[#4285F4] rounded-full transition-all duration-500 ease-in-out"
+      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+    />
+  </ProgressPrimitive.Root>
+));
+Progress.displayName = ProgressPrimitive.Root.displayName;
 
 export { Progress };

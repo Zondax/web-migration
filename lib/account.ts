@@ -11,7 +11,7 @@ import {
 import { hexToU8a } from '@polkadot/util';
 import { AppConfig } from 'config/apps';
 import { errorDetails } from 'config/errors';
-import { MINIMUM_AMOUNT } from 'config/mockData';
+import { MINIMUM_AMOUNT, mockBalances } from 'config/mockData';
 import { Address, TransactionStatus } from 'state/types/ledger';
 
 // Get API and Provider
@@ -82,6 +82,16 @@ export async function getBalance(
   const { address: addressString } = address;
 
   try {
+    if (mockBalances.some((balance) => balance.address === addressString)) {
+      return {
+        ...address,
+        balance: mockBalances.find(
+          (balance) => balance.address === addressString
+        )?.balance,
+        status: 'synchronized',
+        error: undefined
+      };
+    }
     const balance = await api?.query.system.account(addressString);
     const freeBalance =
       balance && 'data' in balance && 'free' in (balance as any).data
