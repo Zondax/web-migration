@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 // Import section components
 import { useLoadIcons } from '@/components/hooks/loadIcons';
+import { useConnection } from '@/components/hooks/useConnection';
 import { useTabs } from '@/components/hooks/useTabs';
 import { GradientBackground } from '@/components/sections/migrate/background';
 import { Header } from '@/components/sections/migrate/header';
@@ -20,6 +21,7 @@ export default function MigratePage() {
   const { activeTab, handleTabChange, goToNextTab, goToPreviousTab } = useTabs({
     tabs: migrationTabs
   });
+  const { isLedgerConnected, isAppOpen } = useConnection();
 
   useLoadIcons();
 
@@ -56,6 +58,15 @@ export default function MigratePage() {
     });
   }, [controls]);
 
+  // Effect to handle device connection status and redirect to first tab if needed
+  useEffect(() => {
+    // If we're not on the first tab (Connect tab) and either the device is not connected
+    // or the app is not open, go back to the first tab
+    if (activeTab !== 0 && (!isLedgerConnected || !isAppOpen)) {
+      // Reset to the first tab
+      handleTabChange(migrationTabs[0]);
+    }
+  }, [isLedgerConnected, isAppOpen, activeTab, handleTabChange]);
   // Prepare props for each tab component
   const connectProps = {
     onContinue: () => goToNextTab()

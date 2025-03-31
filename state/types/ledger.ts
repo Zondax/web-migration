@@ -17,6 +17,7 @@ export interface ConnectionResponse {
 export interface DeviceConnectionProps {
   transport?: Transport;
   genericApp?: PolkadotGenericApp;
+  isAppOpen?: boolean;
 }
 
 /**
