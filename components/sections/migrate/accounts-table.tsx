@@ -103,10 +103,10 @@ function AccountsTable({
           <Table className="w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-left">Address</TableHead>
+                <TableHead className="text-left">Source Address</TableHead>
                 <TableHead className="text-left">Public Key</TableHead>
-                <TableHead className="text-right">Balance</TableHead>
                 <TableHead className="text-left">Destination Address</TableHead>
+                <TableHead className="text-right">Balance</TableHead>
                 <TableHead className="w-[100px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -117,7 +117,7 @@ function AccountsTable({
                     <TableCell className="py-2 text-sm w-1/4">
                       <AddressLink
                         value={account.address.get()}
-                        tooltipText={account.address.get()}
+                        tooltipText={`${account.address.get()} - ${account.path.get()}`}
                         className="break-all"
                       />
                     </TableCell>
@@ -128,6 +128,14 @@ function AccountsTable({
                         className="break-all"
                       />
                     </TableCell>
+                    <TableCell className="py-2 text-sm w-1/4">
+                      <DestinationAddressSelect
+                        account={account}
+                        index={index}
+                        polkadotAddresses={polkadotAddresses}
+                        onDestinationChange={handleDestinationChange}
+                      />
+                    </TableCell>
                     <TableCell className="py-2 text-sm text-right w-1/4">
                       {account.balance.get() !== undefined
                         ? formatBalance(
@@ -136,14 +144,6 @@ function AccountsTable({
                             decimals
                           )
                         : '-'}
-                    </TableCell>
-                    <TableCell className="py-2 text-sm w-1/4">
-                      <DestinationAddressSelect
-                        account={account}
-                        index={index}
-                        polkadotAddresses={polkadotAddresses}
-                        onDestinationChange={handleDestinationChange}
-                      />
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2 justify-end items-center">

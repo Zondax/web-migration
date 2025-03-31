@@ -117,7 +117,14 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
               )}
             </TableCell>
             <TableCell>
-              <AddressLink value={account.address} className="font-mono" />
+              <AddressLink
+                value={account.address}
+                className="font-mono"
+                tooltipText={`${account.address} - ${account.path}`}
+              />
+            </TableCell>
+            <TableCell>
+              <AddressLink value={account.pubKey} className="font-mono" />
             </TableCell>
             <TableCell>
               <AddressLink
@@ -181,6 +188,7 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
           <TableRow>
             <TableHead className="hidden sm:table-cell">Chain</TableHead>
             <TableHead>Source Address</TableHead>
+            <TableHead>Public Key</TableHead>
             <TableHead>Destination Address</TableHead>
             <TableHead>Balance</TableHead>
             <TableHead>Status</TableHead>
