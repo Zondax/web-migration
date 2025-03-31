@@ -5,8 +5,18 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import React from 'react';
 
-function FloatingPaths({ position }: { position: number }) {
-  const paths = Array.from({ length: 36 }, (_, i) => ({
+interface FloatingPathsProps {
+  position: number;
+  density?: number;
+  speed?: number;
+}
+
+function FloatingPaths({
+  position,
+  density = 36,
+  speed = 1
+}: FloatingPathsProps) {
+  const paths = Array.from({ length: density }, (_, i) => ({
     id: i,
     d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${
       380 - i * 5 * position
@@ -40,7 +50,7 @@ function FloatingPaths({ position }: { position: number }) {
               pathOffset: [0, 1, 0]
             }}
             transition={{
-              duration: 20 + Math.random() * 10,
+              duration: (20 + Math.random() * 10) / speed,
               repeat: Number.POSITIVE_INFINITY,
               ease: 'linear'
             }}
@@ -51,30 +61,36 @@ function FloatingPaths({ position }: { position: number }) {
   );
 }
 
-const Blob = ({
-  className,
-  animate = true,
-  style
-}: {
+interface BlobProps {
   className: string;
   animate?: boolean;
   style?: React.CSSProperties;
-}) => {
+  size?: number;
+  intensity?: number;
+}
+
+const Blob = ({
+  className,
+  animate = true,
+  style,
+  size = 1,
+  intensity = 1
+}: BlobProps) => {
   return (
     <motion.div
       className={`absolute rounded-full ${className}`}
       style={style}
-      initial={animate ? { scale: 0.8, opacity: 0.8 } : {}}
+      initial={animate ? { scale: 0.8 * size, opacity: 0.8 } : {}}
       animate={
         animate
           ? {
-              scale: [0.8, 1.1, 0.9],
-              opacity: [0.7, 0.9, 0.7]
+              scale: [0.8 * size, 1.1 * size, 0.9 * size],
+              opacity: [0.7, 0.9 * intensity, 0.7]
             }
           : {}
       }
       transition={{
-        duration: 8,
+        duration: 8 / intensity,
         repeat: Number.POSITIVE_INFINITY,
         repeatType: 'reverse',
         ease: 'easeInOut'
@@ -83,13 +99,21 @@ const Blob = ({
   );
 };
 
-export default function BackgroundPaths({
-  title = 'Welcome to the Polkadot Ledger Migration Assistant',
-  subtitle = 'Simplifying your journey to the new Polkadot Universal Ledger App'
-}: {
+interface BackgroundPathsProps {
   title?: string;
   subtitle?: string;
-}) {
+  showPaths?: boolean;
+  showBlobs?: boolean;
+  animationSpeed?: number;
+}
+
+export default function BackgroundPaths({
+  title = 'Welcome to the Polkadot Ledger Migration Assistant',
+  subtitle = 'Simplifying your journey to the new Polkadot Universal Ledger App',
+  showPaths = true,
+  showBlobs = false,
+  animationSpeed = 1
+}: BackgroundPathsProps) {
   const words = title.split(' ');
 
   return (
@@ -101,40 +125,49 @@ export default function BackgroundPaths({
       }}
     >
       {/* Background blobs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <Blob
-          className="w-[40%] h-[40%] -left-[5%] -top-[5%]"
-          style={{ backgroundColor: 'rgba(255, 38, 112, 0.6)' }}
-        />
-        <Blob
-          className="w-[35%] h-[35%] right-[10%] top-[15%]"
-          style={{ backgroundColor: 'rgba(255, 38, 112, 0.5)' }}
-          animate={false}
-        />
-        <Blob
-          className="w-[25%] h-[25%] right-[5%] bottom-[25%]"
-          style={{ backgroundColor: 'rgba(255, 38, 112, 0.4)' }}
-        />
-        <Blob
-          className="w-[30%] h-[30%] left-[20%] bottom-[5%]"
-          style={{ backgroundColor: 'rgba(255, 38, 112, 0.6)' }}
-          animate={false}
-        />
-        <Blob
-          className="w-[45%] h-[45%] right-[0%] bottom-[0%]"
-          style={{ backgroundColor: 'rgba(255, 38, 112, 0.3)' }}
-        />
-      </div>
+      {showBlobs && (
+        <div className="absolute inset-0 overflow-hidden">
+          <Blob
+            className="w-[40%] h-[40%] -left-[5%] -top-[5%]"
+            style={{ backgroundColor: 'rgba(255, 38, 112, 0.6)' }}
+            intensity={animationSpeed}
+          />
+          <Blob
+            className="w-[35%] h-[35%] right-[10%] top-[15%]"
+            style={{ backgroundColor: 'rgba(255, 38, 112, 0.5)' }}
+            animate={false}
+          />
+          <Blob
+            className="w-[25%] h-[25%] right-[5%] bottom-[25%]"
+            style={{ backgroundColor: 'rgba(255, 38, 112, 0.4)' }}
+            intensity={animationSpeed}
+          />
+          <Blob
+            className="w-[30%] h-[30%] left-[20%] bottom-[5%]"
+            style={{ backgroundColor: 'rgba(255, 38, 112, 0.6)' }}
+            animate={false}
+          />
+          <Blob
+            className="w-[45%] h-[45%] right-[0%] bottom-[0%]"
+            style={{ backgroundColor: 'rgba(255, 38, 112, 0.3)' }}
+            intensity={animationSpeed}
+          />
+        </div>
+      )}
 
       {/* Animated flowing lines */}
-      <FloatingPaths position={1} />
-      <FloatingPaths position={-1} />
+      {showPaths && (
+        <>
+          <FloatingPaths position={1} speed={animationSpeed} />
+          <FloatingPaths position={-1} speed={animationSpeed} />
+        </>
+      )}
 
       <div className="relative z-20 container mx-auto px-4 md:px-6 text-center">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 2 }}
+          transition={{ duration: 2 / animationSpeed }}
           className="max-w-4xl mx-auto"
         >
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold mb-6 tracking-tighter">
@@ -146,7 +179,8 @@ export default function BackgroundPaths({
                     initial={{ y: 100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{
-                      delay: wordIndex * 0.1 + letterIndex * 0.03,
+                      delay:
+                        (wordIndex * 0.1 + letterIndex * 0.03) / animationSpeed,
                       type: 'spring',
                       stiffness: 150,
                       damping: 25
@@ -164,7 +198,10 @@ export default function BackgroundPaths({
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.5, duration: 1 }}
+            transition={{
+              delay: 1.5 / animationSpeed,
+              duration: 1 / animationSpeed
+            }}
             className="text-xl md:text-2xl text-white/90 mb-10 max-w-3xl mx-auto"
           >
             {subtitle}
@@ -173,7 +210,10 @@ export default function BackgroundPaths({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2, duration: 1 }}
+            transition={{
+              delay: 2 / animationSpeed,
+              duration: 1 / animationSpeed
+            }}
           >
             <div
               className="inline-block group relative p-px rounded-2xl backdrop-blur-lg 

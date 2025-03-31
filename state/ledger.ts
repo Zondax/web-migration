@@ -4,6 +4,7 @@ import { handleLedgerError } from '@/lib/utils';
 import { observable } from '@legendapp/state';
 import { AppConfig, AppId, appsConfigs, polkadotAppConfig } from 'config/apps';
 import { errorDetails, InternalErrors } from 'config/errors';
+import { errorApps, syncApps } from 'config/mockData';
 import { LedgerClientError } from './client/base';
 import { ledgerClient } from './client/ledger';
 import { notifications$ } from './notifications';
@@ -12,6 +13,7 @@ import {
   DeviceConnectionProps,
   UpdateMigratedStatusFn
 } from './types/ledger';
+import { Notification } from './types/notifications';
 
 export type AppStatus = 'migrated' | 'synchronized' | 'loading' | 'error';
 
@@ -44,6 +46,11 @@ interface LedgerState {
     status?: AppStatus;
     error?: string;
     syncProgress: number;
+    completedTransactions: number;
+    migrationResult: {
+      success: number;
+      fails: number;
+    };
   };
   polkadotAddresses: Partial<Record<AppId, string[]>>;
 }
@@ -59,7 +66,12 @@ const initialLedgerState: LedgerState = {
     polkadotApp: polkadotAppConfig,
     status: undefined,
     error: undefined,
-    syncProgress: 0
+    syncProgress: 0,
+    completedTransactions: 0,
+    migrationResult: {
+      success: 0,
+      fails: 0
+    }
   },
   polkadotAddresses: {}
 };
@@ -149,7 +161,7 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (
 
 export const ledgerState$ = observable({
   ...initialLedgerState,
-  async connectLedger() {
+  async connectLedger(): Promise<{ connected: boolean }> {
     // Set the loading state to true and clear any previous errors
     ledgerState$.device.isLoading.set(true);
     ledgerState$.device.error.set(undefined);
@@ -183,24 +195,21 @@ export const ledgerState$ = observable({
     }
   },
 
-  // Synchronize Single Account
-  async synchronizeAccount(appId: AppId) {
-    updateApp(appId, { status: 'loading' });
-
-    const app = appsConfigs.get(appId);
-    if (!app) {
-      console.error(`App with id ${appId} not found.`);
-      return;
-    }
-
-    try {
-      const response = await ledgerClient.synchronizeAccounts(app);
-
-      updateApp(appId, { accounts: response.result, status: 'synchronized' });
-    } catch (error) {
-      updateApp(appId, { status: 'error' });
-      ledgerState$.apps.error.set('Failed to synchronize accounts');
-    }
+  // Clear synchronization data
+  clearSynchronization() {
+    ledgerState$.apps.assign({
+      apps: [],
+      polkadotApp: polkadotAppConfig,
+      status: undefined,
+      error: undefined,
+      syncProgress: 0,
+      completedTransactions: 0,
+      migrationResult: {
+        success: 0,
+        fails: 0
+      }
+    });
+    ledgerState$.polkadotAddresses.set({});
   },
 
   // Fetch and Process Accounts for a Single App
@@ -209,6 +218,13 @@ export const ledgerState$ = observable({
     filterByBalance: boolean = true
   ): Promise<App | undefined> {
     try {
+      if (
+        process.env.NEXT_PUBLIC_NODE_ENV === 'development' &&
+        errorApps.includes(app.id)
+      ) {
+        throw new Error('Mock synchronization error');
+      }
+
       const response = await ledgerClient.synchronizeAccounts(app);
 
       if (!response.result || !app.rpcEndpoint) {
@@ -217,7 +233,11 @@ export const ledgerState$ = observable({
           id: app.id,
           ticker: app.ticker,
           decimals: app.decimals,
-          status: 'error'
+          status: 'error',
+          error: {
+            source: 'synchronization',
+            description: 'Failed to synchronize accounts'
+          }
         };
       }
 
@@ -247,6 +267,9 @@ export const ledgerState$ = observable({
         })
       );
 
+      // Log accounts for debugging purposes
+      console.log(`Accounts for app ${app.id}:`, accounts);
+
       const filteredAccounts = accounts.filter(
         (account) =>
           !filterByBalance ||
@@ -261,6 +284,12 @@ export const ledgerState$ = observable({
         );
 
         ledgerState$.polkadotAddresses[app.id].set(polkadotAddresses);
+
+        if (api) {
+          await api.disconnect();
+        } else if (provider) {
+          await provider.disconnect();
+        }
 
         return {
           name: app.name,
@@ -283,14 +312,117 @@ export const ledgerState$ = observable({
         });
       }
 
+      return undefined; // No accounts after filtering
+    } catch (error) {
+      console.log('Error fetching and processing accounts for app:', app.id);
+      return {
+        name: app.name,
+        id: app.id,
+        ticker: app.ticker,
+        decimals: app.decimals,
+        status: 'error',
+        error: {
+          source: 'synchronization',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Error fetching and processing accounts for app.'
+        }
+      };
+    }
+  },
+
+  // Synchronize Single Account
+  async synchronizeAccount(appId: AppId) {
+    updateApp(appId, { status: 'loading' });
+
+    const appConfig = appsConfigs.get(appId);
+    if (!appConfig) {
+      console.error(`App with id ${appId} not found.`);
+      return;
+    }
+
+    try {
+      const app = await ledgerState$.fetchAndProcessAccountsForApp(appConfig);
+      if (app) {
+        updateApp(appId, app);
+      }
+    } catch (error) {
+      updateApp(appId, {
+        status: 'error',
+        error: {
+          source: 'synchronization',
+          description: 'Failed to synchronize accounts'
+        }
+      });
+    }
+  },
+
+  // Fetch and Process Accounts for a Single App
+  async fetchAndProcessPolkadotAccounts(): Promise<App | undefined> {
+    try {
+      const app = polkadotAppConfig;
+      const response = await ledgerClient.synchronizeAccounts(app);
+
+      const noAccountsNotification: Omit<Notification, 'id' | 'createdAt'> = {
+        title: `No migration source`,
+        description: `No Polkadot accounts available to migrate from`,
+        appId: app.id,
+        type: 'info',
+        autoHideDuration: 5000
+      };
+
+      if (!response.result || !app.rpcEndpoint) {
+        notifications$.push(noAccountsNotification);
+        return {
+          name: app.name,
+          id: app.id,
+          ticker: app.ticker,
+          decimals: app.decimals,
+          status: 'error'
+        };
+      }
+
+      const accounts = response.result;
+
+      const { api, provider, error } = await getApiAndProvider(app.rpcEndpoint);
+
+      if (error || !api) {
+        return {
+          name: app.name,
+          id: app.id,
+          ticker: app.ticker,
+          decimals: app.decimals,
+          status: 'error',
+          error: {
+            source: 'synchronization',
+            description:
+              errorDetails.blockchain_connection_error.description ?? ''
+          }
+        };
+      }
+
       if (api) {
         await api.disconnect();
       } else if (provider) {
         await provider.disconnect();
       }
 
-      return undefined; // No accounts after filtering
+      // Only add a notification if there are no accounts after filtering
+      if (accounts.length === 0) {
+        notifications$.push(noAccountsNotification);
+      }
+
+      return {
+        name: app.name,
+        id: app.id,
+        ticker: app.ticker,
+        decimals: app.decimals,
+        status: 'synchronized',
+        accounts
+      };
     } catch (error) {
+      const app = polkadotAppConfig;
       console.log('Error fetching and processing accounts for app:', app.id);
       return {
         name: app.name,
@@ -317,10 +449,14 @@ export const ledgerState$ = observable({
         return;
       }
 
-      const polkadotApp = await ledgerState$.fetchAndProcessAccountsForApp(
-        polkadotAppConfig,
-        false
-      );
+      notifications$.push({
+        title: `Synchronizing accounts`,
+        description: `The first 5 accounts will be synchronized for each blockchain.`,
+        type: 'info',
+        autoHideDuration: 5000
+      });
+
+      const polkadotApp = await ledgerState$.fetchAndProcessPolkadotAccounts();
       if (polkadotApp) {
         ledgerState$.apps.polkadotApp.set({
           ...polkadotApp,
@@ -329,17 +465,41 @@ export const ledgerState$ = observable({
       }
 
       // Get the total number of apps to synchronize
-      const appsToSync = Array.from(appsConfigs.values()).filter(
-        (appConfig) => appConfig && appConfig.rpcEndpoint
+      let appsToSync: (AppConfig | undefined)[] = Array.from(
+        appsConfigs.values()
       );
+
+      // If in development environment, use apps specified in environment variable
+      if (
+        process.env.NEXT_PUBLIC_NODE_ENV === 'development' &&
+        syncApps.length > 0
+      ) {
+        try {
+          appsToSync = syncApps.map((appId) => appsConfigs.get(appId as AppId));
+        } catch (error) {
+          console.error(
+            'Error parsing NEXT_PUBLIC_SYNC_APPS environment variable:',
+            error
+          );
+          return;
+        }
+      }
+
+      appsToSync = appsToSync.filter(
+        (appConfig) => appConfig && appConfig.rpcEndpoint
+      ) as AppConfig[];
       const totalApps = appsToSync.length;
       let syncedApps = 0;
 
       // request and save the accounts of each app synchronously
       for (const appConfig of appsToSync) {
-        const app = await ledgerState$.fetchAndProcessAccountsForApp(appConfig);
-        if (app) {
-          ledgerState$.apps.apps.push(app);
+        if (appConfig) {
+          // Comment it later
+          const app =
+            await ledgerState$.fetchAndProcessAccountsForApp(appConfig);
+          if (app) {
+            ledgerState$.apps.apps.push(app);
+          }
         }
 
         // Update sync progress
@@ -452,10 +612,31 @@ export const ledgerState$ = observable({
           `Account at path ${account.path} in app ${appId} migration failed:`,
           InternalErrors.MIGRATION_ERROR
         );
+
+        // Increment fails counter
+        const currentMigrationResult = ledgerState$.apps.migrationResult.get();
+        ledgerState$.apps.migrationResult.set({
+          ...currentMigrationResult,
+          fails: currentMigrationResult.fails + 1
+        });
       } else if (response.migrated) {
         updateAccount(appId, account.address, {
           status: 'migrated',
           isLoading: false
+        });
+
+        // Increment completed transactions counter
+        const currentCompletedTransactions =
+          ledgerState$.apps.completedTransactions.get();
+        ledgerState$.apps.completedTransactions.set(
+          currentCompletedTransactions + 1
+        );
+
+        // Increment success counter
+        const currentMigrationResult = ledgerState$.apps.migrationResult.get();
+        ledgerState$.apps.migrationResult.set({
+          ...currentMigrationResult,
+          success: currentMigrationResult.success + 1
         });
 
         console.log(
@@ -472,6 +653,13 @@ export const ledgerState$ = observable({
             (error as LedgerClientError).message || 'Failed to migrate account'
         },
         isLoading: false
+      });
+
+      // Increment fails counter
+      const currentMigrationResult = ledgerState$.apps.migrationResult.get();
+      ledgerState$.apps.migrationResult.set({
+        ...currentMigrationResult,
+        fails: currentMigrationResult.fails + 1
       });
     }
   },
@@ -512,8 +700,13 @@ export const ledgerState$ = observable({
     }
   },
 
-  // Migrate All Accounts (refactored)
+  // Migrate All Accounts
   async migrateAll() {
+    // Reset completed transactions counter before starting
+    ledgerState$.apps.completedTransactions.set(0);
+    // Reset migration result
+    ledgerState$.apps.migrationResult.set({ success: 0, fails: 0 });
+
     try {
       const apps = ledgerState$.apps.apps.get();
       for (const app of apps) {

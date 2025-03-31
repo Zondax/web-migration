@@ -8,7 +8,9 @@ import {
   LedgerErrors
 } from 'config/errors';
 import { LedgerClientError } from 'state/client/base';
+import { App } from 'state/ledger';
 import { notifications$ } from 'state/notifications';
+import { Address } from 'state/types/ledger';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
@@ -114,4 +116,43 @@ export const getAppLightIcon = async (appId: string) => {
   } catch (error) {
     return { data: [], error: 'error' };
   }
+};
+
+// Helper function to filter apps without errors
+export const filterAppsWithoutErrors = (apps: App[]): App[] => {
+  return apps
+    .map((app) => ({
+      ...app,
+      accounts:
+        app.accounts?.filter(
+          (account: Address) =>
+            !account.error || account.error?.source === 'migration'
+        ) || []
+    }))
+    .filter((app) => app.accounts.length > 0);
+};
+
+// Helper function to filter apps with errors
+export const filterAppsWithErrors = (apps: App[]): App[] => {
+  return apps
+    .map((app) => ({
+      ...app,
+      accounts:
+        app.accounts?.filter(
+          (account: Address) =>
+            account.error && account.error?.source !== 'migration'
+        ) || []
+    }))
+    .filter((app) => app.accounts.length > 0 || app.status === 'error');
+};
+
+// Function to check if there are accounts with errors
+export const hasAccountsWithErrors = (apps: App[]): boolean => {
+  return apps.some(
+    (app) =>
+      app.error?.source === 'synchronization' ||
+      app.accounts?.some(
+        (account) => account.error && account.error?.source !== 'migration'
+      )
+  );
 };

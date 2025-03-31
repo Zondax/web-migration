@@ -2,17 +2,12 @@ import { Spinner } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
+import { SimpleTooltip } from '@/components/ui/tooltip';
 import { muifyHtml } from '@/lib/muifyHtml';
 import { formatBalance } from '@/lib/utils';
 import { Observable } from '@legendapp/state';
 import { observer, use$ } from '@legendapp/state/react';
-import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertCircle, ChevronDown } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { App, ledgerState$ } from 'state/ledger';
 import { uiState$ } from 'state/ui';
@@ -30,7 +25,7 @@ function AppRow({
   const status = use$(app.status);
   const accounts = use$(app.accounts);
 
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const isSynchronizationLoading = ledgerState$.apps.status.get();
   const icon = uiState$.icons.get()[id];
@@ -78,23 +73,21 @@ function AppRow({
   return (
     <>
       <TableRow>
-        <TableCell>
+        <TableCell className="px-2 text-center">
           {accounts?.length !== 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleExpand}
-              className="p-0 h-8 w-8"
+              className="p-2 hover:bg-gray-200 mx-auto"
             >
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+              />
             </Button>
           )}
         </TableCell>
-        <TableCell className="hidden sm:table-cell">
+        <TableCell className="px-2 hidden sm:table-cell">
           <div className="max-h-8 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8">
             {muifyHtml(icon)}
           </div>
@@ -103,26 +96,21 @@ function AppRow({
         <TableCell className="font-medium">
           {accounts && accounts.length !== 0 ? accounts.length : '-'}
         </TableCell>
-        <TableCell className="font-medium">{renderBalance()}</TableCell>
+        <TableCell className="font-medium font-mono">
+          {renderBalance()}
+        </TableCell>
         <TableCell>
           <div className="flex gap-2 justify-end items-center">
             {renderAction()}
             {app.error?.description?.get() && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <AlertCircle className="h-4 w-4 text-destructive cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{app.error?.description?.get()}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <SimpleTooltip tooltipText={app.error?.description?.get()}>
+                <AlertCircle className="h-4 w-4 text-destructive cursor-help" />
+              </SimpleTooltip>
             )}
           </div>
         </TableCell>
       </TableRow>
-      {isExpanded ? (
+      {isExpanded && accounts?.length !== 0 ? (
         <Accounts
           accounts={app.accounts}
           ticker={app.ticker.get()}

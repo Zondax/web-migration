@@ -122,7 +122,7 @@ export class LedgerService implements ILedgerService {
       throw new Error('Failed to establish device connection');
     }
 
-    console.log('Device connected successfully', connection);
+    console.log('Device connected successfully');
     return { connection };
   }
 

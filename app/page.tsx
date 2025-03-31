@@ -1,15 +1,15 @@
-import BackgroundPaths from '@/components/kokonutui/background-paths';
-import FeatureSection from '@/components/sections/feature-section';
-import ProblemSection from '@/components/sections/problem-section';
-import SolutionSection from '@/components/sections/solution-section';
-import AudienceSection from '@/components/sections/audience-section';
-import CallToAction from '@/components/sections/call-to-action';
+import AudienceSection from '@/components/sections/home/audience-section';
+import CallToAction from '@/components/sections/home/call-to-action';
+import FeatureSection from '@/components/sections/home/feature-section';
+import { HomePage } from '@/components/sections/home/home-page';
+import ProblemSection from '@/components/sections/home/problem-section';
+import SolutionSection from '@/components/sections/home/solution-section';
 
 export default function LandingPage() {
   return (
     <main className="min-h-screen">
       {/* Hero Section */}
-      <BackgroundPaths
+      <HomePage
         title="Welcome to the Polkadot Ledger Migration Assistant"
         subtitle="Simplifying your journey to the new Polkadot Universal Ledger App"
       />
