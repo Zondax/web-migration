@@ -110,7 +110,7 @@ function AppRow({
           </div>
         </TableCell>
       </TableRow>
-      {isExpanded ? (
+      {isExpanded && accounts?.length !== 0 ? (
         <Accounts
           accounts={app.accounts}
           ticker={app.ticker.get()}

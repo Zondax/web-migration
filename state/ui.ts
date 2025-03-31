@@ -19,7 +19,6 @@ export const uiState$ = observable({
   async loadInitialIcons() {
     if (iconsStatus !== 'unloaded') return;
     iconsStatus = 'loading';
-    console.log('Loading initial icons', appsConfigs.values());
     const appIcons: Partial<AppIcons> = {};
 
     const iconPromises = Array.from(appsConfigs.values())

@@ -47,9 +47,9 @@ export function SynchronizeTabContent({
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold">Synchronize Accounts</h2>
+          <h2 className="text-2xl font-bold">Synchronized Accounts</h2>
           <p className="text-gray-600">
-            Click synchronize to start scanning your accounts.
+            Click Migrate All to start migrating your accounts.
           </p>
         </div>
         <div className="flex gap-2">
@@ -119,7 +119,7 @@ export function SynchronizeTabContent({
 
       {accountsWithErrors && (
         <>
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-6 mt-6">
             <div>
               <h2 className="text-2xl font-bold">Failed Synchronization</h2>
               <p className="text-gray-600">

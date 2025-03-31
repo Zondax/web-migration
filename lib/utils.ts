@@ -148,9 +148,11 @@ export const filterAppsWithErrors = (apps: App[]): App[] => {
 
 // Function to check if there are accounts with errors
 export const hasAccountsWithErrors = (apps: App[]): boolean => {
-  return apps.some((app) =>
-    app.accounts?.some(
-      (account) => account.error && account.error?.source !== 'migration'
-    )
+  return apps.some(
+    (app) =>
+      app.error?.source === 'synchronization' ||
+      app.accounts?.some(
+        (account) => account.error && account.error?.source !== 'migration'
+      )
   );
 };

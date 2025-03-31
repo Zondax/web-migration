@@ -20,7 +20,7 @@ export const useConnection = (): UseConnectionReturn => {
   );
 
   const isLedgerConnected = use$(isLedgerConnected$);
-  console.log('isLedgerConnected', isLedgerConnected);
+
   // Handle device connection
   const connectDevice = useCallback(async () => {
     const { connected } = await ledgerState$.connectLedger();

@@ -4,6 +4,7 @@ import { handleLedgerError } from '@/lib/utils';
 import { observable } from '@legendapp/state';
 import { AppConfig, AppId, appsConfigs, polkadotAppConfig } from 'config/apps';
 import { errorDetails, InternalErrors } from 'config/errors';
+import { errorApps, syncApps } from 'config/mockData';
 import { LedgerClientError } from './client/base';
 import { ledgerClient } from './client/ledger';
 import { notifications$ } from './notifications';
@@ -211,32 +212,19 @@ export const ledgerState$ = observable({
     ledgerState$.polkadotAddresses.set({});
   },
 
-  // Synchronize Single Account
-  async synchronizeAccount(appId: AppId) {
-    updateApp(appId, { status: 'loading' });
-
-    const app = appsConfigs.get(appId);
-    if (!app) {
-      console.error(`App with id ${appId} not found.`);
-      return;
-    }
-
-    try {
-      const response = await ledgerClient.synchronizeAccounts(app);
-
-      updateApp(appId, { accounts: response.result, status: 'synchronized' });
-    } catch (error) {
-      updateApp(appId, { status: 'error' });
-      ledgerState$.apps.error.set('Failed to synchronize accounts');
-    }
-  },
-
   // Fetch and Process Accounts for a Single App
   async fetchAndProcessAccountsForApp(
     app: AppConfig,
     filterByBalance: boolean = true
   ): Promise<App | undefined> {
     try {
+      if (
+        process.env.NEXT_PUBLIC_NODE_ENV === 'development' &&
+        errorApps.includes(app.id)
+      ) {
+        throw new Error('Mock synchronization error');
+      }
+
       const response = await ledgerClient.synchronizeAccounts(app);
 
       if (!response.result || !app.rpcEndpoint) {
@@ -245,7 +233,11 @@ export const ledgerState$ = observable({
           id: app.id,
           ticker: app.ticker,
           decimals: app.decimals,
-          status: 'error'
+          status: 'error',
+          error: {
+            source: 'synchronization',
+            description: 'Failed to synchronize accounts'
+          }
         };
       }
 
@@ -293,6 +285,12 @@ export const ledgerState$ = observable({
 
         ledgerState$.polkadotAddresses[app.id].set(polkadotAddresses);
 
+        if (api) {
+          await api.disconnect();
+        } else if (provider) {
+          await provider.disconnect();
+        }
+
         return {
           name: app.name,
           id: app.id,
@@ -314,12 +312,6 @@ export const ledgerState$ = observable({
         });
       }
 
-      if (api) {
-        await api.disconnect();
-      } else if (provider) {
-        await provider.disconnect();
-      }
-
       return undefined; // No accounts after filtering
     } catch (error) {
       console.log('Error fetching and processing accounts for app:', app.id);
@@ -328,8 +320,41 @@ export const ledgerState$ = observable({
         id: app.id,
         ticker: app.ticker,
         decimals: app.decimals,
-        status: 'error'
+        status: 'error',
+        error: {
+          source: 'synchronization',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Error fetching and processing accounts for app.'
+        }
       };
+    }
+  },
+
+  // Synchronize Single Account
+  async synchronizeAccount(appId: AppId) {
+    updateApp(appId, { status: 'loading' });
+
+    const appConfig = appsConfigs.get(appId);
+    if (!appConfig) {
+      console.error(`App with id ${appId} not found.`);
+      return;
+    }
+
+    try {
+      const app = await ledgerState$.fetchAndProcessAccountsForApp(appConfig);
+      if (app) {
+        updateApp(appId, app);
+      }
+    } catch (error) {
+      updateApp(appId, {
+        status: 'error',
+        error: {
+          source: 'synchronization',
+          description: 'Failed to synchronize accounts'
+        }
+      });
     }
   },
 
@@ -358,6 +383,8 @@ export const ledgerState$ = observable({
         };
       }
 
+      const accounts = response.result;
+
       const { api, provider, error } = await getApiAndProvider(app.rpcEndpoint);
 
       if (error || !api) {
@@ -375,34 +402,13 @@ export const ledgerState$ = observable({
         };
       }
 
-      // Check balance for each account, but stop processing if one returns zero
-      const accounts: Address[] = await Promise.all(
-        response.result.map(async (address) => {
-          return await getBalance(address, api);
-        })
-      );
-      // const accounts: Address[] = [];
-      // for (const address of response.result) {
-      //   const accountWithBalance = await getBalance(address, api);
-      //   accounts.push(accountWithBalance);
-
-      //   // If this account has zero balance, stop checking the rest
-      //   if ((!accountWithBalance.balance || accountWithBalance.balance === 0) && !accountWithBalance.error) {
-      //     console.log(`Found account with zero balance for ${app.id}, stopping further balance checks`);
-      //     break;
-      //   }
-      // }
-
-      // Log accounts for debugging purposes
-      console.log(`Accounts for app ${app.id}:`, accounts);
-
       if (api) {
         await api.disconnect();
       } else if (provider) {
         await provider.disconnect();
       }
 
-      // Only set the app if there are accounts after filtering
+      // Only add a notification if there are no accounts after filtering
       if (accounts.length === 0) {
         notifications$.push(noAccountsNotification);
       }
@@ -443,6 +449,13 @@ export const ledgerState$ = observable({
         return;
       }
 
+      notifications$.push({
+        title: `Synchronizing accounts`,
+        description: `The first 5 accounts will be synchronized for each blockchain.`,
+        type: 'info',
+        autoHideDuration: 5000
+      });
+
       const polkadotApp = await ledgerState$.fetchAndProcessPolkadotAccounts();
       if (polkadotApp) {
         ledgerState$.apps.polkadotApp.set({
@@ -451,12 +464,30 @@ export const ledgerState$ = observable({
         });
       }
 
-      // Array.from(appsConfigs.values())
       // Get the total number of apps to synchronize
-      const appsToSync = [
-        appsConfigs.get('kusama'),
-        appsConfigs.get('astar')
-      ].filter((appConfig) => appConfig && appConfig.rpcEndpoint);
+      let appsToSync: (AppConfig | undefined)[] = Array.from(
+        appsConfigs.values()
+      );
+
+      // If in development environment, use apps specified in environment variable
+      if (
+        process.env.NEXT_PUBLIC_NODE_ENV === 'development' &&
+        syncApps.length > 0
+      ) {
+        try {
+          appsToSync = syncApps.map((appId) => appsConfigs.get(appId as AppId));
+        } catch (error) {
+          console.error(
+            'Error parsing NEXT_PUBLIC_SYNC_APPS environment variable:',
+            error
+          );
+          return;
+        }
+      }
+
+      appsToSync = appsToSync.filter(
+        (appConfig) => appConfig && appConfig.rpcEndpoint
+      ) as AppConfig[];
       const totalApps = appsToSync.length;
       let syncedApps = 0;
 
