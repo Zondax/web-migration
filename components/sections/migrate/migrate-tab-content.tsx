@@ -90,9 +90,11 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
       }
     }
 
-    return statusIcon ? (
+    return tooltipContent ? (
       <SimpleTooltip tooltipText={tooltipContent}>{statusIcon}</SimpleTooltip>
-    ) : null;
+    ) : (
+      statusIcon
+    );
   };
 
   // Render a row for each account in the app
