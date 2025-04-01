@@ -1,6 +1,6 @@
 import Transport from '@ledgerhq/hw-transport';
 import TransportWebUSB from '@ledgerhq/hw-transport-webhid';
-import { LedgerError, ResponseVersion } from '@zondax/ledger-js';
+import { LedgerError } from '@zondax/ledger-js';
 import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
 import { ConnectionResponse, DeviceConnectionProps } from 'state/types/ledger';
@@ -15,9 +15,7 @@ export interface ILedgerService {
     appName: string
   ): Promise<{ connection?: DeviceConnectionProps }>;
   initializeTransport(): Promise<Transport>;
-  getAppVersion(
-    genericApp: PolkadotGenericApp
-  ): Promise<ResponseVersion | undefined>;
+  isAppOpen(genericApp: PolkadotGenericApp): Promise<boolean>;
   establishDeviceConnection(): Promise<DeviceConnectionProps | undefined>;
   connectDevice(): Promise<ConnectionResponse | undefined>;
   getAccountAddress(
@@ -71,42 +69,52 @@ export class LedgerService implements ILedgerService {
   /**
    * Initializes the Ledger transport
    */
-  async initializeTransport(): Promise<Transport> {
+  async initializeTransport(onDisconnect?: () => void): Promise<Transport> {
     const transport = await TransportWebUSB.create();
     this.deviceConnection.transport = transport;
-    transport?.on('disconnect', this.handleDisconnect);
+
+    const handleDisconnect = () => {
+      this.handleDisconnect();
+      onDisconnect?.();
+    };
+
+    transport?.on('disconnect', handleDisconnect);
     return transport;
   }
 
   /**
-   * Gets the version of the open app
+   * Checks if the app is open on the Ledger device
    */
-  async getAppVersion(
-    genericApp: PolkadotGenericApp
-  ): Promise<ResponseVersion | undefined> {
-    const versionResult = await genericApp.getVersion();
-    return versionResult;
+  async isAppOpen(genericApp: PolkadotGenericApp): Promise<boolean> {
+    try {
+      const version = await genericApp.getVersion();
+      return Boolean(version);
+    } catch (error) {
+      return false;
+    }
   }
 
   /**
    * Establishes a connection to the Ledger device
    */
-  async establishDeviceConnection(): Promise<
-    DeviceConnectionProps | undefined
-  > {
-    let transport = await this.initializeTransport();
-    let genericApp = new PolkadotGenericApp(transport);
+  async establishDeviceConnection(
+    onDisconnect?: () => void
+  ): Promise<DeviceConnectionProps | undefined> {
+    let transport =
+      this.deviceConnection.transport ||
+      (await this.initializeTransport(onDisconnect));
+    let genericApp =
+      this.deviceConnection.genericApp || new PolkadotGenericApp(transport);
 
-    // Attempt to get version, which implicitly checks if the app is open
-    let version = await this.getAppVersion(genericApp);
+    // Check if the app is already open
+    let isOpen = await this.isAppOpen(genericApp);
 
-    if (!version) {
-      await this.openApp(transport, 'Polkadot Migration');
-      version = await this.getAppVersion(genericApp);
-      if (!version) return undefined;
+    if (!isOpen) {
+      this.openApp(transport, 'Polkadot Migration');
+      return { transport, genericApp, isAppOpen: false };
     }
 
-    const connection = { transport, genericApp };
+    const connection = { transport, genericApp, isAppOpen: true };
     this.deviceConnection = connection;
     return connection;
   }
@@ -114,15 +122,19 @@ export class LedgerService implements ILedgerService {
   /**
    * Connects to the Ledger device
    */
-  async connectDevice(): Promise<ConnectionResponse | undefined> {
+  async connectDevice(
+    onDisconnect?: () => void
+  ): Promise<ConnectionResponse | undefined> {
     console.log('Attempting to connect device...');
-    const connection = await this.establishDeviceConnection();
+    const connection = await this.establishDeviceConnection(onDisconnect);
     if (!connection) {
       console.log('Failed to establish device connection');
       throw new Error('Failed to establish device connection');
     }
 
-    console.log('Device connected successfully');
+    console.log(
+      `Device connected successfully, the app is ${connection.isAppOpen ? 'open' : 'closed'}`
+    );
     return { connection };
   }
 

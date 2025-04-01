@@ -6,6 +6,7 @@ interface UseConnectionReturn {
   connectDevice: () => Promise<boolean>;
   disconnectDevice: () => void;
   isLedgerConnected: boolean;
+  isAppOpen: boolean;
 }
 
 /**
@@ -20,11 +21,13 @@ export const useConnection = (): UseConnectionReturn => {
   );
 
   const isLedgerConnected = use$(isLedgerConnected$);
+  const isAppOpen = ledgerState$.device.connection?.get()?.isAppOpen ?? false;
 
   // Handle device connection
   const connectDevice = useCallback(async () => {
-    const { connected } = await ledgerState$.connectLedger();
-    if (connected) {
+    const result = await ledgerState$.connectLedger();
+
+    if (result.connected && result.isAppOpen) {
       ledgerState$.synchronizeAccounts();
       return true;
     }
@@ -40,6 +43,7 @@ export const useConnection = (): UseConnectionReturn => {
     // Actions
     connectDevice,
     disconnectDevice,
-    isLedgerConnected
+    isLedgerConnected,
+    isAppOpen
   };
 };

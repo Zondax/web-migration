@@ -8,7 +8,7 @@ interface ConnectTabContentProps {
 }
 
 export function ConnectTabContent({ onContinue }: ConnectTabContentProps) {
-  const { connectDevice } = useConnection();
+  const { isLedgerConnected, isAppOpen, connectDevice } = useConnection();
 
   const handleConnect = useCallback(async () => {
     const connected = await connectDevice();
@@ -26,16 +26,42 @@ export function ConnectTabContent({ onContinue }: ConnectTabContentProps) {
         </p>
         <ol className="text-center space-y-3">
           <li className="flex items-center justify-center">
-            <span className="mr-3 font-medium">1.</span>
-            <span>Connect your Ledger device to your computer</span>
+            <span
+              className={`mr-3 font-medium ${isLedgerConnected ? 'text-purple-400' : ''}`}
+            >
+              1.
+            </span>
+            <span className={isLedgerConnected ? 'text-purple-400' : ''}>
+              Connect your Ledger device to your computer
+            </span>
           </li>
           <li className="flex items-center justify-center">
-            <span className="mr-3 font-medium">2.</span>
-            <span>Enter your PIN code on the device</span>
+            <span
+              className={`mr-3 font-medium ${isLedgerConnected ? 'text-purple-400' : ''}`}
+            >
+              2.
+            </span>
+            <span className={isLedgerConnected ? 'text-purple-400' : ''}>
+              Enter your PIN code on the device
+            </span>
           </li>
           <li className="flex items-center justify-center">
-            <span className="mr-3 font-medium">3.</span>
-            <span>Open the Migration App on your Ledger</span>
+            <span
+              className={`mr-3 font-medium ${isLedgerConnected && !isAppOpen ? 'text-rose-400' : isAppOpen ? 'text-purple-400' : ''}`}
+            >
+              3.
+            </span>
+            <span
+              className={
+                isLedgerConnected && !isAppOpen
+                  ? 'text-rose-400'
+                  : isAppOpen
+                    ? 'text-purple-400'
+                    : ''
+              }
+            >
+              Open the Migration App on your Ledger
+            </span>
           </li>
           <li className="flex items-center justify-center">
             <span className="mr-3 font-medium">4.</span>

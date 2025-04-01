@@ -161,7 +161,7 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (
 
 export const ledgerState$ = observable({
   ...initialLedgerState,
-  async connectLedger(): Promise<{ connected: boolean }> {
+  async connectLedger(): Promise<{ connected: boolean; isAppOpen: boolean }> {
     // Set the loading state to true and clear any previous errors
     ledgerState$.device.isLoading.set(true);
     ledgerState$.device.error.set(undefined);
@@ -171,13 +171,32 @@ export const ledgerState$ = observable({
 
       ledgerState$.device.connection.set(response?.connection);
       ledgerState$.device.error.set(response?.error); // Set error even if not connected
-      return { connected: Boolean(response?.connection && !response?.error) };
+
+      const isDeviceConnected = Boolean(
+        response?.connection && !response?.error
+      );
+      const isAppOpen = Boolean(response?.connection?.isAppOpen);
+
+      // Check if device is connected but app is not open
+      if (isDeviceConnected && !isAppOpen) {
+        // Add notification to indicate the user should open the app
+        notifications$.push({
+          title: 'App not open',
+          description:
+            'Please open the Polkadot Migration app on your Ledger device and click Connect again',
+          type: 'warning',
+          autoHideDuration: 5000
+        });
+      }
+
+      return { connected: isDeviceConnected, isAppOpen };
     } catch (error) {
       handleLedgerError(
         error as LedgerClientError,
         InternalErrors.CONNECTION_ERROR
       );
-      return { connected: false };
+
+      return { connected: false, isAppOpen: false };
     } finally {
       ledgerState$.device.isLoading.set(false);
     }
@@ -186,13 +205,23 @@ export const ledgerState$ = observable({
   disconnectLedger() {
     try {
       ledgerClient.disconnect();
-      ledgerState$.device.connection.set(undefined);
+      ledgerState$.clearConnection();
     } catch (error) {
       handleLedgerError(
         error as LedgerClientError,
         InternalErrors.DISCONNECTION_ERROR
       );
     }
+  },
+
+  // Clear connection data
+  clearConnection() {
+    ledgerState$.device.assign({
+      connection: undefined,
+      error: undefined,
+      isLoading: false
+    });
+    ledgerState$.clearSynchronization();
   },
 
   // Clear synchronization data

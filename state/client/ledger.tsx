@@ -6,9 +6,6 @@ import {
   submitAndHandleTransaction
 } from '@/lib/account';
 import { ledgerService } from '@/lib/ledger/ledgerService';
-import { formatVersion } from '@/lib/utils';
-import Transport from '@ledgerhq/hw-transport';
-import { PolkadotGenericApp } from '@zondax/ledger-substrate';
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
 import { AppConfig, AppId, appsConfigs } from 'config/apps';
 import { maxAddressesToFetch } from 'config/config';
@@ -16,7 +13,6 @@ import { InternalErrors } from 'config/errors';
 import {
   Address,
   ConnectionResponse,
-  DeviceConnectionProps,
   TransactionStatus,
   UpdateMigratedStatusFn
 } from '../types/ledger';
@@ -24,58 +20,12 @@ import { withErrorHandling } from './base';
 
 export const ledgerClient = {
   // Device operations
-  async openPolkadotMigrationApp(transport: Transport) {
+  async connectDevice(
+    onDisconnect?: () => void
+  ): Promise<ConnectionResponse | undefined> {
     return withErrorHandling(
-      () => ledgerService.openApp(transport, 'Polkadot Migration'),
-      InternalErrors.APP_NOT_OPEN
-    );
-  },
-
-  async initializeTransport(): Promise<Transport> {
-    return withErrorHandling(
-      () => ledgerService.initializeTransport(),
+      () => ledgerService.connectDevice(onDisconnect),
       InternalErrors.CONNECTION_ERROR
-    );
-  },
-
-  async getAppVersion(
-    genericApp: PolkadotGenericApp
-  ): Promise<string | undefined> {
-    return withErrorHandling(async () => {
-      const version = await ledgerService.getAppVersion(genericApp);
-      return version ? formatVersion(version) : undefined;
-    }, InternalErrors.UNKNOWN_ERROR);
-  },
-
-  async establishDeviceConnection(): Promise<
-    DeviceConnectionProps | undefined
-  > {
-    return withErrorHandling(
-      () => ledgerService.establishDeviceConnection(),
-      InternalErrors.CONNECTION_ERROR
-    );
-  },
-
-  async connectDevice(): Promise<ConnectionResponse | undefined> {
-    return withErrorHandling(
-      () => ledgerService.connectDevice(),
-      InternalErrors.CONNECTION_ERROR
-    );
-  },
-
-  async getAccountAddress(
-    bip44Path: string,
-    ss58prefix: number,
-    showAddrInDevice: boolean
-  ): Promise<GenericeResponseAddress | undefined> {
-    return withErrorHandling(
-      () =>
-        ledgerService.getAccountAddress(
-          bip44Path,
-          ss58prefix,
-          showAddrInDevice
-        ),
-      InternalErrors.GET_ADDRESS_ERROR
     );
   },
 
