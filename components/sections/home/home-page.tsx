@@ -80,7 +80,12 @@ export function HomePage({
           >
             <div className="flex flex-row items-center justify-center gap-2">
               <p className="text-white/80">by</p>
-              <Image src="/zondax-white.svg" alt="Zondax Logo" width={105} height={48} />
+              <Image
+                src="/assets/zondax-white.svg"
+                alt="Zondax Logo"
+                width={105}
+                height={48}
+              />
             </div>
           </motion.div>
 
