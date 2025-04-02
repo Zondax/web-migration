@@ -217,38 +217,39 @@ export async function prepareTransaction(api: ApiPromise, senderAddress: string,
  * @param itemId - The item ID.
  * @param appConfig - The app config.
  * @param pallet - The pallet to use ('nfts' or 'uniques')
- */
+*/
 export async function prepareNFTTransfer(
   api: ApiPromise,
   senderAddress: string,
   receiverAddress: string,
-  collectionId: string,
-  itemId: string,
+  collectionId: number,
+  itemId: number,
   appConfig: AppConfig,
   pallet: 'nfts' | 'uniques' = 'nfts' // Default to nfts pallet
 ) {
-  const nonceResp = await api.query.system.account(senderAddress)
-  const { nonce } = nonceResp.toHuman() as any
+  const nonceResp = await api.query.system.account(senderAddress);
+  const { nonce } = nonceResp.toHuman() as any;
 
-  const metadataV15 = await api.call.metadata.metadataAtVersion<Option<OpaqueMetadata>>(15).then(m => {
-    if (!m.isNone) {
-      return m.unwrap()
-    }
-  })
-  if (!metadataV15) return
+  const metadataV15 = await api.call.metadata
+    .metadataAtVersion<Option<OpaqueMetadata>>(15)
+    .then((m) => {
+      if (!m.isNone) {
+        return m.unwrap();
+      }
+    });
+  if (!metadataV15) return;
 
   const merkleizedMetadata = merkleizeMetadata(metadataV15, {
     decimals: appConfig.decimals,
-    tokenSymbol: appConfig.ticker,
-  })
+    tokenSymbol: appConfig.ticker
+  });
 
-  const metadataHash = merkleizedMetadata.digest()
+  const metadataHash = merkleizedMetadata.digest();
 
   // Create transfer extrinsic based on the selected pallet
-  const transfer =
-    pallet === 'nfts'
-      ? api.tx.nfts.transfer(collectionId, itemId, receiverAddress)
-      : api.tx.uniques.transfer(collectionId, itemId, receiverAddress)
+  const transfer = pallet === 'nfts' 
+    ? api.tx.nfts.transfer(collectionId, itemId, receiverAddress)
+    : api.tx.uniques.transfer(collectionId, itemId, receiverAddress);
 
   // Create the payload for signing
   const payload = api.createType('ExtrinsicPayload', {
@@ -261,19 +262,19 @@ export async function prepareNFTTransfer(
     runtimeVersion: api.runtimeVersion,
     version: api.extrinsicVersion,
     mode: 1,
-    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex')),
-  })
+    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex'))
+  });
 
-  const payloadBytes = payload.toU8a(true)
+  const payloadBytes = payload.toU8a(true);
 
   const metadata = {
     ...merkleizedMetadata,
-    chainId: appConfig.ticker.toLowerCase(),
-  }
+    chainId: appConfig.ticker.toLowerCase()
+  };
 
-  const proof1: Uint8Array = metadata.getProofForExtrinsicPayload(payloadBytes)
+  const proof1: Uint8Array = metadata.getProofForExtrinsicPayload(payloadBytes);
 
-  return { transfer, payload, metadataHash, nonce, proof1, payloadBytes }
+  return { transfer, payload, metadataHash, nonce, proof1, payloadBytes };
 }
 
 // Create Signed Extrinsic
