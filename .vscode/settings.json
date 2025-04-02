@@ -1,5 +1,5 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  "cSpell.words": ["bunx", "ianvs", "ledgerhq", "legendapp", "merkleize", "neondatabase", "polkadot", "webhid", "zondax"]
+  "cSpell.words": ["bunx", "ianvs", "ledgerhq", "legendapp", "merkleize", "muify", "neondatabase", "polkadot", "webhid", "zondax"]
 }
