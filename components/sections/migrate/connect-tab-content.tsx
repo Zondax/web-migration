@@ -1,65 +1,43 @@
-'use client';
+'use client'
 
-import { useConnection } from '@/components/hooks/useConnection';
-import { Button } from '@/components/ui/button';
-import { useCallback } from 'react';
+import { useCallback } from 'react'
+
+import { Button } from '@/components/ui/button'
+import { useConnection } from '@/components/hooks/useConnection'
+
 interface ConnectTabContentProps {
-  onContinue: () => void;
+  onContinue: () => void
 }
 
 export function ConnectTabContent({ onContinue }: ConnectTabContentProps) {
-  const { isLedgerConnected, isAppOpen, connectDevice } = useConnection();
+  const { isLedgerConnected, isAppOpen, connectDevice } = useConnection()
 
   const handleConnect = useCallback(async () => {
-    const connected = await connectDevice();
+    const connected = await connectDevice()
     if (connected) {
-      onContinue();
+      onContinue()
     }
-  }, [connectDevice, onContinue]);
+  }, [connectDevice, onContinue])
 
   return (
     <div className="flex flex-col items-center justify-center h-full py-12">
       <h2 className="text-2xl font-bold mb-8">Connect Your Ledger Device</h2>
       <div className="max-w-md text-center">
-        <p className="mb-6">
-          To begin the migration process, please follow these steps:
-        </p>
+        <p className="mb-6">To begin the migration process, please follow these steps:</p>
         <ol className="text-center space-y-3">
           <li className="flex items-center justify-center">
-            <span
-              className={`mr-3 font-medium ${isLedgerConnected ? 'text-purple-400' : ''}`}
-            >
-              1.
-            </span>
-            <span className={isLedgerConnected ? 'text-purple-400' : ''}>
-              Connect your Ledger device to your computer
-            </span>
+            <span className={`mr-3 font-medium ${isLedgerConnected ? 'text-purple-400' : ''}`}>1.</span>
+            <span className={isLedgerConnected ? 'text-purple-400' : ''}>Connect your Ledger device to your computer</span>
           </li>
           <li className="flex items-center justify-center">
-            <span
-              className={`mr-3 font-medium ${isLedgerConnected ? 'text-purple-400' : ''}`}
-            >
-              2.
-            </span>
-            <span className={isLedgerConnected ? 'text-purple-400' : ''}>
-              Enter your PIN code on the device
-            </span>
+            <span className={`mr-3 font-medium ${isLedgerConnected ? 'text-purple-400' : ''}`}>2.</span>
+            <span className={isLedgerConnected ? 'text-purple-400' : ''}>Enter your PIN code on the device</span>
           </li>
           <li className="flex items-center justify-center">
-            <span
-              className={`mr-3 font-medium ${isLedgerConnected && !isAppOpen ? 'text-rose-400' : isAppOpen ? 'text-purple-400' : ''}`}
-            >
+            <span className={`mr-3 font-medium ${isLedgerConnected && !isAppOpen ? 'text-rose-400' : isAppOpen ? 'text-purple-400' : ''}`}>
               3.
             </span>
-            <span
-              className={
-                isLedgerConnected && !isAppOpen
-                  ? 'text-rose-400'
-                  : isAppOpen
-                    ? 'text-purple-400'
-                    : ''
-              }
-            >
+            <span className={isLedgerConnected && !isAppOpen ? 'text-rose-400' : isAppOpen ? 'text-purple-400' : ''}>
               Open the Migration App on your Ledger
             </span>
           </li>
@@ -69,12 +47,9 @@ export function ConnectTabContent({ onContinue }: ConnectTabContentProps) {
           </li>
         </ol>
       </div>
-      <Button
-        className="mt-10 bg-gray-900 hover:bg-gray-800 text-white px-6 py-2 rounded-md"
-        onClick={handleConnect}
-      >
+      <Button className="mt-10 bg-gray-900 hover:bg-gray-800 text-white px-6 py-2 rounded-md" onClick={handleConnect}>
         Connect Ledger
       </Button>
     </div>
-  );
+  )
 }

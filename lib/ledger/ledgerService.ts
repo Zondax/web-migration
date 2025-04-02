@@ -1,36 +1,30 @@
-import Transport from '@ledgerhq/hw-transport';
-import TransportWebUSB from '@ledgerhq/hw-transport-webhid';
-import { LedgerError } from '@zondax/ledger-js';
-import { PolkadotGenericApp } from '@zondax/ledger-substrate';
-import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common';
-import { ConnectionResponse, DeviceConnectionProps } from 'state/types/ledger';
-import { openApp } from './openApp';
+import Transport from '@ledgerhq/hw-transport'
+import TransportWebUSB from '@ledgerhq/hw-transport-webhid'
+import { LedgerError } from '@zondax/ledger-js'
+import { PolkadotGenericApp } from '@zondax/ledger-substrate'
+import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
+import { ConnectionResponse, DeviceConnectionProps } from 'state/types/ledger'
+
+import { openApp } from './openApp'
 
 /**
  * Interface for the Ledger service that manages device interaction
  */
 export interface ILedgerService {
-  openApp(
-    transport: Transport,
-    appName: string
-  ): Promise<{ connection?: DeviceConnectionProps }>;
-  initializeTransport(): Promise<Transport>;
-  isAppOpen(genericApp: PolkadotGenericApp): Promise<boolean>;
-  establishDeviceConnection(): Promise<DeviceConnectionProps | undefined>;
-  connectDevice(): Promise<ConnectionResponse | undefined>;
-  getAccountAddress(
-    bip44Path: string,
-    ss58prefix: number,
-    showAddrInDevice: boolean
-  ): Promise<GenericeResponseAddress | undefined>;
+  openApp(transport: Transport, appName: string): Promise<{ connection?: DeviceConnectionProps }>
+  initializeTransport(): Promise<Transport>
+  isAppOpen(genericApp: PolkadotGenericApp): Promise<boolean>
+  establishDeviceConnection(): Promise<DeviceConnectionProps | undefined>
+  connectDevice(): Promise<ConnectionResponse | undefined>
+  getAccountAddress(bip44Path: string, ss58prefix: number, showAddrInDevice: boolean): Promise<GenericeResponseAddress | undefined>
   signTransaction(
     bip44Path: string,
     payloadBytes: Uint8Array,
     chainId: string,
     proof1: Uint8Array
-  ): Promise<{ signature?: Buffer<ArrayBufferLike> }>;
-  clearConnection(): void;
-  disconnect(): void;
+  ): Promise<{ signature?: Buffer<ArrayBufferLike> }>
+  clearConnection(): void
+  disconnect(): void
 }
 
 /**
@@ -40,46 +34,43 @@ export interface ILedgerService {
 export class LedgerService implements ILedgerService {
   private deviceConnection: DeviceConnectionProps = {
     transport: undefined,
-    genericApp: undefined
-  };
+    genericApp: undefined,
+  }
 
   // Handles transport disconnection
   private handleDisconnect = () => {
     this.deviceConnection = {
       transport: undefined,
-      genericApp: undefined
-    };
-    console.log('disconnecting');
-  };
+      genericApp: undefined,
+    }
+    console.log('disconnecting')
+  }
 
   /**
    * Opens the Polkadot Migration app on the connected Ledger device
    */
-  async openApp(
-    transport: Transport,
-    appName: string
-  ): Promise<{ connection?: DeviceConnectionProps }> {
+  async openApp(transport: Transport, appName: string): Promise<{ connection?: DeviceConnectionProps }> {
     if (!transport) {
-      throw new Error('TransportStatusError');
+      throw new Error('TransportStatusError')
     }
-    await openApp(transport, appName);
-    return { connection: { transport } };
+    await openApp(transport, appName)
+    return { connection: { transport } }
   }
 
   /**
    * Initializes the Ledger transport
    */
   async initializeTransport(onDisconnect?: () => void): Promise<Transport> {
-    const transport = await TransportWebUSB.create();
-    this.deviceConnection.transport = transport;
+    const transport = await TransportWebUSB.create()
+    this.deviceConnection.transport = transport
 
     const handleDisconnect = () => {
-      this.handleDisconnect();
-      onDisconnect?.();
-    };
+      this.handleDisconnect()
+      onDisconnect?.()
+    }
 
-    transport?.on('disconnect', handleDisconnect);
-    return transport;
+    transport?.on('disconnect', handleDisconnect)
+    return transport
   }
 
   /**
@@ -87,72 +78,58 @@ export class LedgerService implements ILedgerService {
    */
   async isAppOpen(genericApp: PolkadotGenericApp): Promise<boolean> {
     try {
-      const version = await genericApp.getVersion();
-      return Boolean(version);
+      const version = await genericApp.getVersion()
+      return Boolean(version)
     } catch (error) {
-      return false;
+      return false
     }
   }
 
   /**
    * Establishes a connection to the Ledger device
    */
-  async establishDeviceConnection(
-    onDisconnect?: () => void
-  ): Promise<DeviceConnectionProps | undefined> {
-    let transport =
-      this.deviceConnection.transport ||
-      (await this.initializeTransport(onDisconnect));
-    let genericApp =
-      this.deviceConnection.genericApp || new PolkadotGenericApp(transport);
+  async establishDeviceConnection(onDisconnect?: () => void): Promise<DeviceConnectionProps | undefined> {
+    let transport = this.deviceConnection.transport || (await this.initializeTransport(onDisconnect))
+    let genericApp = this.deviceConnection.genericApp || new PolkadotGenericApp(transport)
 
     // Check if the app is already open
-    let isOpen = await this.isAppOpen(genericApp);
+    let isOpen = await this.isAppOpen(genericApp)
 
     if (!isOpen) {
-      this.openApp(transport, 'Polkadot Migration');
-      return { transport, genericApp, isAppOpen: false };
+      this.openApp(transport, 'Polkadot Migration')
+      return { transport, genericApp, isAppOpen: false }
     }
 
-    const connection = { transport, genericApp, isAppOpen: true };
-    this.deviceConnection = connection;
-    return connection;
+    const connection = { transport, genericApp, isAppOpen: true }
+    this.deviceConnection = connection
+    return connection
   }
 
   /**
    * Connects to the Ledger device
    */
-  async connectDevice(
-    onDisconnect?: () => void
-  ): Promise<ConnectionResponse | undefined> {
-    console.log('Attempting to connect device...');
-    const connection = await this.establishDeviceConnection(onDisconnect);
+  async connectDevice(onDisconnect?: () => void): Promise<ConnectionResponse | undefined> {
+    console.log('Attempting to connect device...')
+    const connection = await this.establishDeviceConnection(onDisconnect)
     if (!connection) {
-      console.log('Failed to establish device connection');
-      throw new Error('Failed to establish device connection');
+      console.log('Failed to establish device connection')
+      throw new Error('Failed to establish device connection')
     }
 
-    console.log(
-      `Device connected successfully, the app is ${connection.isAppOpen ? 'open' : 'closed'}`
-    );
-    return { connection };
+    console.log(`Device connected successfully, the app is ${connection.isAppOpen ? 'open' : 'closed'}`)
+    return { connection }
   }
 
   /**
    * Gets an account address from the Ledger device
    */
-  async getAccountAddress(
-    bip44Path: string,
-    ss58prefix: number,
-    showAddrInDevice: boolean
-  ): Promise<GenericeResponseAddress | undefined> {
+  async getAccountAddress(bip44Path: string, ss58prefix: number, showAddrInDevice: boolean): Promise<GenericeResponseAddress | undefined> {
     if (!this.deviceConnection?.genericApp) {
-      throw new Error('App not open');
+      throw new Error('App not open')
     }
 
-    const genericApp = this.deviceConnection
-      .genericApp as unknown as PolkadotGenericApp;
-    return await genericApp.getAddress(bip44Path, ss58prefix, showAddrInDevice);
+    const genericApp = this.deviceConnection.genericApp as unknown as PolkadotGenericApp
+    return await genericApp.getAddress(bip44Path, ss58prefix, showAddrInDevice)
   }
 
   /**
@@ -165,19 +142,14 @@ export class LedgerService implements ILedgerService {
     proof1: Uint8Array
   ): Promise<{ signature?: Buffer<ArrayBufferLike> }> {
     if (!this.deviceConnection?.genericApp) {
-      throw LedgerError.AppDoesNotSeemToBeOpen;
+      throw LedgerError.AppDoesNotSeemToBeOpen
     }
 
-    const genericApp = this.deviceConnection
-      .genericApp as unknown as PolkadotGenericApp;
+    const genericApp = this.deviceConnection.genericApp as unknown as PolkadotGenericApp
 
-    genericApp.txMetadataChainId = chainId;
-    const { signature } = await genericApp.signWithMetadata(
-      bip44Path,
-      Buffer.from(payloadBytes),
-      Buffer.from(proof1)
-    );
-    return { signature };
+    genericApp.txMetadataChainId = chainId
+    const { signature } = await genericApp.signWithMetadata(bip44Path, Buffer.from(payloadBytes), Buffer.from(proof1))
+    return { signature }
   }
 
   /**
@@ -186,8 +158,8 @@ export class LedgerService implements ILedgerService {
   clearConnection() {
     this.deviceConnection = {
       transport: undefined,
-      genericApp: undefined
-    };
+      genericApp: undefined,
+    }
   }
 
   /**
@@ -195,11 +167,11 @@ export class LedgerService implements ILedgerService {
    */
   disconnect() {
     if (this.deviceConnection?.transport) {
-      this.deviceConnection.transport.close();
-      this.deviceConnection.transport.emit('disconnect');
+      this.deviceConnection.transport.close()
+      this.deviceConnection.transport.emit('disconnect')
     }
   }
 }
 
 // Export a singleton instance
-export const ledgerService = new LedgerService();
+export const ledgerService = new LedgerService()

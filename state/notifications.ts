@@ -1,6 +1,6 @@
-import { observable } from '@legendapp/state';
+import { observable } from '@legendapp/state'
 
-import { Notification } from './types/notifications';
+import { Notification } from './types/notifications'
 
 /**
  * Notification Management System
@@ -21,77 +21,66 @@ export const notifications$ = observable({
 
   // Actions
   push(notification: Omit<Notification, 'id' | 'createdAt'>) {
-    if (!notification) return;
+    if (!notification) return
 
     const newNotification: Notification = {
       ...notification,
       id: crypto.randomUUID(),
-      createdAt: new Date()
-    };
+      createdAt: new Date(),
+    }
 
     // Add to active notifications and history
-    notifications$.active.push(newNotification);
-    notifications$.history.push(newNotification);
+    notifications$.active.push(newNotification)
+    notifications$.history.push(newNotification)
   },
 
   dismiss(id: string | undefined) {
-    if (!id) return;
+    if (!id) return
 
-    const notificationIndex =
-      notifications$.active.get()?.findIndex((n) => n?.id === id) ?? -1;
+    const notificationIndex = notifications$.active.get()?.findIndex(n => n?.id === id) ?? -1
     if (notificationIndex !== -1) {
       // Update dismissedAt in history
-      const historyIndex =
-        notifications$.history.get()?.findIndex((n) => n?.id === id) ?? -1;
+      const historyIndex = notifications$.history.get()?.findIndex(n => n?.id === id) ?? -1
       if (historyIndex !== -1) {
-        notifications$.history[historyIndex].dismissedAt?.set(new Date());
+        notifications$.history[historyIndex].dismissedAt?.set(new Date())
       }
 
       // Remove from active notifications
-      notifications$.active.splice(notificationIndex, 1);
+      notifications$.active.splice(notificationIndex, 1)
     }
   },
 
   dismissAll() {
-    const currentTime = new Date();
+    const currentTime = new Date()
     // Update dismissedAt for all active notifications in history
     notifications$.history.get()?.forEach((notification, index) => {
-      if (
-        notification &&
-        !notification.dismissedAt &&
-        notifications$.active.get()?.some((n) => n?.id === notification.id)
-      ) {
-        notifications$.history[index].dismissedAt?.set(currentTime);
+      if (notification && !notification.dismissedAt && notifications$.active.get()?.some(n => n?.id === notification.id)) {
+        notifications$.history[index].dismissedAt?.set(currentTime)
       }
-    });
+    })
 
     // Clear active notifications
-    notifications$.active.set([]);
+    notifications$.active.set([])
   },
 
   clearHistory() {
-    notifications$.history.set([]);
+    notifications$.history.set([])
   },
 
   // Computed getters
   getActiveCount() {
-    return notifications$.active.get()?.length ?? 0;
+    return notifications$.active.get()?.length ?? 0
   },
 
   getHistoryByType(type: Notification['type'] | undefined) {
-    if (!type) return [];
-    return notifications$.history.get()?.filter((n) => n?.type === type) ?? [];
+    if (!type) return []
+    return notifications$.history.get()?.filter(n => n?.type === type) ?? []
   },
 
   getRecentHistory(limit: number = 10) {
-    const history = notifications$.history.get();
-    if (!history?.length) return [];
+    const history = notifications$.history.get()
+    if (!history?.length) return []
 
-    return history
-      .sort(
-        (a, b) =>
-          (b?.createdAt?.getTime() ?? 0) - (a?.createdAt?.getTime() ?? 0)
-      )
-      .slice(0, limit);
-  }
-});
+    return history.sort((a, b) => (b?.createdAt?.getTime() ?? 0) - (a?.createdAt?.getTime() ?? 0)).slice(0, limit)
+  },
+})

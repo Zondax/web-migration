@@ -1,49 +1,42 @@
-import { Spinner } from '@/components/icons';
-import { Badge } from '@/components/ui/badge';
-import { TableCell, TableRow } from '@/components/ui/table';
-import { SimpleTooltip } from '@/components/ui/tooltip';
-import { muifyHtml } from '@/lib/muifyHtml';
-import { formatBalance } from '@/lib/utils';
-import { Observable } from '@legendapp/state';
-import { observer, use$ } from '@legendapp/state/react';
-import { AlertCircle, ChevronDown } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
-import { App, ledgerState$ } from 'state/ledger';
-import { uiState$ } from 'state/ui';
-import Accounts from './accounts-table';
+import { useCallback, useMemo, useState } from 'react'
+import { Observable } from '@legendapp/state'
+import { observer, use$ } from '@legendapp/state/react'
+import { AlertCircle, ChevronDown } from 'lucide-react'
+import { App, ledgerState$ } from 'state/ledger'
+import { uiState$ } from 'state/ui'
 
-function AppRow({
-  app,
-  failedSync
-}: {
-  app: Observable<App>;
-  failedSync?: boolean;
-}) {
-  const name = use$(app.name);
-  const id = use$(app.id);
-  const status = use$(app.status);
-  const accounts = use$(app.accounts);
+import { muifyHtml } from '@/lib/muifyHtml'
+import { formatBalance } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
+import { TableCell, TableRow } from '@/components/ui/table'
+import { SimpleTooltip } from '@/components/ui/tooltip'
+import { Spinner } from '@/components/icons'
 
-  const [isExpanded, setIsExpanded] = useState(true);
+import Accounts from './accounts-table'
 
-  const isSynchronizationLoading = ledgerState$.apps.status.get();
-  const icon = uiState$.icons.get()[id];
+function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolean }) {
+  const name = use$(app.name)
+  const id = use$(app.id)
+  const status = use$(app.status)
+  const accounts = use$(app.accounts)
 
-  const polkadotAddresses = useMemo(
-    () => ledgerState$.polkadotAddresses[id].get(),
-    [id]
-  );
+  const [isExpanded, setIsExpanded] = useState(true)
+
+  const isSynchronizationLoading = ledgerState$.apps.status.get()
+  const icon = uiState$.icons.get()[id]
+
+  const polkadotAddresses = useMemo(() => ledgerState$.polkadotAddresses[id].get(), [id])
 
   const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
+    setIsExpanded(!isExpanded)
+  }
 
   const renderAction = useCallback(() => {
     if (failedSync || !status) {
-      return null;
+      return null
     }
     if (status === 'loading') {
-      return <Spinner />;
+      return <Spinner />
     }
 
     if (status === 'migrated') {
@@ -51,53 +44,36 @@ function AppRow({
         <Badge variant="destructive" className="capitalize">
           {status}
         </Badge>
-      );
+      )
     }
 
-    return null;
-  }, [status, isSynchronizationLoading]);
+    return null
+  }, [status, isSynchronizationLoading])
 
   const renderBalance = () => {
-    if (failedSync) return null;
-    const balance = accounts?.reduce(
-      (total, account) => total + (account.balance || 0),
-      0
-    );
+    if (failedSync) return null
+    const balance = accounts?.reduce((total, account) => total + (account.balance || 0), 0)
 
-    return balance !== undefined
-      ? formatBalance(balance, app.ticker.get(), app.decimals.get())
-      : '-';
-  };
+    return balance !== undefined ? formatBalance(balance, app.ticker.get(), app.decimals.get()) : '-'
+  }
 
   return (
     <>
       <TableRow
-        className={
-          accounts?.length !== 0 ? 'cursor-pointer hover:bg-gray-50' : ''
-        }
+        className={accounts?.length !== 0 ? 'cursor-pointer hover:bg-gray-50' : ''}
         onClick={accounts?.length !== 0 ? toggleExpand : undefined}
       >
         <TableCell className="px-2">
           <div className="flex justify-center items-center h-full">
-            {accounts?.length !== 0 && (
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-              />
-            )}
+            {accounts?.length !== 0 && <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />}
           </div>
         </TableCell>
         <TableCell className="px-2 hidden sm:table-cell">
-          <div className="max-h-8 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8">
-            {muifyHtml(icon)}
-          </div>
+          <div className="max-h-8 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8">{muifyHtml(icon)}</div>
         </TableCell>
         <TableCell className="font-medium">{name}</TableCell>
-        <TableCell className="font-medium">
-          {accounts && accounts.length !== 0 ? accounts.length : '-'}
-        </TableCell>
-        <TableCell className="font-medium font-mono">
-          {renderBalance()}
-        </TableCell>
+        <TableCell className="font-medium">{accounts && accounts.length !== 0 ? accounts.length : '-'}</TableCell>
+        <TableCell className="font-medium font-mono">{renderBalance()}</TableCell>
         <TableCell>
           <div className="flex gap-2 justify-end items-center">
             {renderAction()}
@@ -118,7 +94,7 @@ function AppRow({
         />
       ) : null}
     </>
-  );
+  )
 }
 
-export default observer(AppRow);
+export default observer(AppRow)

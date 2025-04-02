@@ -1,115 +1,99 @@
-import { merkleizeMetadata } from '@polkadot-api/merkleize-metadata';
-import { ApiPromise, WsProvider } from '@polkadot/api';
-import { SubmittableExtrinsic } from '@polkadot/api/types';
-import { GenericExtrinsicPayload } from '@polkadot/types';
-import { Option } from '@polkadot/types-codec';
-import { Hash, OpaqueMetadata } from '@polkadot/types/interfaces';
-import {
-  ExtrinsicPayloadValue,
-  ISubmittableResult
-} from '@polkadot/types/types/extrinsic';
-import { hexToU8a } from '@polkadot/util';
-import { AppConfig } from 'config/apps';
-import { errorDetails } from 'config/errors';
-import { errorAddresses, MINIMUM_AMOUNT, mockBalances } from 'config/mockData';
-import { Address, TransactionStatus } from 'state/types/ledger';
+import { merkleizeMetadata } from '@polkadot-api/merkleize-metadata'
+import { ApiPromise, WsProvider } from '@polkadot/api'
+import { SubmittableExtrinsic } from '@polkadot/api/types'
+import { GenericExtrinsicPayload } from '@polkadot/types'
+import { Option } from '@polkadot/types-codec'
+import { Hash, OpaqueMetadata } from '@polkadot/types/interfaces'
+import { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
+import { hexToU8a } from '@polkadot/util'
+import { AppConfig } from 'config/apps'
+import { errorDetails } from 'config/errors'
+import { errorAddresses, MINIMUM_AMOUNT, mockBalances } from 'config/mockData'
+import { Address, TransactionStatus } from 'state/types/ledger'
 
 // Get API and Provider
-export async function getApiAndProvider(
-  rpcEndpoint: string
-): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
+export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
   try {
     // Create a provider with default settings (will allow first connection)
-    const provider = new WsProvider(rpcEndpoint);
+    const provider = new WsProvider(rpcEndpoint)
 
     // Add an error handler to prevent the automatic reconnection loops
-    provider.on('error', (error) => {
-      console.error('WebSocket error:', error);
-    });
+    provider.on('error', error => {
+      console.error('WebSocket error:', error)
+    })
 
     // Set a timeout for the connection attempt
     const connectionPromise = new Promise<ApiPromise>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        reject(new Error('Connection timeout: The node is not responding.'));
-      }, 15000); // 15 second timeout
+        reject(new Error('Connection timeout: The node is not responding.'))
+      }, 15000) // 15 second timeout
 
       ApiPromise.create({
         provider,
         throwOnConnect: true,
-        throwOnUnknown: true
+        throwOnUnknown: true,
       })
-        .then((api) => {
-          clearTimeout(timeoutId);
-          resolve(api);
+        .then(api => {
+          clearTimeout(timeoutId)
+          resolve(api)
         })
-        .catch((err) => {
-          clearTimeout(timeoutId);
-          reject(err);
-        });
-    });
+        .catch(err => {
+          clearTimeout(timeoutId)
+          reject(err)
+        })
+    })
 
-    const api = await connectionPromise;
+    const api = await connectionPromise
 
     // If connection is successful, return the API and provider
-    return { api, provider };
+    return { api, provider }
   } catch (e) {
-    console.error('Error creating API for RPC endpoint:', rpcEndpoint, e);
+    console.error('Error creating API for RPC endpoint:', rpcEndpoint, e)
 
     // More specific error messages based on the error
-    const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+    const errorMessage = e instanceof Error ? e.message : 'Unknown error'
 
     if (errorMessage.includes('timeout')) {
-      return { error: 'Connection timeout: The node is not responding.' };
-    } else if (
-      errorMessage.includes('refused') ||
-      errorMessage.includes('WebSocket')
-    ) {
-      return { error: 'Connection refused: The node endpoint is unreachable.' };
+      return { error: 'Connection timeout: The node is not responding.' }
+    } else if (errorMessage.includes('refused') || errorMessage.includes('WebSocket')) {
+      return { error: 'Connection refused: The node endpoint is unreachable.' }
     } else {
-      return { error: `Failed to connect to the blockchain: ${errorMessage}` };
+      return { error: `Failed to connect to the blockchain: ${errorMessage}` }
     }
   }
 }
 
-export const getBip44Path = (bip44Path: string, index: number) =>
-  bip44Path.replace(/\/0'$/, `/${index}'`);
+export const getBip44Path = (bip44Path: string, index: number) => bip44Path.replace(/\/0'$/, `/${index}'`)
 
 // Get Balance (simplified error handling)
-export async function getBalance(
-  address: Address,
-  api: ApiPromise
-): Promise<Address> {
-  const { address: addressString } = address;
+export async function getBalance(address: Address, api: ApiPromise): Promise<Address> {
+  const { address: addressString } = address
 
   try {
     if (process.env.NEXT_PUBLIC_NODE_ENV === 'development') {
-      if (mockBalances.some((balance) => balance.address === addressString)) {
+      if (mockBalances.some(balance => balance.address === addressString)) {
         return {
           ...address,
-          balance: mockBalances.find(
-            (balance) => balance.address === addressString
-          )?.balance,
+          balance: mockBalances.find(balance => balance.address === addressString)?.balance,
           status: 'synchronized',
-          error: undefined
-        };
+          error: undefined,
+        }
       }
       if (errorAddresses.includes(addressString)) {
-        throw new Error('Error fetching balance');
+        throw new Error('Error fetching balance')
       }
     }
 
-    const balance = await api?.query.system.account(addressString);
+    const balance = await api?.query.system.account(addressString)
     const freeBalance =
-      balance && 'data' in balance && 'free' in (balance as any).data
-        ? parseFloat((balance.data as any).free.toString())
-        : undefined;
+      balance && 'data' in balance && 'free' in (balance as any).data ? parseFloat((balance.data as any).free.toString()) : undefined
 
     return {
       ...address,
       balance: freeBalance,
       status: 'synchronized',
-      error: undefined
-    };
+      error: undefined,
+    }
   } catch (e) {
     return {
       ...address,
@@ -117,9 +101,9 @@ export async function getBalance(
       status: 'synchronized',
       error: {
         source: 'balance_fetch',
-        description: errorDetails.balance_not_gotten.description ?? ''
-      }
-    };
+        description: errorDetails.balance_not_gotten.description ?? '',
+      },
+    }
   }
 }
 
@@ -127,11 +111,7 @@ export async function getBalance(
  * Updates the transaction status with optional details.
  */
 export interface UpdateTransactionStatus {
-  (
-    status: TransactionStatus,
-    message?: string,
-    txDetails?: { txHash?: string; blockHash?: string; blockNumber?: string }
-  ): void;
+  (status: TransactionStatus, message?: string, txDetails?: { txHash?: string; blockHash?: string; blockNumber?: string }): void
 }
 
 /**
@@ -142,34 +122,24 @@ export interface UpdateTransactionStatus {
  * 4. Building the payload for signing
  * 5. Generating the merkle proof
  */
-export async function prepareTransaction(
-  api: ApiPromise,
-  senderAddress: string,
-  receiverAddress: string,
-  appConfig: AppConfig
-) {
-  const nonceResp = await api.query.system.account(senderAddress);
-  const { nonce } = nonceResp.toHuman() as any;
+export async function prepareTransaction(api: ApiPromise, senderAddress: string, receiverAddress: string, appConfig: AppConfig) {
+  const nonceResp = await api.query.system.account(senderAddress)
+  const { nonce } = nonceResp.toHuman() as any
 
-  const metadataV15 = await api.call.metadata
-    .metadataAtVersion<Option<OpaqueMetadata>>(15)
-    .then((m) => {
-      if (!m.isNone) {
-        return m.unwrap();
-      }
-    });
-  if (!metadataV15) return;
+  const metadataV15 = await api.call.metadata.metadataAtVersion<Option<OpaqueMetadata>>(15).then(m => {
+    if (!m.isNone) {
+      return m.unwrap()
+    }
+  })
+  if (!metadataV15) return
 
   const merkleizedMetadata = merkleizeMetadata(metadataV15, {
     decimals: appConfig.decimals,
-    tokenSymbol: appConfig.ticker
-  });
+    tokenSymbol: appConfig.ticker,
+  })
 
-  const metadataHash = merkleizedMetadata.digest();
-  const transfer = api.tx.balances.transferKeepAlive(
-    receiverAddress,
-    MINIMUM_AMOUNT
-  ); // TODO: Replace MINIMUM_AMOUNT by amount
+  const metadataHash = merkleizedMetadata.digest()
+  const transfer = api.tx.balances.transferKeepAlive(receiverAddress, MINIMUM_AMOUNT) // TODO: Replace MINIMUM_AMOUNT by amount
 
   // Create the payload for signing
   const payload = api.createType('ExtrinsicPayload', {
@@ -182,19 +152,19 @@ export async function prepareTransaction(
     runtimeVersion: api.runtimeVersion,
     version: api.extrinsicVersion,
     mode: 1,
-    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex'))
-  });
+    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex')),
+  })
 
-  const payloadBytes = payload.toU8a(true);
+  const payloadBytes = payload.toU8a(true)
 
   const metadata = {
     ...merkleizedMetadata,
-    chainId: appConfig.ticker.toLowerCase()
-  };
+    chainId: appConfig.ticker.toLowerCase(),
+  }
 
-  const proof1: Uint8Array = metadata.getProofForExtrinsicPayload(payloadBytes);
+  const proof1: Uint8Array = metadata.getProofForExtrinsicPayload(payloadBytes)
 
-  return { transfer, payload, metadataHash, nonce, proof1, payloadBytes };
+  return { transfer, payload, metadataHash, nonce, proof1, payloadBytes }
 }
 // Create Signed Extrinsic
 export function createSignedExtrinsic(
@@ -216,10 +186,10 @@ export function createSignedExtrinsic(
     tip: 0,
     transactionVersion: api.runtimeVersion.transactionVersion,
     mode: 1,
-    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex'))
-  };
+    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex')),
+  }
 
-  return transfer.addSignature(senderAddress, signature, payloadValue);
+  return transfer.addSignature(senderAddress, signature, payloadValue)
 }
 
 // Submit Transaction and Handle Status
@@ -230,109 +200,94 @@ export async function submitAndHandleTransaction(
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
-      updateStatus(
-        'unknown',
-        'Transaction timed out, check the transaction status in the explorer.'
-      );
-      reject(new Error('Transaction timed out'));
-    }, 120000); // 2-minute timeout
+      updateStatus('unknown', 'Transaction timed out, check the transaction status in the explorer.')
+      reject(new Error('Transaction timed out'))
+    }, 120000) // 2-minute timeout
 
     transfer
       .send(async (status: ISubmittableResult) => {
-        let blockNumber: string | undefined;
-        let blockHash: string | undefined;
-        let txHash: string | undefined;
+        let blockNumber: string | undefined
+        let blockHash: string | undefined
+        let txHash: string | undefined
 
         if (status.isInBlock) {
-          blockHash = status.status.asInBlock.toHex();
-          txHash = status.txHash.toHex();
-          blockNumber =
-            'blockNumber' in status
-              ? (status.blockNumber as Hash)?.toHex()
-              : undefined;
+          blockHash = status.status.asInBlock.toHex()
+          txHash = status.txHash.toHex()
+          blockNumber = 'blockNumber' in status ? (status.blockNumber as Hash)?.toHex() : undefined
           updateStatus('inBlock', `In block: ${blockHash}`, {
             txHash,
             blockHash,
-            blockNumber
-          });
+            blockNumber,
+          })
         }
         if (status.isFinalized) {
-          clearTimeout(timeoutId);
-          blockHash = status.status.asFinalized.toHex();
-          txHash = status.txHash.toHex();
-          blockNumber =
-            'blockNumber' in status
-              ? (status.blockNumber as Hash)?.toHex()
-              : undefined;
+          clearTimeout(timeoutId)
+          blockHash = status.status.asFinalized.toHex()
+          txHash = status.txHash.toHex()
+          blockNumber = 'blockNumber' in status ? (status.blockNumber as Hash)?.toHex() : undefined
 
-          console.log(`Transaction finalized in block: ${blockHash}`);
+          console.log(`Transaction finalized in block: ${blockHash}`)
           updateStatus('finalized', `Finalized in block: ${blockHash}`, {
             txHash,
             blockHash,
-            blockNumber
-          });
+            blockNumber,
+          })
 
           if (!status.txIndex) {
             updateStatus('unknown', 'The status is unknown', {
               txHash,
               blockHash,
-              blockNumber
-            });
-            resolve();
-            return; // Resolve here, as we have a final status
+              blockNumber,
+            })
+            resolve()
+            return // Resolve here, as we have a final status
           }
 
-          const result = await getTransactionDetails(
-            api,
-            blockHash,
-            status.txIndex
-          );
+          const result = await getTransactionDetails(api, blockHash, status.txIndex)
           if (result?.success) {
-            console.log(
-              `Transaction successful: ${txHash}, ${blockHash}, ${blockNumber}`
-            );
+            console.log(`Transaction successful: ${txHash}, ${blockHash}, ${blockNumber}`)
             updateStatus('success', 'Successful Transaction', {
               txHash,
               blockHash,
-              blockNumber
-            });
-            resolve();
+              blockNumber,
+            })
+            resolve()
           } else if (result?.error) {
             updateStatus('failed', result.error, {
               txHash,
               blockHash,
-              blockNumber
-            });
-            reject(new Error(result.error)); // Reject with the specific error
+              blockNumber,
+            })
+            reject(new Error(result.error)) // Reject with the specific error
           } else {
             // Handle cases where result is undefined or doesn't have success/error
             updateStatus('error', 'Unknown transaction status', {
               txHash,
               blockHash,
-              blockNumber
-            });
-            reject(new Error('Unknown transaction status'));
+              blockNumber,
+            })
+            reject(new Error('Unknown transaction status'))
           }
         } else if (status.isError) {
-          clearTimeout(timeoutId);
-          console.error('Transaction is error ', status.dispatchError);
-          updateStatus('error', 'Transaction is error');
-          reject(new Error('Transaction is error'));
+          clearTimeout(timeoutId)
+          console.error('Transaction is error ', status.dispatchError)
+          updateStatus('error', 'Transaction is error')
+          reject(new Error('Transaction is error'))
         } else if (status.isWarning) {
-          console.log('Transaction is warning');
-          updateStatus('warning', 'Transaction is warning');
+          console.log('Transaction is warning')
+          updateStatus('warning', 'Transaction is warning')
         } else if (status.isCompleted) {
-          console.log('Transaction is completed');
-          updateStatus('completed', 'Transaction is completed');
+          console.log('Transaction is completed')
+          updateStatus('completed', 'Transaction is completed')
         }
       })
       .catch((error: any) => {
-        clearTimeout(timeoutId);
-        console.error('Error sending transaction:', error);
-        updateStatus('error', 'Error sending transaction');
-        reject(error);
-      });
-  });
+        clearTimeout(timeoutId)
+        console.error('Error sending transaction:', error)
+        updateStatus('error', 'Error sending transaction')
+        reject(error)
+      })
+  })
 }
 
 // Get Transaction Details
@@ -342,83 +297,76 @@ export async function getTransactionDetails(
   txIndex: number
 ): Promise<{ success: boolean; error?: string } | undefined> {
   // Use api.at(blockHash) to get the API for that block
-  const apiAt = await api.at(blockHash);
+  const apiAt = await api.at(blockHash)
   // Get the events and filter the ones related to this extrinsic.
-  const records = await apiAt.query.system.events();
+  const records = await apiAt.query.system.events()
 
   // Find events related to the specific extrinsic
   const relatedEvents = (records as any).filter(
     ({
-      phase
+      phase,
     }: {
       phase: {
-        isApplyExtrinsic: any;
-        asApplyExtrinsic: { eq: (arg0: any) => any };
-      };
+        isApplyExtrinsic: any
+        asApplyExtrinsic: { eq: (arg0: any) => any }
+      }
     }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(txIndex)
-  );
+  )
 
-  let success = false;
-  let errorInfo: string | undefined;
+  let success = false
+  let errorInfo: string | undefined
 
   relatedEvents.forEach(({ event }: { event: any }) => {
     if (apiAt.events.system.ExtrinsicSuccess.is(event)) {
-      success = true;
+      success = true
     } else if (apiAt.events.system.ExtrinsicFailed.is(event)) {
-      console.log('Transaction failed!');
-      const [dispatchError] = event.data;
+      console.log('Transaction failed!')
+      const [dispatchError] = event.data
 
       if ((dispatchError as any).isModule) {
         // for module errors, we have the section indexed, lookup
-        const decoded = apiAt.registry.findMetaError(
-          (dispatchError as any).asModule
-        );
-        errorInfo = `${decoded.section}.${decoded.name}: ${decoded.docs.join(
-          ' '
-        )}`;
+        const decoded = apiAt.registry.findMetaError((dispatchError as any).asModule)
+        errorInfo = `${decoded.section}.${decoded.name}: ${decoded.docs.join(' ')}`
       } else {
         // Other, CannotLookup, BadOrigin, no extra info
-        errorInfo = dispatchError.toString();
+        errorInfo = dispatchError.toString()
       }
     }
-  });
+  })
 
   if (success) {
-    console.log('Transaction successful!');
-    return { success: true };
+    console.log('Transaction successful!')
+    return { success: true }
   } else if (errorInfo) {
     return {
       success: false,
-      error: `Transaction failed on-chain: ${errorInfo}`
-    };
+      error: `Transaction failed on-chain: ${errorInfo}`,
+    }
   }
   // Important:  Handle the case where neither success nor failure is found.
-  return undefined;
+  return undefined
 }
 
 /**
  * Safely disconnects the API and WebSocket provider to prevent memory leaks
  * and ongoing connection attempts.
  */
-export async function disconnectSafely(
-  api?: ApiPromise,
-  provider?: WsProvider
-): Promise<void> {
+export async function disconnectSafely(api?: ApiPromise, provider?: WsProvider): Promise<void> {
   try {
     // First disconnect the API if it exists
     if (api) {
-      console.log('Disconnecting API...');
-      await api.disconnect();
+      console.log('Disconnecting API...')
+      await api.disconnect()
     }
 
     // Then disconnect the provider if it exists
     if (provider) {
-      console.log('Disconnecting WebSocket provider...');
-      await provider.disconnect();
+      console.log('Disconnecting WebSocket provider...')
+      await provider.disconnect()
     }
 
-    console.log('Disconnection complete');
+    console.log('Disconnection complete')
   } catch (error) {
-    console.error('Error during disconnection:', error);
+    console.error('Error during disconnection:', error)
   }
 }

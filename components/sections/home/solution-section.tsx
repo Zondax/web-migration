@@ -1,43 +1,38 @@
-'use client';
+'use client'
 
-import { motion } from 'framer-motion';
-import { CheckCircle, Link2, Lock, Search } from 'lucide-react';
+import { motion } from 'framer-motion'
+import { CheckCircle, Link2, Lock, Search } from 'lucide-react'
 
 export default function SolutionSection() {
   const features = [
     {
       icon: Link2,
       title: 'Connect your Ledger device directly in your browser',
-      description:
-        'Seamless connection with your hardware wallet without additional software',
-      delay: 0.1
+      description: 'Seamless connection with your hardware wallet without additional software',
+      delay: 0.1,
     },
     {
       icon: Search,
       title: "See which accounts are ready to migrate—and which aren't",
       description: "Clear visibility into your accounts' migration status",
-      delay: 0.2
+      delay: 0.2,
     },
     {
       icon: CheckCircle,
       title: 'Follow a step-by-step guide through the migration process',
-      description:
-        'Intuitive interface that walks you through each stage of migration',
-      delay: 0.3
+      description: 'Intuitive interface that walks you through each stage of migration',
+      delay: 0.3,
     },
     {
       icon: Lock,
       title: 'Stay secure with clear instructions and no hidden risks',
       description: 'Security-focused approach with transparent processes',
-      delay: 0.4
-    }
-  ];
+      delay: 0.4,
+    },
+  ]
 
   return (
-    <section
-      className="py-20 px-4"
-      style={{ background: 'linear-gradient(to bottom, #ffffff, #f5f0ff)' }}
-    >
+    <section className="py-20 px-4" style={{ background: 'linear-gradient(to bottom, #ffffff, #f5f0ff)' }}>
       <div className="container mx-auto max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -50,8 +45,7 @@ export default function SolutionSection() {
             Our Solution
           </h2>
           <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto">
-            We're building a dedicated web app to make this migration simple,
-            secure, and transparent.
+            We're building a dedicated web app to make this migration simple, secure, and transparent.
           </p>
         </motion.div>
 
@@ -71,9 +65,7 @@ export default function SolutionSection() {
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2 text-gray-800">
-                  {feature.title}
-                </h3>
+                <h3 className="text-lg font-semibold mb-2 text-gray-800">{feature.title}</h3>
                 <p className="text-gray-600">{feature.description}</p>
               </div>
             </motion.div>
@@ -92,12 +84,11 @@ export default function SolutionSection() {
               The Migration Assistant
             </h3>
             <p className="text-gray-700 text-lg">
-              No more manual steps. Just a smooth, guided transition to the
-              future of Ledger experience.
+              No more manual steps. Just a smooth, guided transition to the future of Ledger experience.
             </p>
           </div>
         </motion.div>
       </div>
     </section>
-  );
+  )
 }

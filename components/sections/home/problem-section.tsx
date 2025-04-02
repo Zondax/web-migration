@@ -1,14 +1,11 @@
-'use client';
+'use client'
 
-import { motion } from 'framer-motion';
-import { AlertTriangle } from 'lucide-react';
+import { motion } from 'framer-motion'
+import { AlertTriangle } from 'lucide-react'
 
 export default function ProblemSection() {
   return (
-    <section
-      className="py-20 px-4"
-      style={{ background: 'linear-gradient(to bottom, #f9f9ff, #ffffff)' }}
-    >
+    <section className="py-20 px-4" style={{ background: 'linear-gradient(to bottom, #f9f9ff, #ffffff)' }}>
       <div className="container mx-auto max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -33,14 +30,10 @@ export default function ProblemSection() {
             transition={{ duration: 0.8 }}
             className="bg-white p-8 rounded-2xl shadow-lg border border-purple-100"
           >
-            <h3 className="text-xl font-bold mb-4 text-gray-800">
-              Complex Migration Process
-            </h3>
+            <h3 className="text-xl font-bold mb-4 text-gray-800">Complex Migration Process</h3>
             <p className="text-gray-700">
-              While the new app is a leap forward, many users are left without
-              the tools they need to switch over safely and confidently. Today,
-              the migration process is still mostly manual, and there's no
-              native interface to guide users through it.
+              While the new app is a leap forward, many users are left without the tools they need to switch over safely and confidently.
+              Today, the migration process is still mostly manual, and there's no native interface to guide users through it.
             </p>
           </motion.div>
 
@@ -51,14 +44,10 @@ export default function ProblemSection() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="bg-white p-8 rounded-2xl shadow-lg border border-purple-100"
           >
-            <h3 className="text-xl font-bold mb-4 text-gray-800">
-              Adoption Barriers
-            </h3>
+            <h3 className="text-xl font-bold mb-4 text-gray-800">Adoption Barriers</h3>
             <p className="text-gray-700">
-              This complexity discourages users from upgrading, even when the
-              benefits are clear. Without a streamlined process, many users
-              continue using outdated applications, missing out on important
-              security and usability improvements.
+              This complexity discourages users from upgrading, even when the benefits are clear. Without a streamlined process, many users
+              continue using outdated applications, missing out on important security and usability improvements.
             </p>
           </motion.div>
         </div>
@@ -76,5 +65,5 @@ export default function ProblemSection() {
         </motion.div>
       </div>
     </section>
-  );
+  )
 }

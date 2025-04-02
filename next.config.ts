@@ -3,12 +3,12 @@ export default {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'avatars.githubusercontent.com'
+        hostname: 'avatars.githubusercontent.com',
       },
       {
         protocol: 'https',
-        hostname: '*.public.blob.vercel-storage.com'
-      }
-    ]
-  }
-};
+        hostname: '*.public.blob.vercel-storage.com',
+      },
+    ],
+  },
+}

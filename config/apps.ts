@@ -1,17 +1,17 @@
-import appsConfigData from './appsConfig.json';
+import appsConfigData from './appsConfig.json'
 
 // Extract app IDs dynamically from the JSON data
-export type AppId = (typeof appsConfigData)[number]['id'] | 'polkadot';
+export type AppId = (typeof appsConfigData)[number]['id'] | 'polkadot'
 
 export interface AppConfig {
-  id: AppId;
-  name: string;
-  cla: number;
-  bip44Path: string;
-  ss58Prefix: number;
-  rpcEndpoint?: string;
-  ticker: string;
-  decimals: number;
+  id: AppId
+  name: string
+  cla: number
+  bip44Path: string
+  ss58Prefix: number
+  rpcEndpoint?: string
+  ticker: string
+  decimals: number
 }
 
 // Polkadot app config
@@ -23,41 +23,41 @@ export const polkadotAppConfig: AppConfig = {
   ss58Prefix: 0,
   rpcEndpoint: 'wss://rpc.polkadot.io',
   ticker: 'DOT',
-  decimals: 10
-};
+  decimals: 10,
+}
 
 /**
  * Load app configurations from JSON data
  * @returns A Map with app configurations indexed by AppId
  */
 export function loadAppConfigs(): Map<AppId, AppConfig> {
-  const appsConfigs = new Map<AppId, AppConfig>();
+  const appsConfigs = new Map<AppId, AppConfig>()
 
   // Convert JSON data to AppConfig objects and add to the map
-  appsConfigData.forEach((config) => {
+  appsConfigData.forEach(config => {
     appsConfigs.set(config.id as AppId, {
       ...config,
-      id: config.id as AppId
-    });
-  });
+      id: config.id as AppId,
+    })
+  })
 
-  return appsConfigs;
+  return appsConfigs
 }
 
 // Create the Map with app configs
-export const appsConfigs = loadAppConfigs();
+export const appsConfigs = loadAppConfigs()
 
 // Helper object to help with type inference
-export const appsConfigsObj = Object.fromEntries(appsConfigs);
+export const appsConfigsObj = Object.fromEntries(appsConfigs)
 
 // Helper function to get BIP44 path for a chain
 export const getChainPath = (appId: AppId): string | undefined => {
-  const appConfig = appsConfigs.get(appId);
-  return appConfig ? appConfig.bip44Path : undefined;
-};
+  const appConfig = appsConfigs.get(appId)
+  return appConfig ? appConfig.bip44Path : undefined
+}
 
 // Helper function to get SS58 prefix for a chain
 export const getChainPrefix = (appId: AppId): number | undefined => {
-  const appConfig = appsConfigs.get(appId);
-  return appConfig ? appConfig.ss58Prefix : undefined;
-};
+  const appConfig = appsConfigs.get(appId)
+  return appConfig ? appConfig.ss58Prefix : undefined
+}

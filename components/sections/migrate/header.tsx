@@ -1,6 +1,7 @@
-'use client';
+'use client'
 
-import { motion } from 'framer-motion';
+import { motion } from 'framer-motion'
+
 export function Header() {
   return (
     <header className="flex justify-between items-center mb-8">
@@ -15,17 +16,11 @@ export function Header() {
             <div className="w-6 h-6 rounded-full bg-gradient-to-r from-[#FF2670] to-[#7916F3]"></div>
           </div>
         </div>
-        <span className="font-bold text-lg text-white">
-          Polkadot Ledger Migration Assistant
-        </span>
+        <span className="font-bold text-lg text-white">Polkadot Ledger Migration Assistant</span>
       </motion.div>
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
         {/* <User /> */}
       </motion.div>
     </header>
-  );
+  )
 }

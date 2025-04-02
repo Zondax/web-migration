@@ -1,32 +1,29 @@
-'use client';
+'use client'
 
-import { motion } from 'framer-motion';
-import { Users, Wallet, Zap } from 'lucide-react';
+import { motion } from 'framer-motion'
+import { Users, Wallet, Zap } from 'lucide-react'
 
 export default function AudienceSection() {
   const audiences = [
     {
       icon: Wallet,
       title: 'Users with Ledger Wallet devices',
-      description:
-        'Anyone currently using a Ledger device to manage Substrate based assets',
-      delay: 0.1
+      description: 'Anyone currently using a Ledger device to manage Substrate based assets',
+      delay: 0.1,
     },
     {
       icon: Zap,
       title: 'Holders across parachains',
-      description:
-        'Users with assets on Kusama, Astar, and other Substrate-based chains',
-      delay: 0.2
+      description: 'Users with assets on Kusama, Astar, and other Substrate-based chains',
+      delay: 0.2,
     },
     {
       icon: Users,
       title: 'Universal App adopters',
-      description:
-        'Anyone looking to move to the new Polkadot Universal App without the headache',
-      delay: 0.3
-    }
-  ];
+      description: 'Anyone looking to move to the new Polkadot Universal App without the headache',
+      delay: 0.3,
+    },
+  ]
 
   return (
     <section className="py-20 px-4 bg-white">
@@ -42,8 +39,7 @@ export default function AudienceSection() {
             Who It's For
           </h2>
           <p className="text-lg text-gray-700 max-w-3xl mx-auto">
-            This tool is designed for users across the Polkadot ecosystem who
-            want a seamless transition to the new Universal Ledger app.
+            This tool is designed for users across the Polkadot ecosystem who want a seamless transition to the new Universal Ledger app.
           </p>
         </motion.div>
 
@@ -60,14 +56,12 @@ export default function AudienceSection() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 mb-6">
                 <audience.icon className="w-8 h-8 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">
-                {audience.title}
-              </h3>
+              <h3 className="text-xl font-semibold mb-3 text-gray-800">{audience.title}</h3>
               <p className="text-gray-600">{audience.description}</p>
             </motion.div>
           ))}
         </div>
       </div>
     </section>
-  );
+  )
 }
