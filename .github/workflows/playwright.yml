@@ -1,0 +1,81 @@
+name: "Playwright Tests"
+on:
+  workflow_call:
+    secrets:
+      NEXT_PUBLIC_LOCATIONIQ_TOKEN: { required: true }
+      AUTH_ZITADEL_ID: { required: true }
+      AUTH_ZITADEL_SECRET: { required: true }
+      AUTH_ZITADEL_ISSUER: { required: true }
+      AUTH_ZITADEL_KEY_ID: { required: true }
+      AUTH_URL: { required: true }
+      AUTH_SECRET: { required: true }
+      AUTH_CI_USERNAME: { required: true }
+      AUTH_CI_PASSWORD: { required: true }
+
+      AUTH_ZITADEL_KEY_SECRET: { required: false }
+      DATABASE_NEON_URL: { required: false }
+
+env:
+  PROJECT: prio-next
+  NAMESPACE: web-prio
+  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+  HEAD_BRANCH_NAME: ${{ github.head_ref }}
+
+jobs:
+  playwright:
+    name: Playwright Shard
+    runs-on: zondax-runners
+    strategy:
+      matrix:
+        include:
+          - position: shard1
+            playwrightShard: "1/2"
+          - position: shard2
+            playwrightShard: "2/2"
+    container:
+      image: node:20-bookworm
+      env:
+        PLAYWRIGHT_SHARD: ${{ matrix.playwrightShard }}
+        NEXT_PUBLIC_LOCATIONIQ_TOKEN: ${{ secrets.NEXT_PUBLIC_LOCATIONIQ_TOKEN }}
+        NEXT_PUBLIC_GRPC_SERVER: ${{ secrets.NEXT_PUBLIC_GRPC_SERVER }}
+        AUTH_ZITADEL_ID: ${{ secrets.AUTH_ZITADEL_ID }}
+        AUTH_ZITADEL_SECRET: ${{ secrets.AUTH_ZITADEL_SECRET }}
+        AUTH_ZITADEL_ISSUER: ${{ secrets.AUTH_ZITADEL_ISSUER }}
+        AUTH_ZITADEL_KEY_ID: ${{ secrets.AUTH_ZITADEL_KEY_ID }}
+        AUTH_ZITADEL_KEY_SECRET: ${{ secrets.AUTH_ZITADEL_KEY_SECRET }}
+        AUTH_URL: ${{ secrets.AUTH_URL }}
+        AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+        AUTH_CI_USERNAME: ${{ secrets.AUTH_CI_USERNAME }}
+        AUTH_CI_PASSWORD: ${{ secrets.AUTH_CI_PASSWORD }}
+        CI: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Disable shallow clone
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run build for web
+        working-directory: apps/web
+        run: bun run build
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: bun e2e:install
+
+      - name: Run Playwright tests
+        working-directory: apps/web
+        run: bun e2e:sharding
+
+      - name: Upload Playwright Report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.position }}
+          path: apps/web/playwright-report/
+          retention-days: 15

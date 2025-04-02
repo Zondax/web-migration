@@ -69,13 +69,16 @@
     "@types/react": "19.0.2",
     "@types/react-dom": "npm:types-react-dom@19.0.0-alpha.3",
     "@vitejs/plugin-react": "4.3.4",
+    "eslint": "9.22.0",
     "eslint-config-next": "15.2.2",
     "eslint-plugin-prettier": "^5.2.5",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.2.0",
     "prettier": "^3.5.3",
     "sort-package-json": "^2.15.1",
+    "globals": "^16.0.0",
     "typescript": "^5.8.2",
+    "typescript-eslint": "8.26.1",
     "vitest": "3.0.8"
   }
 }
