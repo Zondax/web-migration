@@ -11,7 +11,12 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "start": "next start",
-    "test": "vitest run",
+    "test": "vitest run --coverage",
+    "test:e2e": "playwright test e2e",
+    "test:e2e:debug": "playwright test e2e --debug",
+    "test:e2e:install": "playwright install",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:ui": "playwright test e2e --ui",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -69,6 +74,7 @@
     "@types/react": "19.1.0",
     "@types/react-dom": "npm:types-react-dom@19.0.0-alpha.3",
     "@vitejs/plugin-react": "4.3.4",
+    "@vitest/coverage-v8": "3.1.1",
     "eslint": "9.23.0",
     "eslint-config-next": "15.2.4",
     "eslint-plugin-prettier": "^5.2.6",
