@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import { truncateMiddleOfString, formatBalance } from '../utils'
+import { describe, expect, it } from 'vitest'
+
+import { formatBalance, truncateMiddleOfString } from '../utils'
 
 describe('truncateMiddleOfString', () => {
   it('should return null for empty string', () => {
@@ -35,4 +36,4 @@ describe('formatBalance', () => {
   it('should handle large numbers', () => {
     expect(formatBalance(1000000000, 'DOT')).toBe('1,000,000,000 DOT')
   })
-}) 
+})
