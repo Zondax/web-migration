@@ -22,7 +22,6 @@ jobs:
     with:
       disable_linting: false
       disable_tests: false
-      package_manager: pnpm
 # FIXME: generalize, migrate & reenable
 # playwright-tests:
 #   needs: [checks-ts, checks-expo]
