@@ -1,64 +1,97 @@
-<div align="center"><strong>Next.js 14 Admin Dashboard Template</strong></div>
-<div align="center">Built with the Next.js App Router</div>
-<br />
-<div align="center">
-<a href="https://next-admin-dash.vercel.app/">Demo</a>
-<span> · </span>
-<a href="https://vercel.com/templates/next.js/admin-dashboard-tailwind-postgres-react-nextjs">Clone & Deploy</a>
-<span>
-</div>
+# Polkadot Migration Web Interface
 
-## Overview
+A modern web interface for Polkadot migration built with Next.js 15 and React 19.
 
-This is a starter template using the following stack:
+## Features
 
-- Framework - [Next.js (App Router)](https://nextjs.org)
-- Language - [TypeScript](https://www.typescriptlang.org)
-- Auth - [Auth.js](https://authjs.dev)
-- Database - [Postgres](https://vercel.com/postgres)
-- Deployment - [Vercel](https://vercel.com/docs/concepts/next.js/overview)
-- Styling - [Tailwind CSS](https://tailwindcss.com)
-- Components - [Shadcn UI](https://ui.shadcn.com/)
-- Analytics - [Vercel Analytics](https://vercel.com/analytics)
-- Formatting - [Prettier](https://prettier.io)
+- **Modern Stack**
 
-This template uses the new Next.js App Router. This includes support for enhanced layouts, colocation of components, tests, and styles, component-level data fetching, and more.
+  - Next.js 15 with App Router
+  - React 19
+  - TypeScript
+  - Tailwind CSS
+  - Shadcn UI Components
+  - Vercel Analytics
+
+- **Polkadot Integration**
+
+  - Ledger Hardware Wallet Support
+  - Polkadot API Integration
+  - Substrate Protocol Support
+
+- **Development Tools**
+  - ESLint for code linting
+  - Prettier for code formatting
+  - Vitest for testing
+  - Playwright for E2E testing
 
 ## Getting Started
 
-During the deployment, Vercel will prompt you to create a new Postgres database. This will add the necessary environment variables to your project.
+### Prerequisites
 
-Inside the Vercel Postgres dashboard, create a table based on the schema defined in this repository.
+- Node.js (LTS version)
+- Bun (for package management)
+- A Polkadot-compatible Ledger device (optional)
 
-```
-CREATE TYPE status AS ENUM ('active', 'inactive', 'archived');
+### Installation
 
-CREATE TABLE products (
-  id SERIAL PRIMARY KEY,
-  image_url TEXT NOT NULL,
-  name TEXT NOT NULL,
-  status status NOT NULL,
-  price NUMERIC(10, 2) NOT NULL,
-  stock INTEGER NOT NULL,
-  available_at TIMESTAMP NOT NULL
-);
-```
-
-Then, uncomment `app/api/seed.ts` and hit `http://localhost:3000/api/seed` to seed the database with products.
-
-Next, copy the `.env.example` file to `.env` and update the values. Follow the instructions in the `.env.example` file to set up your GitHub OAuth application.
+1. Clone the repository:
 
 ```bash
-npm i -g vercel
-vercel link
-vercel env pull
+git clone [repository-url]
+cd web-migration
 ```
 
-Finally, run the following commands to start the development server:
+2. Install dependencies:
 
-```
-pnpm install
-pnpm dev
+```bash
+bun install
 ```
 
-You should now be able to access the application at http://localhost:3000.
+3. Copy the environment variables:
+
+```bash
+cp .env.example .env
+```
+
+4. Start the development server:
+
+```bash
+bun dev
+```
+
+The application will be available at `http://localhost:3000`.
+
+## Development
+
+### Available Scripts
+
+- `bun dev` - Start development server
+- `bun build` - Build for production
+- `bun start` - Start production server
+- `bun test` - Run tests
+- `bun test:watch` - Run tests in watch mode
+- `bun lint` - Run ESLint
+- `bun format` - Format code with Prettier
+- `bun deps:update` - Update dependencies
+
+### Project Structure
+
+- `app/` - Next.js app router pages and layouts
+- `components/` - Reusable React components
+- `config/` - Application configuration
+- `lib/` - Utility functions and shared logic
+- `state/` - State management
+- `public/` - Static assets
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the Apache 2.0 License - see the LICENSE file for details.

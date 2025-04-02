@@ -1,28 +1,21 @@
-'use client';
+'use client'
 
-import { useSynchronization } from '@/components/hooks/useSynchronization';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
-import { SimpleTooltip } from '@/components/ui/tooltip';
-import { observable } from '@legendapp/state';
-import { RefreshCw } from 'lucide-react';
-import AppRow from './app-row';
+import { observable } from '@legendapp/state'
+import { RefreshCw } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { SimpleTooltip } from '@/components/ui/tooltip'
+import { useSynchronization } from '@/components/hooks/useSynchronization'
+
+import AppRow from './app-row'
 
 interface SynchronizeTabContentProps {
-  onContinue: () => void;
+  onContinue: () => void
 }
 
-export function SynchronizeTabContent({
-  onContinue
-}: SynchronizeTabContentProps) {
+export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps) {
   const {
     // State
     status,
@@ -36,40 +29,29 @@ export function SynchronizeTabContent({
 
     // Actions
     rescanFailedAccounts,
-    restartSynchronization
-  } = useSynchronization();
+    restartSynchronization,
+  } = useSynchronization()
 
   const handleMigrate = () => {
-    onContinue();
-  };
+    onContinue()
+  }
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold">Synchronized Accounts</h2>
-          <p className="text-gray-600">
-            Click Migrate All to start migrating your accounts.
-          </p>
+          <p className="text-gray-600">Click Migrate All to start migrating your accounts.</p>
         </div>
         <div className="flex gap-2">
           {status !== 'loading' && appsWithoutErrors.length === 0 && (
             <SimpleTooltip tooltipText="Synchronize Again">
-              <Button
-                onClick={restartSynchronization}
-                variant="outline"
-                className="flex items-center gap-1"
-                disabled={isRescaning}
-              >
+              <Button onClick={restartSynchronization} variant="outline" className="flex items-center gap-1" disabled={isRescaning}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </SimpleTooltip>
           )}
-          <Button
-            onClick={handleMigrate}
-            disabled={status === 'loading' || appsWithoutErrors.length === 0}
-            variant="purple"
-          >
+          <Button onClick={handleMigrate} disabled={status === 'loading' || appsWithoutErrors.length === 0} variant="purple">
             {status === 'loading' ? 'Synchronizing...' : 'Migrate All'}
           </Button>
         </div>
@@ -97,20 +79,12 @@ export function SynchronizeTabContent({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {(status === 'synchronized' || status === 'loading') &&
-          appsWithoutErrors.length ? (
-            appsWithoutErrors.map((app) => (
-              <AppRow key={app.id.toString()} app={observable(app)} />
-            ))
+          {(status === 'synchronized' || status === 'loading') && appsWithoutErrors.length ? (
+            appsWithoutErrors.map(app => <AppRow key={app.id.toString()} app={observable(app)} />)
           ) : (
             <TableRow>
-              <TableCell
-                colSpan={6}
-                className="text-center text-muted-foreground p-4"
-              >
-                {status === 'synchronized'
-                  ? 'No accounts to migrate'
-                  : 'No synchronized accounts'}
+              <TableCell colSpan={6} className="text-center text-muted-foreground p-4">
+                {status === 'synchronized' ? 'No accounts to migrate' : 'No synchronized accounts'}
               </TableCell>
             </TableRow>
           )}
@@ -123,8 +97,7 @@ export function SynchronizeTabContent({
             <div>
               <h2 className="text-2xl font-bold">Failed Synchronization</h2>
               <p className="text-gray-600">
-                The account couldn't be scanned successfully. Please try again
-                or continue with the successfully scanned accounts.
+                The account couldn&apos;t be scanned successfully. Please try again or continue with the successfully scanned accounts.
               </p>
             </div>
             <Button onClick={rescanFailedAccounts} variant="purple">
@@ -146,17 +119,13 @@ export function SynchronizeTabContent({
             </TableHeader>
             <TableBody>
               {/* Filter and show only apps with error accounts */}
-              {appsWithErrors.map((app) => (
-                <AppRow
-                  key={app.id.toString()}
-                  app={observable(app)}
-                  failedSync
-                />
+              {appsWithErrors.map(app => (
+                <AppRow key={app.id.toString()} app={observable(app)} failedSync />
               ))}
             </TableBody>
           </Table>
         </>
       )}
     </div>
-  );
+  )
 }

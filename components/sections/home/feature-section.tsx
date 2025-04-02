@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion'
+import { ArrowRight } from 'lucide-react'
 
 export default function FeatureSection() {
   return (
@@ -18,10 +18,8 @@ export default function FeatureSection() {
             Why This Matters
           </h2>
           <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto">
-            The latest Polkadot Ledger Application brings a major upgrade to the
-            ecosystem. By consolidating support for multiple Substrate-based
-            chains into one secure, universal app, it offers a smoother, more
-            powerful experience for managing your assets.
+            The latest Polkadot Ledger Application brings a major upgrade to the ecosystem. By consolidating support for multiple
+            Substrate-based chains into one secure, universal app, it offers a smoother, more powerful experience for managing your assets.
           </p>
           <div className="mt-6 text-lg md:text-xl text-gray-700 font-medium">
             But migrating from older Ledger-based accounts can be complex.
@@ -50,41 +48,31 @@ export default function FeatureSection() {
                   </div>
                 </a>
               </div>
-              <h3 className="text-2xl font-bold text-center mb-4 text-gray-800">
-                The Universal Ledger App Advantage
-              </h3>
+              <h3 className="text-2xl font-bold text-center mb-4 text-gray-800">The Universal Ledger App Advantage</h3>
               <ul className="space-y-4">
                 <li className="flex items-start">
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center mt-1">
                     <span className="text-white text-xs">✓</span>
                   </div>
-                  <span className="ml-3 text-gray-700">
-                    One app for all Substrate-based chains
-                  </span>
+                  <span className="ml-3 text-gray-700">One app for all Substrate-based chains</span>
                 </li>
                 <li className="flex items-start">
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center mt-1">
                     <span className="text-white text-xs">✓</span>
                   </div>
-                  <span className="ml-3 text-gray-700">
-                    Enhanced security features
-                  </span>
+                  <span className="ml-3 text-gray-700">Enhanced security features</span>
                 </li>
                 <li className="flex items-start">
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center mt-1">
                     <span className="text-white text-xs">✓</span>
                   </div>
-                  <span className="ml-3 text-gray-700">
-                    Improved transaction management
-                  </span>
+                  <span className="ml-3 text-gray-700">Improved transaction management</span>
                 </li>
                 <li className="flex items-start">
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center mt-1">
                     <span className="text-white text-xs">✓</span>
                   </div>
-                  <span className="ml-3 text-gray-700">
-                    Future-proof for ecosystem growth
-                  </span>
+                  <span className="ml-3 text-gray-700">Future-proof for ecosystem growth</span>
                 </li>
               </ul>
             </div>
@@ -92,5 +80,5 @@ export default function FeatureSection() {
         </motion.div>
       </div>
     </section>
-  );
+  )
 }

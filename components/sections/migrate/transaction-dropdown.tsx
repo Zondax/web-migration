@@ -1,20 +1,16 @@
-import { AddressLink } from '@/components/AddressLink';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-react';
-import { Transaction } from 'state/types/ledger';
+import { ChevronDown } from 'lucide-react'
+import { Transaction } from 'state/types/ledger'
+
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { AddressLink } from '@/components/AddressLink'
 
 interface TransactionDropdownProps {
-  transaction: Transaction | undefined;
+  transaction: Transaction | undefined
 }
 
 function TransactionDropdown({ transaction }: TransactionDropdownProps) {
   if (!transaction?.hash) {
-    return null;
+    return null
   }
 
   return (
@@ -27,36 +23,24 @@ function TransactionDropdown({ transaction }: TransactionDropdownProps) {
         {transaction.hash && (
           <DropdownMenuItem className="gap-2">
             Transaction Hash:
-            <AddressLink
-              value={transaction.hash ?? ''}
-              tooltipText={transaction.hash}
-              className="break-all"
-            />
+            <AddressLink value={transaction.hash ?? ''} tooltipText={transaction.hash} className="break-all" />
           </DropdownMenuItem>
         )}
         {transaction.blockHash && (
           <DropdownMenuItem className="gap-2">
             Block Hash:
-            <AddressLink
-              value={transaction.blockHash ?? ''}
-              tooltipText={transaction.blockHash}
-              className="break-all"
-            />
+            <AddressLink value={transaction.blockHash ?? ''} tooltipText={transaction.blockHash} className="break-all" />
           </DropdownMenuItem>
         )}
         {transaction.blockNumber && (
           <DropdownMenuItem className="gap-2">
             Block Number:
-            <AddressLink
-              value={transaction.blockNumber ?? ''}
-              tooltipText={transaction.blockNumber}
-              className="break-all"
-            />
+            <AddressLink value={transaction.blockNumber ?? ''} tooltipText={transaction.blockNumber} className="break-all" />
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }
 
-export default TransactionDropdown;
+export default TransactionDropdown

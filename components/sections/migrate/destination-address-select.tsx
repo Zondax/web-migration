@@ -1,37 +1,24 @@
-import { AddressLink } from '@/components/AddressLink';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Observable } from '@legendapp/state';
-import { observer } from '@legendapp/state/react';
-import { Address } from 'state/types/ledger';
+import { Observable } from '@legendapp/state'
+import { observer } from '@legendapp/state/react'
+import { Address } from 'state/types/ledger'
+
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { AddressLink } from '@/components/AddressLink'
 
 interface DestinationAddressSelectProps {
-  account: Observable<Address>;
-  index: number;
-  polkadotAddresses: string[] | undefined;
-  onDestinationChange: (value: string, index: number) => void;
+  account: Observable<Address>
+  index: number
+  polkadotAddresses: string[] | undefined
+  onDestinationChange: (value: string, index: number) => void
 }
 
-function DestinationAddressSelect({
-  account,
-  index,
-  polkadotAddresses,
-  onDestinationChange
-}: DestinationAddressSelectProps) {
+function DestinationAddressSelect({ account, index, polkadotAddresses, onDestinationChange }: DestinationAddressSelectProps) {
   return (
     <Select
       value={account.destinationAddress.get() || ''}
-      onValueChange={(value) => onDestinationChange(value, index)}
+      onValueChange={value => onDestinationChange(value, index)}
       disabled={
-        account.balance.get() === undefined ||
-        account.status.get() === 'migrated' ||
-        !polkadotAddresses ||
-        polkadotAddresses.length === 0
+        account.balance.get() === undefined || account.status.get() === 'migrated' || !polkadotAddresses || polkadotAddresses.length === 0
       }
     >
       <SelectTrigger className="w-full">
@@ -49,18 +36,13 @@ function DestinationAddressSelect({
           <SelectItem key={addrIndex} value={polkadotAddress}>
             <div className="flex items-center gap-2">
               <span>Polkadot {addrIndex + 1}:</span>
-              <AddressLink
-                value={polkadotAddress}
-                disableTooltip
-                className="break-all"
-                hasCopyButton={false}
-              />
+              <AddressLink value={polkadotAddress} disableTooltip className="break-all" hasCopyButton={false} />
             </div>
           </SelectItem>
         ))}
       </SelectContent>
     </Select>
-  );
+  )
 }
 
-export default observer(DestinationAddressSelect);
+export default observer(DestinationAddressSelect)

@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { uiState$ } from 'state/ui';
+import { useEffect } from 'react'
+import { uiState$ } from 'state/ui'
 
 /**
  * A hook that provides functionality for loading application icons
@@ -7,8 +7,8 @@ import { uiState$ } from 'state/ui';
 export const useLoadIcons = () => {
   // Load icons on component mount if autoLoad is true
   useEffect(() => {
-    uiState$.loadInitialIcons();
-  }, []);
+    uiState$.loadInitialIcons()
+  }, [])
 
-  return;
-};
+  return
+}

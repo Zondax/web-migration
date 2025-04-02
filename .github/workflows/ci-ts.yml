@@ -1,0 +1,39 @@
+name: CI-ts
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+  schedule:
+    - cron: '0 0 * * *' # Every day at midnight UTC
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ts-checks:
+    uses: zondax/_workflows/.github/workflows/_checks-ts.yaml@main
+    with:
+      disable_linting: false
+      disable_tests: false
+# FIXME: generalize, migrate & reenable
+# playwright-tests:
+#   needs: [checks-ts, checks-expo]
+#   uses: ./.github/workflows/playwright.yml
+#   secrets: inherit
+
+# playwright-smoke:
+#   needs: [checks-ts, checks-expo]
+#   uses: ./.github/workflows/playwright.smoke.yml
+#   secrets: inherit
+
+# playwright-perf:
+#   needs: [checks-ts, checks-expo]
+#   uses: ./.github/workflows/playwright.perf.yml
+#   secrets: inherit

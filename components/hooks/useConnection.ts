@@ -1,12 +1,12 @@
-import { use$, useObservable } from '@legendapp/state/react';
-import { useCallback } from 'react';
-import { ledgerState$ } from 'state/ledger';
+import { useCallback } from 'react'
+import { use$, useObservable } from '@legendapp/state/react'
+import { ledgerState$ } from 'state/ledger'
 
 interface UseConnectionReturn {
-  connectDevice: () => Promise<boolean>;
-  disconnectDevice: () => void;
-  isLedgerConnected: boolean;
-  isAppOpen: boolean;
+  connectDevice: () => Promise<boolean>
+  disconnectDevice: () => void
+  isLedgerConnected: boolean
+  isAppOpen: boolean
 }
 
 /**
@@ -14,36 +14,33 @@ interface UseConnectionReturn {
  */
 export const useConnection = (): UseConnectionReturn => {
   const isLedgerConnected$ = useObservable(() =>
-    Boolean(
-      ledgerState$.device.connection?.transport.get() &&
-        ledgerState$.device.connection?.genericApp.get()
-    )
-  );
+    Boolean(ledgerState$.device.connection?.transport.get() && ledgerState$.device.connection?.genericApp.get())
+  )
 
-  const isLedgerConnected = use$(isLedgerConnected$);
-  const isAppOpen = ledgerState$.device.connection?.get()?.isAppOpen ?? false;
+  const isLedgerConnected = use$(isLedgerConnected$)
+  const isAppOpen = ledgerState$.device.connection?.get()?.isAppOpen ?? false
 
   // Handle device connection
   const connectDevice = useCallback(async () => {
-    const result = await ledgerState$.connectLedger();
+    const result = await ledgerState$.connectLedger()
 
     if (result.connected && result.isAppOpen) {
-      ledgerState$.synchronizeAccounts();
-      return true;
+      ledgerState$.synchronizeAccounts()
+      return true
     }
-    return false;
-  }, []);
+    return false
+  }, [])
 
   // Handle device disconnection
   const disconnectDevice = useCallback(() => {
-    ledgerState$.disconnectLedger();
-  }, []);
+    ledgerState$.disconnectLedger()
+  }, [])
 
   return {
     // Actions
     connectDevice,
     disconnectDevice,
     isLedgerConnected,
-    isAppOpen
-  };
-};
+    isAppOpen,
+  }
+}

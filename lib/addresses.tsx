@@ -1,7 +1,4 @@
-import {
-  decodeAddress as decodeAddressPolkadot,
-  encodeAddress as encodeAddressPolkadot
-} from '@polkadot/keyring';
+import { decodeAddress as decodeAddressPolkadot, encodeAddress as encodeAddressPolkadot } from '@polkadot/keyring'
 
 /**
  * Converts an address from one network format to another by changing the SS58 prefix
@@ -11,7 +8,7 @@ import {
  */
 export function convertSS58Format(address: string, prefix: number): string {
   // Decode the address
-  const decoded = decodeAddressPolkadot(address);
+  const decoded = decodeAddressPolkadot(address)
   // Encode it with the provided prefix
-  return encodeAddressPolkadot(decoded, prefix);
+  return encodeAddressPolkadot(decoded, prefix)
 }

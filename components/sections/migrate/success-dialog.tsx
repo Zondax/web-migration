@@ -1,30 +1,19 @@
-'use client';
+'use client'
 
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface SuccessDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onReturn: () => void;
-  successCount: number;
-  totalCount: number;
+  open: boolean
+  onClose: () => void
+  onReturn: () => void
+  successCount: number
+  totalCount: number
 }
 
-export function SuccessDialog({
-  open,
-  onClose,
-  onReturn,
-  successCount,
-  totalCount
-}: SuccessDialogProps) {
+export function SuccessDialog({ open, onClose, onReturn, successCount, totalCount }: SuccessDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md text-center">
@@ -68,14 +57,11 @@ export function SuccessDialog({
           <Button variant="outline" onClick={onClose}>
             View Details
           </Button>
-          <Button
-            className="bg-[#7916F3] hover:bg-[#6B46C1] text-white"
-            onClick={onReturn}
-          >
+          <Button className="bg-[#7916F3] hover:bg-[#6B46C1] text-white" onClick={onReturn}>
             Return to Home
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
