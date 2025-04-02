@@ -21,6 +21,6 @@ jobs:
     uses: zondax/_workflows/.github/workflows/_checks-ts.yaml@main
 
   playwright-tests:
-    needs: [checks-ts, checks-expo]
+    needs: [ts-checks]
     uses: ./.github/workflows/playwright.yml
     secrets: inherit
