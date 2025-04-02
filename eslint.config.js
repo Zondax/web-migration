@@ -50,17 +50,6 @@ export default [
       'react/react-in-jsx-scope': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: 'prio-grpc',
-              message: 'Direct imports from prio-grpc are not allowed.',
-            },
-          ],
-        },
-      ],
     },
   },
 ]

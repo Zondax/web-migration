@@ -46,17 +46,6 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       'react/react-in-jsx-scope': 'off',
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: 'prio-grpc',
-              message: 'Direct imports from prio-grpc are not allowed.',
-            },
-          ],
-        },
-      ],
     },
   },
 ]
