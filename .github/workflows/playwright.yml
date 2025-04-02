@@ -32,24 +32,25 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Disable shallow clone
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 'latest'
+
+      - name: Setup pnpm
+        if: ${{ inputs.package_manager == 'pnpm' }}
+        uses: pnpm/action-setup@v4
+
       - name: Install dependencies
-        run: bun install
+        run: pnpm install
 
       - name: Run build for web
         working-directory: apps/web
-        run: bun run build
+        run: pnpm run build
 
       - name: Install dependencies
         working-directory: apps/web
-        run: bun e2e:install
+        run: pnpm e2e:install
 
       - name: Run Playwright tests
         working-directory: apps/web
-        run: bun e2e:sharding
+        run: pnpm e2e:sharding
 
       - name: Upload Playwright Report
         if: ${{ !cancelled() }}

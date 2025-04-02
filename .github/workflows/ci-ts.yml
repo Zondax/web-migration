@@ -19,6 +19,7 @@ concurrency:
 jobs:
   ts-checks:
     uses: zondax/_workflows/.github/workflows/_checks-ts.yaml@main
+    package_manager: pnpm
 
   playwright-tests:
     needs: [ts-checks]
