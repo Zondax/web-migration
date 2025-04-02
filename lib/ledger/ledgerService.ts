@@ -89,11 +89,9 @@ export class LedgerService implements ILedgerService {
    * Establishes a connection to the Ledger device
    */
   async establishDeviceConnection(onDisconnect?: () => void): Promise<DeviceConnectionProps | undefined> {
-    let transport = this.deviceConnection.transport || (await this.initializeTransport(onDisconnect))
-    let genericApp = this.deviceConnection.genericApp || new PolkadotGenericApp(transport)
-
-    // Check if the app is already open
-    let isOpen = await this.isAppOpen(genericApp)
+    const transport = this.deviceConnection.transport || (await this.initializeTransport(onDisconnect))
+    const genericApp = this.deviceConnection.genericApp || new PolkadotGenericApp(transport)
+    const isOpen = await this.isAppOpen(genericApp)
 
     if (!isOpen) {
       this.openApp(transport, 'Polkadot Migration')

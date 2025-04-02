@@ -36,7 +36,7 @@ export default function AudienceSection() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-pink-600">
-            Who It's For
+            Who It&apos;s For
           </h2>
           <p className="text-lg text-gray-700 max-w-3xl mx-auto">
             This tool is designed for users across the Polkadot ecosystem who want a seamless transition to the new Universal Ledger app.

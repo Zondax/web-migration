@@ -10,7 +10,7 @@ on:
       - main
       - dev
   schedule:
-    - cron: "0 0 * * *" # Every day at midnight UTC
+    - cron: '0 0 * * *' # Every day at midnight UTC
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref }}

@@ -48,7 +48,7 @@ function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolea
     }
 
     return null
-  }, [status, isSynchronizationLoading])
+  }, [status, isSynchronizationLoading, failedSync])
 
   const renderBalance = () => {
     if (failedSync) return null

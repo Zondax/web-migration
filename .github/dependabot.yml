@@ -1,38 +1,38 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "daily"
+      interval: 'daily'
     commit-message:
-      prefix: "deps"
+      prefix: 'deps'
     open-pull-requests-limit: 5
-    target-branch: "dev"
+    target-branch: 'dev'
 
-  - package-ecosystem: "npm"
-    directory: "/apps/web"
+  - package-ecosystem: 'npm'
+    directory: '/apps/web'
     schedule:
-      interval: "daily"
+      interval: 'daily'
     commit-message:
-      prefix: "deps"
+      prefix: 'deps'
     open-pull-requests-limit: 5
-    target-branch: "dev"
+    target-branch: 'dev'
 
-  - package-ecosystem: "npm"
-    directory: "/apps/expo"
+  - package-ecosystem: 'npm'
+    directory: '/apps/expo'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     commit-message:
-      prefix: "deps"
+      prefix: 'deps'
     open-pull-requests-limit: 5
-    target-branch: "dev"
+    target-branch: 'dev'
 
-  - package-ecosystem: "gomod"
-    directory: "/"
+  - package-ecosystem: 'gomod'
+    directory: '/'
     schedule:
-      interval: "daily"
+      interval: 'daily'
     commit-message:
-      prefix: "chore"
-      prefix-development: "chore"
-      include: "scope"
+      prefix: 'chore'
+      prefix-development: 'chore'
+      include: 'scope'
     target-branch: dev

@@ -33,7 +33,7 @@ export default function ProblemSection() {
             <h3 className="text-xl font-bold mb-4 text-gray-800">Complex Migration Process</h3>
             <p className="text-gray-700">
               While the new app is a leap forward, many users are left without the tools they need to switch over safely and confidently.
-              Today, the migration process is still mostly manual, and there's no native interface to guide users through it.
+              Today, the migration process is still mostly manual, and there&apos;s no native interface to guide users through it.
             </p>
           </motion.div>
 

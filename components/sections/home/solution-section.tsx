@@ -45,7 +45,7 @@ export default function SolutionSection() {
             Our Solution
           </h2>
           <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto">
-            We're building a dedicated web app to make this migration simple, secure, and transparent.
+            We&apos;re building a dedicated web app to make this migration simple, secure, and transparent.
           </p>
         </motion.div>
 

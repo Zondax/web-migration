@@ -1,4 +1,4 @@
-name: "Playwright Smoke Tests"
+name: 'Playwright Smoke Tests'
 on:
   workflow_call:
     secrets:
@@ -42,7 +42,7 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "latest"
+          bun-version: 'latest'
       - name: Install dependencies
         run: bun install
 

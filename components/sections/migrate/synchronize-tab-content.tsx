@@ -97,7 +97,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
             <div>
               <h2 className="text-2xl font-bold">Failed Synchronization</h2>
               <p className="text-gray-600">
-                The account couldn't be scanned successfully. Please try again or continue with the successfully scanned accounts.
+                The account couldn&apos;t be scanned successfully. Please try again or continue with the successfully scanned accounts.
               </p>
             </div>
             <Button onClick={rescanFailedAccounts} variant="purple">
