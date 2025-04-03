@@ -20,20 +20,9 @@ jobs:
   ts-checks:
     uses: zondax/_workflows/.github/workflows/_checks-ts.yaml@main
     with:
-      disable_linting: false
-      disable_tests: false
-# FIXME: generalize, migrate & reenable
-# playwright-tests:
-#   needs: [checks-ts, checks-expo]
-#   uses: ./.github/workflows/playwright.yml
-#   secrets: inherit
+      package_manager: pnpm
 
-# playwright-smoke:
-#   needs: [checks-ts, checks-expo]
-#   uses: ./.github/workflows/playwright.smoke.yml
-#   secrets: inherit
-
-# playwright-perf:
-#   needs: [checks-ts, checks-expo]
-#   uses: ./.github/workflows/playwright.perf.yml
-#   secrets: inherit
+  playwright-tests:
+    needs: [ts-checks]
+    uses: ./.github/workflows/playwright.yml
+    secrets: inherit
