@@ -6,7 +6,6 @@ import { Option } from '@polkadot/types-codec'
 import { Hash, OpaqueMetadata } from '@polkadot/types/interfaces'
 import { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
 import { hexToU8a } from '@polkadot/util'
-import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
 import { AppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, MINIMUM_AMOUNT, mockBalances } from 'config/mockData'
@@ -100,10 +99,10 @@ export async function getBalance(
     const nativeBalance = await getNativeBalance(addressString, api)
 
     // Get Uniques if available
-    const { nfts: uniquesNfts, collections: uniquesCollections } = await getUniquesOwnedByAccount(address, api)
+    const { nfts: uniquesNfts, collections: uniquesCollections } = await getUniquesOwnedByAccount(addressString, api)
 
     // Get NFTs if available
-    const { nfts, collections } = await getNFTsOwnedByAccount(address, api)
+    const { nfts, collections } = await getNFTsOwnedByAccount(addressString, api)
 
     return {
       balance: {
@@ -605,7 +604,7 @@ export function processNftItem(item: NftItem, isUnique: boolean = false) {
  * @param apiOrEndpoint An existing API instance or RPC endpoint string (required).
  * @returns An array of NFTDisplayInfo objects, or an empty array on error.
  */
-export async function getNFTsOwnedByAccount(address: GenericeResponseAddress, apiOrEndpoint: string | ApiPromise): Promise<NftsInfo> {
+export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: string | ApiPromise): Promise<NftsInfo> {
   let apiToUse: ApiPromise
   let providerToDisconnect: WsProvider | undefined
   // Check if we received an API instance or an endpoint string
@@ -631,7 +630,6 @@ export async function getNFTsOwnedByAccount(address: GenericeResponseAddress, ap
     apiToUse = apiOrEndpoint
   }
 
-  const { address: addressString } = address
   const allNFTs: NftsInfo = { nfts: [], collections: [] }
 
   // Check if nfts pallet is available
@@ -647,9 +645,9 @@ export async function getNFTsOwnedByAccount(address: GenericeResponseAddress, ap
   }
 
   try {
-    const entries = await apiToUse.query.nfts.account.entries(addressString)
+    const entries = await apiToUse.query.nfts.account.entries(address)
 
-    console.log(`Found ${entries.length} NFT entries for address ${addressString}`)
+    console.log(`Found ${entries.length} NFT entries for address ${address}`)
 
     const itemsInfo = entries.map(([key, _info]) => {
       const info = key.args.map(k => k.toPrimitive())
@@ -702,7 +700,7 @@ export async function getNFTsOwnedByAccount(address: GenericeResponseAddress, ap
 
     return result
   } catch (error) {
-    console.error(`Error fetching NFTs for address ${addressString}:`, error)
+    console.error(`Error fetching NFTs for address ${address}:`, error)
 
     // Disconnect if we created a new connection
     if (providerToDisconnect) {
@@ -726,7 +724,7 @@ export async function getNFTsOwnedByAccount(address: GenericeResponseAddress, ap
  * @param apiOrEndpoint An existing API instance or RPC endpoint string (required).
  * @returns An array of NFTDisplayInfo objects, or an empty array on error.
  */
-export async function getUniquesOwnedByAccount(address: GenericeResponseAddress, apiOrEndpoint: string | ApiPromise): Promise<NftsInfo> {
+export async function getUniquesOwnedByAccount(address: string, apiOrEndpoint: string | ApiPromise): Promise<NftsInfo> {
   let apiToUse: ApiPromise
   let providerToDisconnect: WsProvider | undefined
   // Check if we received an API instance or an endpoint string
@@ -752,7 +750,6 @@ export async function getUniquesOwnedByAccount(address: GenericeResponseAddress,
     apiToUse = apiOrEndpoint
   }
 
-  const { address: addressString } = address
   const allNFTs: NftsInfo = { nfts: [], collections: [] }
 
   // Check if nfts pallet is available
@@ -768,9 +765,9 @@ export async function getUniquesOwnedByAccount(address: GenericeResponseAddress,
   }
 
   try {
-    const entries = await apiToUse.query.uniques.account.entries(addressString)
+    const entries = await apiToUse.query.uniques.account.entries(address)
 
-    console.log(`Found ${entries.length} uniques entries for address ${addressString}, ${entries}}`)
+    console.log(`Found ${entries.length} uniques entries for address ${address}, ${entries}}`)
 
     const itemsInfo = entries.map(([key, _info]) => {
       const info = key.args.map(k => k.toPrimitive())
@@ -823,7 +820,7 @@ export async function getUniquesOwnedByAccount(address: GenericeResponseAddress,
 
     return result
   } catch (error) {
-    console.error(`Error fetching uniques NFTs for address ${addressString}:`, error)
+    console.error(`Error fetching uniques NFTs for address ${address}:`, error)
 
     // Disconnect if we created a new connection
     if (providerToDisconnect) {
