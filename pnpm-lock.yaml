@@ -32,6 +32,12 @@ importers:
       '@polkadot/keyring':
         specifier: ^13.4.3
         version: 13.4.3(@polkadot/util-crypto@13.4.3(@polkadot/util@13.4.3))(@polkadot/util@13.4.3)
+      '@polkadot/types':
+        specifier: ^15.9.1
+        version: 15.9.1
+      '@polkadot/types-codec':
+        specifier: ^15.9.1
+        version: 15.9.1
       '@polkadot/util':
         specifier: ^13.4.3
         version: 13.4.3
