@@ -42,7 +42,6 @@ jobs:
         run: pnpm install
 
       - name: Run build for web
-        working-directory: apps/web
         run: pnpm run build
 
       - name: Install dependencies
