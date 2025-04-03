@@ -6,6 +6,7 @@
     "build": "next build",
     "deps:update": "pnpm exec npm-check-updates -u -t semver && pnpm install",
     "dev": "next dev --turbo",
+    "env:init": "cp .env.backup .env",
     "format": "prettier --write . && sort-package-json",
     "format:check": "FORCE_COLOR=1 prettier --check . && sort-package-json -c",
     "lint": "eslint .",
