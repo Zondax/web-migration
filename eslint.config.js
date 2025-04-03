@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint'
 
 export default [
   {
-    ignores: ['.next/', 'components/ui/**', 'node_modules/**', 'public/**', 'styles/**', 'coverage/**'],
+    ignores: ['.next/', 'components/ui/**', 'node_modules/**', 'public/**', 'styles/**', 'coverage/**', 'playwright-report/**'],
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
