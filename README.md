@@ -1,4 +1,4 @@
-# Zondax Web Migration
+# Zondax Migration Web Interface
 
 ---
 
@@ -52,7 +52,7 @@ Built by Zondax to simplify the complex process of adopting the consolidated Uni
 
 ## 🧑‍💻 Getting Started
 
-1. Clone the repository
+1. Clone the repository:
 
 ```bash
 git clone [repository-url]
@@ -79,7 +79,20 @@ bun dev
 
 The application will be available at `http://localhost:3000`.
 
-## Project Structure
+## Development
+
+### Available Scripts
+
+- `bun dev` - Start development server
+- `bun build` - Build for production
+- `bun start` - Start production server
+- `bun test` - Run tests
+- `bun test:watch` - Run tests in watch mode
+- `bun lint` - Run ESLint
+- `bun format` - Format code with Prettier
+- `bun deps:update` - Update dependencies
+
+### Project Structure
 
 - `app/` - Next.js app router pages and layouts
 - `components/` - Reusable React components
@@ -88,7 +101,7 @@ The application will be available at `http://localhost:3000`.
 - `public/` - Static assets
 - `state/` - State management logic with legendapp/state
 
-## Architecture
+### Architecture
 
 The application follows clean architecture principles:
 
@@ -136,14 +149,6 @@ Each chain configuration contains these key parameters:
 - `decimals`: Number of decimal places for the currency
 
 For detailed examples of how to structure your chain configuration, refer to the existing entries in the appsConfig.json file.
-
-## Development Guidelines
-
-- When adding new features, create modular components in dedicated files
-- Extract reusable UI elements into configurable components
-- Use hooks to encapsulate complex logic and state management
-- Keep state management centralized in parent components
-- Follow the established styling patterns using Tailwind CSS
 
 ## License
 
