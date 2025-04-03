@@ -339,8 +339,8 @@
     "cla": 151,
     "bip44Path": "m/44'/434'/0'/0'/0'",
     "ss58Prefix": 2,
-    "rpcEndpoint": "wss://kusama-asset-hub-rpc.polkadot.io",
-    "ticker": "STATEMINE",
+    "rpcEndpoint": "wss://statemine.public.curie.radiumblock.co/ws",
+    "ticker": "KSM",
     "decimals": 12
   },
   {
@@ -350,8 +350,8 @@
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 0,
     "rpcEndpoint": "wss://polkadot-asset-hub-rpc.polkadot.io",
-    "ticker": "STATEMINT",
-    "decimals": 12
+    "ticker": "DOT",
+    "decimals": 10
   },
   {
     "id": "ternoa",

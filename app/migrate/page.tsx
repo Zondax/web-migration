@@ -111,9 +111,9 @@ export default function MigratePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={controls}
-          className="bg-white/90 backdrop-blur-md rounded-xl border border-white/20 shadow-xl p-0 mb-8 overflow-hidden"
+          className="bg-white/90 backdrop-blur-md rounded-xl border border-white/20 shadow-xl p-0 mb-8"
         >
-          <div className="bg-gradient-to-r from-[#F8F9FC]/90 to-white/90 border-b border-[#DCE2E9] px-4 py-3">
+          <div className="bg-gradient-to-r from-[#F8F9FC]/90 to-white/90 rounded-xl border-b border-[#DCE2E9] px-4 py-3">
             {/* Tabs */}
             <Tabs tabs={tabsWithStatus} activeTab={activeTab} onTabChange={handleTabChange} />
 

@@ -56,10 +56,19 @@ export type UpdateMigratedStatusFn = (
 ) => void
 
 /**
+ * Balance information for an account
+ */
+export interface Balance {
+  native?: number
+  nfts?: Nft[]
+  uniques?: Nft[]
+}
+
+/**
  * Extended address information including balance, status and transaction details
  */
 export interface Address extends GenericeResponseAddress {
-  balance?: number
+  balance?: Balance
   status?: AddressStatus
   isLoading?: boolean
   error?: {
@@ -69,4 +78,50 @@ export interface Address extends GenericeResponseAddress {
   transaction?: Transaction
   destinationAddress?: string
   path: string
+}
+
+/**
+ * Essential NFT Information
+ */
+export interface Nft {
+  collectionId: number | string
+  itemId: number | string
+  creator: string
+  owner: string
+  isUnique?: boolean
+  isFrozen?: boolean
+}
+
+/**
+ * Information about an NFT collection
+ */
+export interface Collection {
+  collectionId: number
+  owner?: string
+  items?: number
+  name?: string
+  image?: string
+  description?: string
+  external_url?: string
+  mediaUri?: string
+  attributes?: {
+    trait_type: string
+    value: string
+  }[]
+  error?: {
+    source: 'collection_info_fetch'
+    description: string
+  }
+}
+
+/**
+ * All NFTs owned by an address
+ */
+export interface NftsInfo {
+  nfts: Nft[]
+  collections: Collection[]
+  error?: {
+    source: 'nft_info_fetch' | 'uniques_info_fetch'
+    description: string
+  }
 }

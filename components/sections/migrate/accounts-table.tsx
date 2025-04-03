@@ -2,15 +2,16 @@ import { Observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { motion } from 'framer-motion'
 import { AlertCircle, CheckCircle, ChevronDown, Clock, XCircle } from 'lucide-react'
+import { Collections } from 'state/ledger'
 import { Address } from 'state/types/ledger'
 
-import { formatBalance } from '@/lib/utils'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip } from '@/components/ui/tooltip'
 import { AddressLink } from '@/components/AddressLink'
 import { Spinner } from '@/components/icons'
 
+import BalanceHoverCard from './balance-hover-card'
 import DestinationAddressSelect from './destination-address-select'
 
 function AccountsTable({
@@ -18,11 +19,15 @@ function AccountsTable({
   ticker,
   decimals,
   polkadotAddresses,
+  collections,
+  appId,
 }: {
   accounts: Observable<Address[] | undefined>
   ticker: string
   decimals: number
   polkadotAddresses: string[]
+  collections?: Collections
+  appId: string
 }) {
   const handleDestinationChange = (value: string, accountIndex: number) => {
     accounts[accountIndex].destinationAddress.set(value)
@@ -72,6 +77,14 @@ function AccountsTable({
     return statusIcon ? <SimpleTooltip tooltipText={tooltipContent}>{statusIcon}</SimpleTooltip> : null
   }
 
+  const renderBalance = (account: Observable<Address>) => {
+    const balance = account.balance.get()
+
+    return balance ? (
+      <BalanceHoverCard balance={balance} collections={collections} ticker={ticker} decimals={decimals} appId={appId} />
+    ) : null
+  }
+
   return (
     <TableRow>
       <TableCell colSpan={6} className="p-0">
@@ -115,7 +128,7 @@ function AccountsTable({
                       />
                     </TableCell>
                     <TableCell className="py-2 text-sm text-right w-1/4">
-                      {account.balance.get() !== undefined ? formatBalance(account.balance.get()!, ticker, decimals) : '-'}
+                      <div className="flex items-center justify-end gap-2">{renderBalance(account)}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2 justify-end items-center">
