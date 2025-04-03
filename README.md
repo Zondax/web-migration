@@ -21,34 +21,63 @@ A comprehensive web application designed to streamline the migration process to 
 
 Built by Zondax to simplify the complex process of adopting the consolidated Universal Ledger App for the Polkadot ecosystem.
 
-## :gear: Tech Stack
+## :gear: Features
 
-- **Framework**: [Next.js 15](https://nextjs.org) (App Router)
-- **State Management**: [@legendapp/state](https://legendapp.com/state/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com) + [class-variance-authority](https://cva.style/docs)
-- **Components**: [Radix UI](https://www.radix-ui.com/) + [Shadcn UI](https://ui.shadcn.com/)
-- **Blockchain**: [@polkadot/api](https://polkadot.js.org/docs/api)
-- **Hardware Wallet**: Ledger integration via [@zondax/ledger-substrate](https://github.com/Zondax/ledger-substrate-js)
-- **Animation**: [Framer Motion](https://www.framer.com/motion/)
-- **Development**: TypeScript, Prettier
-- **Deployment**: Vercel
+- **Modern Stack**
+
+  - Next.js 15 with App Router
+  - React 19
+  - TypeScript
+  - Tailwind CSS
+  - Shadcn UI Components
+  - Vercel Analytics
+
+- **Polkadot Integration**
+
+  - Ledger Hardware Wallet Support
+  - Polkadot API Integration
+  - Substrate Protocol Support
+
+- **Development Tools**
+  - ESLint for code linting
+  - Prettier for code formatting
+  - Vitest for testing
+  - Playwright for E2E testing
+
+### Prerequisites
+
+- Node.js (LTS version)
+- Bun (for package management)
+- A Polkadot-compatible Ledger device (optional)
 
 ## 🧑‍💻 Getting Started
 
 1. Clone the repository
+
+```bash
+git clone [repository-url]
+cd web-migration
+```
+
 2. Install dependencies:
-   ```bash
-   yarn install
-   ```
+
+```bash
+bun install
+```
+
 3. Initialize your dev environment:
-   ```bash
-   yarn dev:init
-   ```
+
+```bash
+bun env:init
+```
+
 4. Start the development server:
-   ```bash
-   yarn dev
-   ```
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+```bash
+bun dev
+```
+
+The application will be available at `http://localhost:3000`.
 
 ## Project Structure
 
@@ -67,6 +96,14 @@ The application follows clean architecture principles:
 - Services are agnostic of state management libraries
 - Core business logic and interfaces are in separate files
 - UI components are modular and composable
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## Adding New Chains
 
@@ -110,4 +147,4 @@ For detailed examples of how to structure your chain configuration, refer to the
 
 ## License
 
-See [LICENSE.md](LICENSE.md) for details.
+This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
