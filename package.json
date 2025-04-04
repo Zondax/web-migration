@@ -23,9 +23,9 @@
   },
   "dependencies": {
     "@ledgerhq/hw-transport": "^6.31.4",
+    "@ledgerhq/hw-transport-mocker": "^6.28.6",
     "@ledgerhq/hw-transport-webhid": "^6.30.0",
     "@ledgerhq/types-live": "^6.65.0",
-    "@ledgerhq/hw-transport-mocker": "^6.28.6",
     "@legendapp/state": "3.0.0-beta.30",
     "@neondatabase/serverless": "^1.0.0",
     "@polkadot-api/merkleize-metadata": "^1.1.14",
