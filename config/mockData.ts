@@ -7,10 +7,10 @@ export const mockBalances =
           address: 'obPSGcVmQPZzgWZrVM4fPMYAjJYuduNCYckAqqnnDDHf4Wr',
           balance: 2000000000,
         },
-        {
-          address: 'Gq9CTYACKtgA1dyrM5yh7oDK6yh1P3ErjcxZvDmJu9YjdB5', // KUSAMA 1
-          balance: 10000000003,
-        },
+        // {
+        //   address: 'Gq9CTYACKtgA1dyrM5yh7oDK6yh1P3ErjcxZvDmJu9YjdB5', // KUSAMA 1
+        //   balance: 10000000003
+        // },
         {
           address: 'EfEKXK3qtfDwMMV9Tc63ADoUdHdM1XrgeubH1PHh3TGzKXH', // KUSAMA 3
           balance: 30000000003,

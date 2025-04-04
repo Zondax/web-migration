@@ -38,7 +38,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold">Synchronized Accounts</h2>
           <p className="text-gray-600">Click Migrate All to start migrating your accounts.</p>

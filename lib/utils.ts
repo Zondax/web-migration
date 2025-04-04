@@ -5,8 +5,10 @@ import { errorDetails, InternalErrors, LedgerErrorDetails, LedgerErrors } from '
 import { LedgerClientError } from 'state/client/base'
 import { App } from 'state/ledger'
 import { notifications$ } from 'state/notifications'
-import { Address } from 'state/types/ledger'
+import { Address, Collection, Nft } from 'state/types/ledger'
 import { twMerge } from 'tailwind-merge'
+
+import { NftBalance } from '@/components/sections/migrate/balance-gallery'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -71,9 +73,9 @@ export const truncateMiddleOfString = (str: string, maxLength: number) => {
  * @param {number} balance - The balance to format.
  * @returns {string} The formatted balance.
  */
-export const formatBalance = (balance: number, ticker: string, decimals?: number): string => {
+export const formatBalance = (balance: number, ticker?: string, decimals?: number): string => {
   if (balance === 0) {
-    return `0 ${ticker}`
+    return `0 ${ticker ?? ''}`
   }
 
   const adjustedBalance = decimals ? balance / Math.pow(10, decimals) : balance
@@ -83,7 +85,7 @@ export const formatBalance = (balance: number, ticker: string, decimals?: number
     maximumFractionDigits: 5,
   })
 
-  return `${formattedBalance} ${ticker}`
+  return `${formattedBalance} ${ticker ?? ''}`
 }
 
 export const formatVersion = (version: ResponseVersion): string => {
@@ -131,4 +133,47 @@ export const hasAccountsWithErrors = (apps: App[]): boolean => {
   return apps.some(
     app => app.error?.source === 'synchronization' || app.accounts?.some(account => account.error && account.error?.source !== 'migration')
   )
+}
+
+// Helper function to group NFTs by collection ID
+export const groupNftsByCollection = <T extends { collectionId: number | string }>(nfts: T[] | undefined): Record<number, T[]> => {
+  if (!nfts || nfts.length === 0) {
+    return {}
+  }
+
+  return nfts.reduce(
+    (acc, nft) => {
+      const collectionId = Number(nft.collectionId)
+      if (!acc[collectionId]) {
+        acc[collectionId] = []
+      }
+      acc[collectionId].push(nft)
+      return acc
+    },
+    {} as Record<number, T[]>
+  )
+}
+
+// Helper function to create NftBalance objects from collections and items
+export const createNftBalances = (items: Nft[], collectionsArray: Collection[]) => {
+  if (!items || items.length === 0) {
+    return []
+  }
+
+  const nftBalances: NftBalance[] = []
+
+  // Group NFTs by collection
+  const itemsByCollection = groupNftsByCollection(items)
+
+  // Create NftBalance objects for each collection
+  Object.entries(itemsByCollection).forEach(([collectionId, collectionItems]) => {
+    const collection = collectionsArray.find(c => c.collectionId === Number(collectionId)) || { collectionId: Number(collectionId) }
+
+    nftBalances.push({
+      items: collectionItems,
+      collection: collection,
+    })
+  })
+
+  return nftBalances
 }

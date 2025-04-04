@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { Address } from 'state/types/ledger'
@@ -13,14 +14,19 @@ interface DestinationAddressSelectProps {
 }
 
 function DestinationAddressSelect({ account, index, polkadotAddresses, onDestinationChange }: DestinationAddressSelectProps) {
+  const isDisabled = useMemo(() => {
+    return (
+      (account.balance.native.get() === undefined &&
+        (account.balance.nfts.get() === undefined || account.balance.nfts.get()?.length === 0) &&
+        (account.balance.uniques.get() === undefined || account.balance.uniques.get()?.length === 0)) ||
+      account.status.get() === 'migrated' ||
+      !polkadotAddresses ||
+      polkadotAddresses.length === 0
+    )
+  }, [account, polkadotAddresses])
+
   return (
-    <Select
-      value={account.destinationAddress.get() || ''}
-      onValueChange={value => onDestinationChange(value, index)}
-      disabled={
-        account.balance.get() === undefined || account.status.get() === 'migrated' || !polkadotAddresses || polkadotAddresses.length === 0
-      }
-    >
+    <Select value={account.destinationAddress.get() || ''} onValueChange={value => onDestinationChange(value, index)} disabled={isDisabled}>
       <SelectTrigger className="w-full">
         <SelectValue>
           <AddressLink

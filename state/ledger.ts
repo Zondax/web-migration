@@ -10,7 +10,7 @@ import { handleLedgerError } from '@/lib/utils'
 import { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
 import { notifications$ } from './notifications'
-import { Address, DeviceConnectionProps, UpdateMigratedStatusFn } from './types/ledger'
+import { Address, Collection, DeviceConnectionProps, UpdateMigratedStatusFn } from './types/ledger'
 import { Notification } from './types/notifications'
 
 export type AppStatus = 'migrated' | 'synchronized' | 'loading' | 'error'
@@ -19,10 +19,16 @@ export type AppIcons = {
   [key in AppId]: string
 }
 
+export interface Collections {
+  uniques: Map<number, Collection>
+  nfts: Map<number, Collection>
+}
+
 export interface App {
   name: string
   id: AppId
   accounts?: Address[]
+  collections?: Collections
   ticker: string
   decimals: number
   status?: AppStatus
@@ -250,16 +256,63 @@ export const ledgerState$ = observable({
         }
       }
 
+      // Store collections for this address if they exist
+      const collectionsMap = {
+        uniques: new Map<number, Collection>(),
+        nfts: new Map<number, Collection>(),
+      }
+
       const accounts: Address[] = await Promise.all(
         response.result.map(async address => {
-          return await getBalance(address, api)
+          const { balance, collections, error } = await getBalance(address, api)
+          if (error) {
+            return {
+              ...address,
+              balance,
+              error: {
+                source: 'balance_fetch',
+                description: 'Failed to fetch balance',
+              },
+              isLoading: false,
+            }
+          }
+          if (collections) {
+            // Process uniques collections
+            if (collections.uniques && collections.uniques.length > 0) {
+              collections.uniques.forEach(collection => {
+                if (collection.collectionId) {
+                  collectionsMap.uniques.set(collection.collectionId, collection)
+                }
+              })
+            }
+
+            // Process nfts collections
+            if (collections.nfts && collections.nfts.length > 0) {
+              collections.nfts.forEach(collection => {
+                if (collection.collectionId) {
+                  collectionsMap.nfts.set(collection.collectionId, collection)
+                }
+              })
+            }
+          }
+
+          return {
+            ...address,
+            balance,
+            status: 'synchronized',
+            error: undefined,
+            isLoading: false,
+          }
         })
       )
 
-      // Log accounts for debugging purposes
-      console.log(`Accounts for app ${app.id}:`, accounts)
-
-      const filteredAccounts = accounts.filter(account => !filterByBalance || (account.balance && account.balance > 0) || account.error)
+      const filteredAccounts = accounts.filter(
+        account =>
+          !filterByBalance ||
+          (account.balance &&
+            ((account.balance.native && account.balance.native > 0) || (account.balance.nfts && account.balance.nfts.length > 0))) ||
+          account.error
+      )
 
       // Only set the app if there are accounts after filtering
       if (filteredAccounts.length > 0) {
@@ -283,6 +336,7 @@ export const ledgerState$ = observable({
             ...account,
             destinationAddress: polkadotAddresses[0],
           })),
+          collections: collectionsMap,
         }
       } else {
         notifications$.push({
@@ -513,20 +567,53 @@ export const ledgerState$ = observable({
     }
 
     try {
-      const accountWithBalance = await getBalance(address, api)
-      updateAccount(appId, address.address, {
-        ...accountWithBalance,
-        isLoading: false,
-      })
-    } catch (error) {
-      handleLedgerError(error as LedgerClientError, InternalErrors.BALANCE_NOT_GOTTEN)
-      updateAccount(appId, address.address, {
-        isLoading: false,
-        error: {
-          source: 'balance_fetch',
-          description: 'Failed to fetch balance',
-        },
-      })
+      const { balance, collections, error } = await getBalance(address, api)
+      if (!error) {
+        updateAccount(appId, address.address, {
+          ...address,
+          balance,
+          status: 'synchronized',
+          error: undefined,
+          isLoading: false,
+        })
+
+        if (collections && (collections.uniques.length > 0 || collections.nfts.length > 0)) {
+          // Get existing collections for this app
+          const apps = ledgerState$.apps.apps.get()
+          const app = apps.find(a => a.id === appId)
+          const existingCollections = app?.collections || {
+            uniques: new Map<number, Collection>(),
+            nfts: new Map<number, Collection>(),
+          }
+
+          // Merge with new collections
+          const updatedCollections = {
+            uniques: new Map(existingCollections.uniques),
+            nfts: new Map(existingCollections.nfts),
+          }
+          collections.uniques.forEach(collection => {
+            if (collection.collectionId) {
+              updatedCollections.uniques.set(collection.collectionId, collection)
+            }
+          })
+          collections.nfts.forEach(collection => {
+            if (collection.collectionId) {
+              updatedCollections.nfts.set(collection.collectionId, collection)
+            }
+          })
+          updateApp(appId, {
+            collections: updatedCollections,
+          })
+        }
+      } else {
+        updateAccount(appId, address.address, {
+          isLoading: false,
+          error: {
+            source: 'balance_fetch',
+            description: 'Failed to fetch balance',
+          },
+        })
+      }
     } finally {
       if (api) {
         await api.disconnect()
@@ -624,7 +711,7 @@ export const ledgerState$ = observable({
         const account = app.accounts[accountIndex]
 
         // Skip accounts that are already migrated or have no balance
-        if (account.status === 'migrated' || !account.balance || account.balance <= 0) {
+        if (account.status === 'migrated' || !account.balance || (account.balance.native && account.balance.native <= 0)) {
           continue
         }
         await ledgerState$.migrateAccount(app.id, accountIndex)

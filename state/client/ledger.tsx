@@ -34,7 +34,7 @@ export const ledgerClient = {
   async migrateAccount(appId: AppId, account: Address, updateStatus: UpdateMigratedStatusFn): Promise<{ migrated?: boolean }> {
     const senderAddress = account.address
     const receiverAddress = account.destinationAddress
-    const transferAmount = account.balance
+    const transferAmount = account.balance?.native
     const appConfig = appsConfigs.get(appId)
 
     if (!receiverAddress) {

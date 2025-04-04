@@ -12,17 +12,17 @@ import { TableCell, TableRow } from '@/components/ui/table'
 import { SimpleTooltip } from '@/components/ui/tooltip'
 import { Spinner } from '@/components/icons'
 
-import Accounts from './accounts-table'
+import AccountsTable from './accounts-table'
 
 function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolean }) {
   const name = use$(app.name)
   const id = use$(app.id)
   const status = use$(app.status)
   const accounts = use$(app.accounts)
+  const collections = use$(app.collections)
 
   const [isExpanded, setIsExpanded] = useState(true)
 
-  const isSynchronizationLoading = ledgerState$.apps.status.get()
   const icon = uiState$.icons.get()[id]
 
   const polkadotAddresses = useMemo(() => ledgerState$.polkadotAddresses[id].get(), [id])
@@ -52,7 +52,7 @@ function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolea
 
   const renderBalance = () => {
     if (failedSync) return null
-    const balance = accounts?.reduce((total, account) => total + (account.balance || 0), 0)
+    const balance = accounts?.reduce((total, account) => total + (account.balance?.native ?? 0), 0)
 
     return balance !== undefined ? formatBalance(balance, app.ticker.get(), app.decimals.get()) : '-'
   }
@@ -86,11 +86,13 @@ function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolea
         </TableCell>
       </TableRow>
       {isExpanded && accounts?.length !== 0 ? (
-        <Accounts
+        <AccountsTable
           accounts={app.accounts}
           ticker={app.ticker.get()}
           decimals={app.decimals.get()}
           polkadotAddresses={polkadotAddresses ?? []}
+          collections={collections}
+          appId={id}
         />
       ) : null}
     </>

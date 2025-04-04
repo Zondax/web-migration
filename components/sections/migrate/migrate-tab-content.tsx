@@ -2,14 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { observer } from '@legendapp/state/react'
+import { observer, use$ } from '@legendapp/state/react'
 import { AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react'
 import { App } from 'state/ledger'
 import { Address } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
 import { muifyHtml } from '@/lib/muifyHtml'
-import { formatBalance } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip } from '@/components/ui/tooltip'
@@ -17,6 +16,7 @@ import { AddressLink } from '@/components/AddressLink'
 import { useMigration } from '@/components/hooks/useMigration'
 import { Spinner } from '@/components/icons'
 
+import BalanceHoverCard from './balance-hover-card'
 import { SuccessDialog } from './success-dialog'
 import TransactionDropdown from './transaction-dropdown'
 
@@ -30,7 +30,8 @@ interface MigrateRowProps {
 }
 
 const MigrateRow = observer(({ app }: MigrateRowProps) => {
-  const icon = uiState$.icons.get()[app.id]
+  const icon = use$(uiState$.icons.get())[app.id]
+  const collections = use$(app.collections)
 
   // If there are no accounts, render a placeholder row
   if (!app.accounts || app.accounts.length === 0) {
@@ -88,7 +89,14 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
   return (
     <>
       {app.accounts
-        .filter(account => account.balance && account.balance !== 0 && account.destinationAddress)
+        .filter(
+          account =>
+            account.balance &&
+            (account.balance.native !== 0 ||
+              (account.balance.nfts && account.balance.nfts?.length !== 0) ||
+              (account.balance.uniques && account.balance.uniques?.length !== 0)) &&
+            account.destinationAddress
+        )
         .map((account, index) => (
           <TableRow key={`${app.id}-${account.address}-${index}`}>
             <TableCell className="px-2 hidden sm:table-cell">
@@ -107,7 +115,15 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
             <TableCell>
               <AddressLink value={account.destinationAddress!} className="font-mono" />
             </TableCell>
-            <TableCell className="font-mono">{formatBalance(account.balance!, app.ticker, app.decimals)}</TableCell>
+            <TableCell>
+              <BalanceHoverCard
+                balance={account.balance!}
+                collections={collections}
+                ticker={app.ticker}
+                decimals={app.decimals}
+                appId={app.id}
+              />
+            </TableCell>
             <TableCell>
               <div className="flex items-center space-x-2">
                 {renderStatusIcon(account)}
