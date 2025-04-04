@@ -5,7 +5,7 @@ import { errorApps, syncApps } from 'config/mockData'
 
 import { getApiAndProvider, getBalance } from '@/lib/account'
 import { convertSS58Format } from '@/lib/addresses'
-import { handleLedgerError } from '@/lib/utils'
+import { handleLedgerError, hasBalance } from '@/lib/utils'
 
 import { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
@@ -306,13 +306,7 @@ export const ledgerState$ = observable({
         })
       )
 
-      const filteredAccounts = accounts.filter(
-        account =>
-          !filterByBalance ||
-          (account.balance &&
-            ((account.balance.native && account.balance.native > 0) || (account.balance.nfts && account.balance.nfts.length > 0))) ||
-          account.error
-      )
+      const filteredAccounts = accounts.filter(account => !filterByBalance || hasBalance(account) || account.error)
 
       // Only set the app if there are accounts after filtering
       if (filteredAccounts.length > 0) {
@@ -641,8 +635,10 @@ export const ledgerState$ = observable({
     })
 
     try {
+      console.log('Migrating account 1', account)
       const response = await ledgerClient.migrateAccount(appId, account, updateMigratedStatus)
 
+      console.log('Migrating account 2', response)
       if (!response.migrated) {
         updateAccount(appId, account.address, {
           error: {
@@ -711,7 +707,7 @@ export const ledgerState$ = observable({
         const account = app.accounts[accountIndex]
 
         // Skip accounts that are already migrated or have no balance
-        if (account.status === 'migrated' || !account.balance || (account.balance.native && account.balance.native <= 0)) {
+        if (account.status === 'migrated' || !hasBalance(account)) {
           continue
         }
         await ledgerState$.migrateAccount(app.id, accountIndex)

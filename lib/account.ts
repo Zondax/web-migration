@@ -8,8 +8,8 @@ import { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types
 import { hexToU8a } from '@polkadot/util'
 import { AppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
-import { errorAddresses, MINIMUM_AMOUNT, mockBalances } from 'config/mockData'
-import { Address, Balance, Collection, NftsInfo, TransactionStatus } from 'state/types/ledger'
+import { errorAddresses, mockBalances } from 'config/mockData'
+import { Address, Balance, Collection, Nft, NftsInfo, TransactionStatus } from 'state/types/ledger'
 
 // Get API and Provider
 export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
@@ -156,14 +156,19 @@ export interface UpdateTransactionStatus {
 }
 
 /**
- * Prepares a transaction by:
- * 1. Getting the sender's nonce
- * 2. Retrieving and merkleizing metadata
- * 3. Creating the transfer extrinsic
- * 4. Building the payload for signing
- * 5. Generating the merkle proof
+ * Prepares a transaction payload for signing
+ * @param api - The API instance.
+ * @param senderAddress - The sender's address.
+ * @param appConfig - The app config.
+ * @param transfer - The transfer extrinsic.
+ * @returns The prepared transaction data for signing.
  */
-export async function prepareTransaction(api: ApiPromise, senderAddress: string, receiverAddress: string, appConfig: AppConfig) {
+export async function prepareTransactionPayload(
+  api: ApiPromise,
+  senderAddress: string,
+  appConfig: AppConfig,
+  transfer: SubmittableExtrinsic<'promise', ISubmittableResult>
+) {
   const nonceResp = await api.query.system.account(senderAddress)
   const { nonce } = nonceResp.toHuman() as any
 
@@ -180,7 +185,6 @@ export async function prepareTransaction(api: ApiPromise, senderAddress: string,
   })
 
   const metadataHash = merkleizedMetadata.digest()
-  const transfer = api.tx.balances.transferKeepAlive(receiverAddress, MINIMUM_AMOUNT) // TODO: Replace MINIMUM_AMOUNT by amount
 
   // Create the payload for signing
   const payload = api.createType('ExtrinsicPayload', {
@@ -209,71 +213,43 @@ export async function prepareTransaction(api: ApiPromise, senderAddress: string,
 }
 
 /**
- * Prepare a NFT transfer transaction
+ * Prepare a transaction to transfer assets (NFTs and/or native tokens)
  * @param api - The API instance.
  * @param senderAddress - The sender's address.
  * @param receiverAddress - The receiver's address.
- * @param collectionId - The collection ID.
- * @param itemId - The item ID.
- * @param appConfig - The app config.
- * @param pallet - The pallet to use ('nfts' or 'uniques')
+ * @param nfts - Array of NFTs to transfer, each containing collectionId and itemId.
+ * @param appConfig - The app configuration.
+ * @param nativeAmount - Optional amount of native tokens to transfer.
  */
-export async function prepareNFTTransfer(
+export async function prepareTransaction(
   api: ApiPromise,
   senderAddress: string,
   receiverAddress: string,
-  collectionId: string,
-  itemId: string,
+  nfts: Array<Nft>,
   appConfig: AppConfig,
-  pallet: 'nfts' | 'uniques' = 'nfts' // Default to nfts pallet
+  nativeAmount?: number
 ) {
-  const nonceResp = await api.query.system.account(senderAddress)
-  const { nonce } = nonceResp.toHuman() as any
-
-  const metadataV15 = await api.call.metadata.metadataAtVersion<Option<OpaqueMetadata>>(15).then(m => {
-    if (!m.isNone) {
-      return m.unwrap()
+  // Create transfer calls for each item (NFT or native token)
+  const calls = nfts.map(item => {
+    // Handle NFT transfer
+    if (item.collectionId !== undefined && item.itemId !== undefined) {
+      return !item.isUnique
+        ? api.tx.nfts.transfer(item.collectionId, item.itemId, receiverAddress)
+        : api.tx.uniques.transfer(item.collectionId, item.itemId, receiverAddress)
     }
-  })
-  if (!metadataV15) return
 
-  const merkleizedMetadata = merkleizeMetadata(metadataV15, {
-    decimals: appConfig.decimals,
-    tokenSymbol: appConfig.ticker,
+    throw new Error('Invalid item: must provide either amount for native transfer or collectionId and itemId for NFT transfer')
   })
 
-  const metadataHash = merkleizedMetadata.digest()
-
-  // Create transfer extrinsic based on the selected pallet
-  const transfer =
-    pallet === 'nfts'
-      ? api.tx.nfts.transfer(collectionId, itemId, receiverAddress)
-      : api.tx.uniques.transfer(collectionId, itemId, receiverAddress)
-
-  // Create the payload for signing
-  const payload = api.createType('ExtrinsicPayload', {
-    method: transfer.method.toHex(),
-    nonce: nonce as unknown as number,
-    genesisHash: api.genesisHash,
-    blockHash: api.genesisHash,
-    transactionVersion: api.runtimeVersion.transactionVersion,
-    specVersion: api.runtimeVersion.specVersion,
-    runtimeVersion: api.runtimeVersion,
-    version: api.extrinsicVersion,
-    mode: 1,
-    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex')),
-  })
-
-  const payloadBytes = payload.toU8a(true)
-
-  const metadata = {
-    ...merkleizedMetadata,
-    chainId: appConfig.ticker.toLowerCase(),
+  // Add native amount transfer if provided
+  if (nativeAmount !== undefined) {
+    calls.push(api.tx.balances.transferKeepAlive(receiverAddress, nativeAmount))
   }
 
-  const proof1: Uint8Array = metadata.getProofForExtrinsicPayload(payloadBytes)
+  // Create a batch transaction
+  const batchTransfer = api.tx.utility.batchAll(calls)
 
-  return { transfer, payload, metadataHash, nonce, proof1, payloadBytes }
+  return prepareTransactionPayload(api, senderAddress, appConfig, batchTransfer)
 }
 
 // Create Signed Extrinsic
