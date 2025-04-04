@@ -177,3 +177,17 @@ export const createNftBalances = (items: Nft[], collectionsArray: Collection[]) 
 
   return nftBalances
 }
+
+/**
+ * Checks if an account has any balance (native, NFTs, or uniques)
+ * @param account The account to check
+ * @returns True if the account has any balance, false otherwise
+ */
+export const hasBalance = (account: Address): boolean => {
+  return Boolean(
+    account.balance !== undefined &&
+      ((account.balance.native && account.balance.native > 0) ||
+        (account.balance.nfts && account.balance.nfts.length > 0) ||
+        (account.balance.uniques && account.balance.uniques.length > 0))
+  )
+}

@@ -5,6 +5,7 @@ import { InternalErrors } from 'config/errors'
 
 import { createSignedExtrinsic, getApiAndProvider, getBip44Path, prepareTransaction, submitAndHandleTransaction } from '@/lib/account'
 import { ledgerService } from '@/lib/ledger/ledgerService'
+import { hasBalance } from '@/lib/utils'
 
 import { Address, ConnectionResponse, TransactionStatus, UpdateMigratedStatusFn } from '../types/ledger'
 import { withErrorHandling } from './base'
@@ -34,13 +35,13 @@ export const ledgerClient = {
   async migrateAccount(appId: AppId, account: Address, updateStatus: UpdateMigratedStatusFn): Promise<{ migrated?: boolean }> {
     const senderAddress = account.address
     const receiverAddress = account.destinationAddress
-    const transferAmount = account.balance?.native
+    const hasAvailableBalance = hasBalance(account)
     const appConfig = appsConfigs.get(appId)
 
     if (!receiverAddress) {
       throw InternalErrors.NO_RECEIVER_ADDRESS
     }
-    if (!transferAmount) {
+    if (!hasAvailableBalance) {
       throw InternalErrors.NO_TRANSFER_AMOUNT
     }
     if (!appConfig) {
@@ -56,7 +57,15 @@ export const ledgerClient = {
       }
 
       try {
-        const preparedTx = await prepareTransaction(api, senderAddress, receiverAddress, appConfig)
+        // Collect all NFTs to transfer (both uniques and regular NFTs)
+        const nftsToTransfer = [...(account.balance?.uniques || []), ...(account.balance?.nfts || [])]
+
+        // Get native amount if available
+        const nativeAmount = account.balance?.native
+
+        // Prepare transaction with all assets
+        const preparedTx = await prepareTransaction(api, senderAddress, receiverAddress, nftsToTransfer, appConfig, nativeAmount)
+        // const preparedTx = await prepareTransaction(api, senderAddress, receiverAddress, appConfig)
         if (!preparedTx) {
           throw new Error('Prepare transaction failed')
         }
