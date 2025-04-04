@@ -599,14 +599,16 @@ export function processNftItem(item: NftItem, isUnique: boolean = false) {
 }
 
 /**
- * Gets all NFTs owned by a given address, across all collections.
- * @param address The address to check.
- * @param apiOrEndpoint An existing API instance or RPC endpoint string (required).
- * @returns An array of NFTDisplayInfo objects, or an empty array on error.
+ * Common function to handle NFT fetching logic for both nfts and uniques pallets
+ * @param address The address to check
+ * @param apiOrEndpoint An existing API instance or RPC endpoint string
+ * @param palletType The pallet type to query ('nfts' or 'uniques')
+ * @returns An object with NFT information or error details
  */
-export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: string | ApiPromise): Promise<NftsInfo> {
+async function getNFTsCommon(address: string, apiOrEndpoint: string | ApiPromise, palletType: 'nfts' | 'uniques'): Promise<NftsInfo> {
   let apiToUse: ApiPromise
   let providerToDisconnect: WsProvider | undefined
+
   // Check if we received an API instance or an endpoint string
   if (typeof apiOrEndpoint === 'string') {
     // Create a new connection using the provided endpoint
@@ -617,7 +619,7 @@ export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: stri
         nfts: [],
         collections: [],
         error: {
-          source: 'nft_info_fetch',
+          source: `${palletType}_info_fetch` as 'nft_info_fetch' | 'uniques_info_fetch',
           description: error ?? 'Failed to connect to the blockchain.',
         },
       }
@@ -632,9 +634,27 @@ export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: stri
 
   const allNFTs: NftsInfo = { nfts: [], collections: [] }
 
-  // Check if nfts pallet is available
-  if (!apiToUse.query.nfts) {
-    console.log('NFTs pallet is not available on this chain')
+  // Define pallet-specific configurations
+  const config = {
+    nfts: {
+      accountQuery: apiToUse.query.nfts?.account,
+      itemQuery: apiToUse.query.nfts?.item,
+      metadataQuery: apiToUse.query.nfts?.collectionMetadataOf,
+      logPrefix: 'NFT',
+      errorSource: 'nft_info_fetch',
+    },
+    uniques: {
+      accountQuery: apiToUse.query.uniques?.account,
+      itemQuery: apiToUse.query.uniques?.asset,
+      metadataQuery: apiToUse.query.uniques?.classMetadataOf,
+      logPrefix: 'uniques',
+      errorSource: 'uniques_info_fetch',
+    },
+  }[palletType]
+
+  // Check if the pallet is available
+  if (!config.accountQuery) {
+    console.log(`${config.logPrefix} pallet is not available on this chain`)
 
     // Disconnect if we created a new connection
     if (providerToDisconnect) {
@@ -645,9 +665,9 @@ export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: stri
   }
 
   try {
-    const entries = await apiToUse.query.nfts.account.entries(address)
+    const entries = await config.accountQuery.entries(address)
 
-    console.log(`Found ${entries.length} NFT entries for address ${address}`)
+    console.log(`Found ${entries.length} ${config.logPrefix} entries for address ${address}}`)
 
     const itemsInfo = entries.map(([key, _info]) => {
       const info = key.args.map(k => k.toPrimitive())
@@ -655,7 +675,7 @@ export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: stri
       return info
     })
 
-    const itemsInformation = await Promise.all(itemsInfo.map(async itemInfo => await apiToUse!.query.nfts.item(...itemInfo)))
+    const itemsInformation = await Promise.all(itemsInfo.map(async itemInfo => await config.itemQuery(...itemInfo)))
 
     const myItems: NftItem[] = itemsInformation.map((item, index) => {
       const [collectionId, itemId] = itemsInfo[index]
@@ -681,7 +701,7 @@ export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: stri
     // Filter items with unique collection IDs to avoid duplicate metadata requests
     const uniqueItems = Array.from(new Set(myItems.map(item => Number(item.ids.collectionId))))
 
-    const metadataPromises = uniqueItems.map(collectionId => apiToUse!.query.nfts.collectionMetadataOf(collectionId))
+    const metadataPromises = uniqueItems.map(collectionId => config.metadataQuery(collectionId))
     const metadataRequests = await Promise.all(metadataPromises)
     const collectionInfo: Promise<Collection>[] = metadataRequests.map(async (metadata, index) => {
       const collectionId = uniqueItems[index]
@@ -689,7 +709,7 @@ export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: stri
     })
 
     const result: NftsInfo = {
-      nfts: myItems.map(item => processNftItem(item)),
+      nfts: myItems.map(item => processNftItem(item, palletType === 'uniques')),
       collections: await Promise.all(collectionInfo),
     }
 
@@ -700,7 +720,7 @@ export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: stri
 
     return result
   } catch (error) {
-    console.error(`Error fetching NFTs for address ${address}:`, error)
+    console.error(`Error fetching ${config.logPrefix} for address ${address}:`, error)
 
     // Disconnect if we created a new connection
     if (providerToDisconnect) {
@@ -711,7 +731,7 @@ export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: stri
       nfts: [],
       collections: [],
       error: {
-        source: 'nft_info_fetch',
+        source: config.errorSource as 'nft_info_fetch' | 'uniques_info_fetch',
         description: `Failed to fetch NFTs: ${String(error)}`,
       },
     }
@@ -724,118 +744,18 @@ export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: stri
  * @param apiOrEndpoint An existing API instance or RPC endpoint string (required).
  * @returns An array of NFTDisplayInfo objects, or an empty array on error.
  */
+export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: string | ApiPromise): Promise<NftsInfo> {
+  return getNFTsCommon(address, apiOrEndpoint, 'nfts')
+}
+
+/**
+ * Gets all uniques owned by a given address, across all collections.
+ * @param address The address to check.
+ * @param apiOrEndpoint An existing API instance or RPC endpoint string (required).
+ * @returns An array of NFTDisplayInfo objects, or an empty array on error.
+ */
 export async function getUniquesOwnedByAccount(address: string, apiOrEndpoint: string | ApiPromise): Promise<NftsInfo> {
-  let apiToUse: ApiPromise
-  let providerToDisconnect: WsProvider | undefined
-  // Check if we received an API instance or an endpoint string
-  if (typeof apiOrEndpoint === 'string') {
-    // Create a new connection using the provided endpoint
-    const { api, provider, error } = await getApiAndProvider(apiOrEndpoint)
-
-    if (error || !api) {
-      return {
-        nfts: [],
-        collections: [],
-        error: {
-          source: 'uniques_info_fetch',
-          description: error ?? 'Failed to connect to the blockchain.',
-        },
-      }
-    }
-
-    apiToUse = api
-    providerToDisconnect = provider
-  } else {
-    // Use the provided API instance
-    apiToUse = apiOrEndpoint
-  }
-
-  const allNFTs: NftsInfo = { nfts: [], collections: [] }
-
-  // Check if nfts pallet is available
-  if (!apiToUse.query.uniques) {
-    console.log('Uniques pallet is not available on this chain')
-
-    // Disconnect if we created a new connection
-    if (providerToDisconnect) {
-      await disconnectSafely(apiToUse, providerToDisconnect)
-    }
-
-    return allNFTs
-  }
-
-  try {
-    const entries = await apiToUse.query.uniques.account.entries(address)
-
-    console.log(`Found ${entries.length} uniques entries for address ${address}, ${entries}}`)
-
-    const itemsInfo = entries.map(([key, _info]) => {
-      const info = key.args.map(k => k.toPrimitive())
-      info.shift() // first item is the address which we do not need it to fetch the item information
-      return info
-    })
-
-    const itemsInformation = await Promise.all(itemsInfo.map(async itemInfo => await apiToUse!.query.uniques.asset(...itemInfo)))
-
-    const myItems: NftItem[] = itemsInformation.map((item, index) => {
-      const [collectionId, itemId] = itemsInfo[index]
-      return {
-        ids: {
-          collectionId: collectionId as string | number,
-          itemId: itemId as string | number,
-        },
-        itemInfo: item.toPrimitive(),
-      }
-    })
-
-    if (myItems.length === 0) {
-      // Disconnect if we created a new connection
-      if (providerToDisconnect) {
-        await disconnectSafely(apiToUse, providerToDisconnect)
-      }
-
-      return allNFTs
-    }
-
-    // Fetch metadata for all items
-    // Filter items with unique collection IDs to avoid duplicate metadata requests
-    const uniqueItems = Array.from(new Set(myItems.map(item => Number(item.ids.collectionId))))
-
-    const metadataPromises = uniqueItems.map(collectionId => apiToUse!.query.uniques.classMetadataOf(collectionId))
-    const metadataRequests = await Promise.all(metadataPromises)
-    const collectionInfo: Promise<Collection>[] = metadataRequests.map(async (metadata, index) => {
-      const collectionId = uniqueItems[index]
-      return processCollectionMetadata(metadata, collectionId)
-    })
-
-    const result: NftsInfo = {
-      nfts: myItems.map(item => processNftItem(item, true)),
-      collections: await Promise.all(collectionInfo),
-    }
-
-    // Disconnect if we created a new connection
-    if (providerToDisconnect) {
-      await disconnectSafely(apiToUse, providerToDisconnect)
-    }
-
-    return result
-  } catch (error) {
-    console.error(`Error fetching uniques NFTs for address ${address}:`, error)
-
-    // Disconnect if we created a new connection
-    if (providerToDisconnect) {
-      await disconnectSafely(apiToUse, providerToDisconnect)
-    }
-
-    return {
-      nfts: [],
-      collections: [],
-      error: {
-        source: 'uniques_info_fetch',
-        description: `Failed to fetch NFTs: ${String(error)}`,
-      },
-    }
-  }
+  return getNFTsCommon(address, apiOrEndpoint, 'uniques')
 }
 
 /**
@@ -880,8 +800,6 @@ export async function fetchFromIpfs<T>(ipfsUrl: string): Promise<T | null> {
     // Convert IPFS URL to HTTP
     const httpUrl = ipfsToHttpUrl(ipfsUrl)
 
-    console.log(`Fetching IPFS content from ${httpUrl}`)
-
     // Make the HTTP request
     const response = await fetch(httpUrl)
 
@@ -919,13 +837,10 @@ export async function getEnrichedNftMetadata(metadataUrl: string): Promise<{
     if (isDirectCid) {
       // It's a direct CID, convert it to HTTP URL format
       ipfsUrl = ipfsToHttpUrl(`ipfs://${metadataUrl}`)
-      console.log(`Converting direct CID ${metadataUrl} to ${ipfsUrl}`)
     } else {
       // It's already an IPFS or HTTP URL
       ipfsUrl = metadataUrl.startsWith('ipfs://') ? ipfsToHttpUrl(metadataUrl) : metadataUrl
     }
-
-    console.log(`Fetching NFT metadata from ${ipfsUrl}`)
 
     // Get the metadata
     const metadata = await fetchFromIpfs<any>(ipfsUrl)

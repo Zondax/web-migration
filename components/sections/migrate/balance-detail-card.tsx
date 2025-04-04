@@ -15,7 +15,7 @@ const NftDetailCard = ({ balance, collection, isUnique }: NftDetailCardProps) =>
   const imageUrl = collection?.image || collection?.mediaUri
 
   return (
-    <Card className="flex flex-row items-center p-3 overflow-hidden">
+    <Card className="flex flex-row items-center p-3">
       <div className="h-12 w-12 rounded-full overflow-hidden bg-muted mr-3 flex-shrink-0">
         {imageUrl ? (
           <img
@@ -33,10 +33,14 @@ const NftDetailCard = ({ balance, collection, isUnique }: NftDetailCardProps) =>
       </div>
       <div className="flex-1">
         <CardHeader className="p-0 pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            {collection?.name}
-            <span className="bg-gray-500 text-white text-[10px] px-2 py-0 rounded-full">{isUnique ? 'UNIQUE' : 'NFT'}</span>
-            <span className="ml-auto font-medium font-mono">{balance}</span>
+          <CardTitle className="text-base flex items-center gap-2 w-full">
+            <div className="flex-grow min-w-0 flex items-center">
+              <span className="truncate block max-w-[250px]">{collection?.name || `Collection #${collection.collectionId}`}</span>
+              <span className="bg-gray-500 text-white text-[10px] px-2 py-0.5 rounded-full ml-2 flex-shrink-0">
+                {isUnique ? 'UNIQUE' : 'NFT'}
+              </span>
+            </div>
+            <span className="flex-shrink-0 font-medium font-mono ml-auto">{balance}</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="flex gap-1 p-0 text-sm text-left">
@@ -61,7 +65,7 @@ const NativeTokensDetailCard = ({ balance, ticker, decimals, appId }: NativeToke
   const formattedBalance = formatBalance(balance, undefined, decimals)
 
   return (
-    <Card className="flex flex-row items-center p-3 overflow-hidden">
+    <Card className="flex flex-row items-center p-3">
       <div className="h-12 w-12 rounded-full overflow-hidden bg-muted mr-3 flex-shrink-0">
         {icon ? (
           <div className="flex h-full w-full items-center justify-center [&_svg]:h-12 [&_svg]:w-12">{muifyHtml(icon)}</div>

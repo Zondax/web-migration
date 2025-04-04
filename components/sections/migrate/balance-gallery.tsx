@@ -22,7 +22,7 @@ interface BalanceGalleryProps {
 
 const BalanceGallery = ({ nfts, uniques, nativeBalance }: BalanceGalleryProps) => {
   return (
-    <div className="flex flex-col gap-3 p-2 max-h-[400px] overflow-y-auto w-full sm:w-auto">
+    <div className="flex flex-col gap-3 p-2 max-h-[400px] overflow-y-auto w-full sm:w-auto sm:min-w-[300px]">
       {nativeBalance && (
         <div>
           <NativeTokensDetailCard
