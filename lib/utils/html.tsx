@@ -1,6 +1,9 @@
 import HTMLReactParser, { DOMNode, domToReact, HTMLReactParserOptions } from 'html-react-parser'
 import DOMPurify from 'isomorphic-dompurify'
 
+/**
+ * Configuration options for HTML to React transformation
+ */
 const htmlToReactOptions: HTMLReactParserOptions = {
   replace: (domNode: DOMNode) => {
     if ('children' in domNode) {
@@ -33,9 +36,15 @@ const htmlToReactOptions: HTMLReactParserOptions = {
         }
       }
     }
+    return undefined
   },
 }
 
+/**
+ * Transforms and sanitizes HTML into React elements with Material UI styling
+ * @param input The HTML string to transform
+ * @returns The transformed React elements
+ */
 export function muifyHtml(input: string) {
   const purified = DOMPurify.sanitize(input)
   const output = HTMLReactParser(purified, htmlToReactOptions)

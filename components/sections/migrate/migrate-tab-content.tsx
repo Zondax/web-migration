@@ -8,7 +8,7 @@ import { App } from 'state/ledger'
 import { Address } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
-import { muifyHtml } from '@/lib/muifyHtml'
+import { muifyHtml } from '@/lib/utils/html'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip } from '@/components/ui/tooltip'

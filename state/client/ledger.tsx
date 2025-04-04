@@ -3,9 +3,10 @@ import { AppConfig, AppId, appsConfigs } from 'config/apps'
 import { maxAddressesToFetch } from 'config/config'
 import { InternalErrors } from 'config/errors'
 
-import { createSignedExtrinsic, getApiAndProvider, getBip44Path, prepareTransaction, submitAndHandleTransaction } from '@/lib/account'
+import { createSignedExtrinsic, getApiAndProvider, prepareTransaction, submitAndHandleTransaction } from '@/lib/account'
 import { ledgerService } from '@/lib/ledger/ledgerService'
 import { hasBalance } from '@/lib/utils'
+import { getBip44Path } from '@/lib/utils/address'
 
 import { Address, ConnectionResponse, TransactionStatus, UpdateMigratedStatusFn } from '../types/ledger'
 import { withErrorHandling } from './base'

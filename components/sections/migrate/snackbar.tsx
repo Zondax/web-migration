@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { notifications$ } from 'state/notifications'
 import { uiState$ } from 'state/ui'
 
-import { muifyHtml } from '@/lib/muifyHtml'
+import { muifyHtml } from '@/lib/utils/html'
 import { Button } from '@/components/ui/button'
 
 function Snackbar() {
