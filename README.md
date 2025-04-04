@@ -47,7 +47,7 @@ Built by Zondax to simplify the complex process of adopting the consolidated Uni
 ### Prerequisites
 
 - Node.js (LTS version)
-- Bun (for package management)
+- pnpm (for package management)
 - A Polkadot-compatible Ledger device (optional)
 
 ## 🧑‍💻 Getting Started
@@ -62,19 +62,19 @@ cd web-migration
 2. Install dependencies:
 
 ```bash
-bun install
+pnpm install
 ```
 
 3. Initialize your dev environment:
 
 ```bash
-bun env:init
+pnpm env:init
 ```
 
 4. Start the development server:
 
 ```bash
-bun dev
+pnpm dev
 ```
 
 The application will be available at `http://localhost:3000`.
@@ -83,14 +83,21 @@ The application will be available at `http://localhost:3000`.
 
 ### Available Scripts
 
-- `bun dev` - Start development server
-- `bun build` - Build for production
-- `bun start` - Start production server
-- `bun test` - Run tests
-- `bun test:watch` - Run tests in watch mode
-- `bun lint` - Run ESLint
-- `bun format` - Format code with Prettier
-- `bun deps:update` - Update dependencies
+- `pnpm dev` - Start development server with Turbo
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm test` - Run tests with coverage
+- `pnpm test:watch` - Run tests in watch mode
+- `pnpm test:e2e` - Run E2E tests with Playwright
+- `pnpm test:e2e:debug` - Run E2E tests in debug mode
+- `pnpm test:e2e:ui` - Run E2E tests with UI
+- `pnpm test:e2e:report` - Show Playwright test report
+- `pnpm lint` - Run ESLint
+- `pnpm lint:fix` - Fix ESLint issues
+- `pnpm format` - Format code with Prettier and sort package.json
+- `pnpm format:check` - Check code formatting
+- `pnpm deps:update` - Update dependencies
+- `pnpm env:init` - Initialize environment variables
 
 ### Project Structure
 
