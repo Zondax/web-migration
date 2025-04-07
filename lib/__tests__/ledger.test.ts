@@ -258,7 +258,7 @@ describe('LedgerService', () => {
       expect(mockGenericApp.txMetadataChainId).toBe(chainId)
     })
 
-    it.skip('should throw error when app is not open', async () => {
+    it('should throw error when app is not open', async () => {
       const ledgerService = new LedgerService()
       const mockGenericApp = createMockGenericApp({
         signWithMetadata: vi.fn().mockRejectedValue(new Error('28161')),

@@ -36,7 +36,6 @@ const htmlToReactOptions: HTMLReactParserOptions = {
         }
       }
     }
-    return undefined
   },
 }
 

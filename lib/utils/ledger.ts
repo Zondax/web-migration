@@ -13,7 +13,7 @@ export const getAppLightIcon = async (appId: string) => {
     const hubUrl = process.env.NEXT_PUBLIC_HUB_BACKEND_URL
 
     if (!hubUrl) {
-      return
+      return { data: null, error: 'Missing hub URL' }
     }
 
     const response = await axios.get(hubUrl + `/app/${appId}/icon/light`)

@@ -8,9 +8,7 @@ import { decodeAddress as decodeAddressPolkadot, encodeAddress as encodeAddressP
  */
 export function convertSS58Format(address: string, prefix: number): string {
   // Decode the address
-  console.log('address', address)
   const decoded = decodeAddressPolkadot(address)
-  console.log('decoded', decoded)
   // Encode it with the provided prefix
   return encodeAddressPolkadot(decoded, prefix)
 }
