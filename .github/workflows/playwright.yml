@@ -49,7 +49,8 @@ jobs:
             libxrandr2 \
             libgbm1 \
             libxkbcommon0 \
-            libasound2
+            libasound2 \
+            libcups2
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
