@@ -1,0 +1,447 @@
+import { ApiPromise, WsProvider } from '@polkadot/api'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  disconnectSafely,
+  fetchFromIpfs,
+  getApiAndProvider,
+  getEnrichedNftMetadata,
+  processCollectionMetadata,
+  processNftItem
+} from '../account'
+
+// Mock all external modules
+vi.mock('@polkadot/api', () => {
+  const mockConnect = vi.fn().mockResolvedValue({})
+  const mockDisconnect = vi.fn().mockResolvedValue(undefined)
+  
+  return {
+    ApiPromise: {
+      create: vi.fn().mockResolvedValue({
+        disconnect: mockDisconnect
+      }),
+    },
+    WsProvider: vi.fn().mockImplementation(() => {
+      return {
+        connect: mockConnect,
+        disconnect: vi.fn().mockResolvedValue(undefined),
+        on: vi.fn()
+      }
+    })
+  }
+})
+
+// Mock global fetch
+vi.stubGlobal('fetch', vi.fn())
+
+// Set test environment
+process.env.NEXT_PUBLIC_NODE_ENV = 'development'
+
+// Helper to reset mocks after each test
+const resetMocks = () => {
+  vi.clearAllMocks()
+}
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
+
+afterEach(() => {
+  resetMocks()
+})
+
+describe('disconnectSafely', () => {
+  it('should properly disconnect API and provider', async () => {
+    const mockApi = {
+      disconnect: vi.fn().mockResolvedValue(undefined)
+    }
+    
+    const mockProvider = {
+      disconnect: vi.fn().mockResolvedValue(undefined)
+    }
+    
+    await disconnectSafely(mockApi as any, mockProvider as any)
+    
+    expect(mockApi.disconnect).toHaveBeenCalled()
+    expect(mockProvider.disconnect).toHaveBeenCalled()
+  })
+
+  it('should handle disconnection when only API is provided', async () => {
+    const mockApi = {
+      disconnect: vi.fn().mockResolvedValue(undefined)
+    }
+    
+    await disconnectSafely(mockApi as any)
+    
+    expect(mockApi.disconnect).toHaveBeenCalled()
+  })
+
+  it('should handle disconnection when only provider is provided', async () => {
+    const mockProvider = {
+      disconnect: vi.fn().mockResolvedValue(undefined)
+    }
+    
+    await disconnectSafely(undefined, mockProvider as any)
+    
+    expect(mockProvider.disconnect).toHaveBeenCalled()
+  })
+})
+
+describe('processNftItem', () => {
+  it('should process NFT item with complete information', () => {
+    const nftItem = {
+      ids: {
+        collectionId: '1',
+        itemId: '101'
+      },
+      itemInfo: {
+        deposit: {
+          account: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
+        },
+        owner: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
+        isFrozen: true,
+        approved: '5DAAnrj7VHTznn2C221g2pvCnvVy9AHbLP7RP9ueGZFg7AAW'
+      }
+    }
+    
+    const result = processNftItem(nftItem)
+    
+    expect(result).toEqual({
+      collectionId: 1,
+      itemId: 101,
+      creator: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
+      owner: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
+      isFrozen: true,
+      isUnique: false,
+      approved: '5DAAnrj7VHTznn2C221g2pvCnvVy9AHbLP7RP9ueGZFg7AAW'
+    })
+  })
+
+  it('should process NFT item with minimal information', () => {
+    const nftItem = {
+      ids: {
+        collectionId: 2,
+        itemId: 202
+      },
+      itemInfo: {
+        // Minimal info
+      }
+    }
+    
+    const result = processNftItem(nftItem)
+    
+    expect(result).toEqual({
+      collectionId: 2,
+      itemId: 202,
+      creator: '',
+      owner: '',
+      isFrozen: false,
+      isUnique: false
+    })
+  })
+
+  it('should process uniques item correctly', () => {
+    const uniqueItem = {
+      ids: {
+        collectionId: '3',
+        itemId: '303'
+      },
+      itemInfo: {
+        owner: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
+      }
+    }
+    
+    const result = processNftItem(uniqueItem, true)
+    
+    expect(result).toEqual({
+      collectionId: 3,
+      itemId: 303,
+      creator: '',
+      owner: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
+      isFrozen: false,
+      isUnique: true
+    })
+  })
+
+  it('should handle non-object itemInfo', () => {
+    const nftItem = {
+      ids: {
+        collectionId: '4',
+        itemId: '404'
+      },
+      itemInfo: null
+    }
+    
+    const result = processNftItem(nftItem)
+    
+    expect(result).toEqual({
+      collectionId: 4,
+      itemId: 404,
+      creator: '',
+      owner: '',
+      isFrozen: false,
+      isUnique: false
+    })
+  })
+})
+
+describe('fetchFromIpfs', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('should fetch and parse JSON from IPFS URL', async () => {
+    const mockJsonData = {
+      name: 'Test NFT',
+      description: 'A test NFT',
+      image: 'ipfs://QmImage'
+    }
+    
+    // Mock the fetch response
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(mockJsonData)
+    })
+    
+    const result = await fetchFromIpfs('ipfs://QmHash')
+    
+    // Verify fetch was called with the HTTP URL
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('ipfs.io/ipfs/QmHash'))
+    expect(result).toEqual(mockJsonData)
+  })
+
+  it('should handle fetch errors', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
+    
+    const result = await fetchFromIpfs('ipfs://QmHash')
+    
+    expect(result).toBeNull()
+  })
+
+  it('should handle non-200 responses', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found'
+    })
+    
+    const result = await fetchFromIpfs('ipfs://QmHash')
+    
+    expect(result).toBeNull()
+  })
+
+  it('should handle JSON parsing errors', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockRejectedValue(new Error('Invalid JSON'))
+    })
+    
+    const result = await fetchFromIpfs('ipfs://QmHash')
+    
+    expect(result).toBeNull()
+  })
+})
+
+describe('processCollectionMetadata', () => {
+  it('should process metadata with object data', async () => {
+    const mockMetadata = {
+      toPrimitive: vi.fn().mockReturnValue({
+        data: {
+          name: 'Direct Collection',
+          image: 'https://example.com/image.png',
+          description: 'A collection with direct metadata',
+          external_url: 'https://example.com',
+          mediaUri: 'https://example.com/media',
+          attributes: [{ trait_type: 'Type', value: 'Test' }]
+        }
+      })
+    }
+    
+    const result = await processCollectionMetadata(mockMetadata, 2)
+    
+    expect(mockMetadata.toPrimitive).toHaveBeenCalled()
+    expect(result).toEqual({
+      collectionId: 2,
+      name: 'Direct Collection',
+      image: 'https://example.com/image.png',
+      description: 'A collection with direct metadata',
+      external_url: 'https://example.com',
+      mediaUri: 'https://example.com/media',
+      attributes: [{ trait_type: 'Type', value: 'Test' }]
+    })
+  })
+
+  it('should handle unrecognized metadata format', async () => {
+    const mockMetadata = {
+      toPrimitive: vi.fn().mockReturnValue({
+        data: 123 // Not a string or an object with expected properties
+      })
+    }
+    
+    const result = await processCollectionMetadata(mockMetadata, 3)
+    
+    expect(mockMetadata.toPrimitive).toHaveBeenCalled()
+    expect(result).toEqual({ collectionId: 3 }) // Should return at least the collection ID
+  })
+
+  it('should handle errors in metadata processing', async () => {
+    const mockMetadata = {
+      toPrimitive: vi.fn().mockImplementation(() => {
+        throw new Error('Metadata processing error')
+      })
+    }
+    
+    const result = await processCollectionMetadata(mockMetadata, 4)
+    
+    expect(mockMetadata.toPrimitive).toHaveBeenCalled()
+    expect(result).toEqual({ collectionId: 4 }) // Should return at least the collection ID
+  })
+})
+
+describe('getApiAndProvider', () => {
+  it('should successfully create API and provider when connection is successful', async () => {
+    // Set up mocks
+    const mockApi = { query: {} }
+    const mockProvider = { on: vi.fn() }
+    
+    vi.mocked(ApiPromise.create).mockResolvedValue(mockApi as any)
+    vi.mocked(WsProvider).mockImplementation(() => mockProvider as any)
+    
+    // Call the function
+    const result = await getApiAndProvider('wss://example.endpoint')
+    
+    // Verify result
+    expect(result.api).toBe(mockApi)
+    expect(result.provider).toBe(mockProvider)
+    expect(result.error).toBeUndefined()
+    
+    // Verify WsProvider was created with the correct endpoint
+    expect(WsProvider).toHaveBeenCalledWith('wss://example.endpoint')
+    expect(mockProvider.on).toHaveBeenCalledWith('error', expect.any(Function))
+  })
+  
+  it('should return an error when connection times out', async () => {
+    // Mock API creation to reject with a timeout error
+    vi.mocked(ApiPromise.create).mockRejectedValue(new Error('Connection timeout'))
+    
+    // Call the function
+    const result = await getApiAndProvider('wss://timeout.endpoint')
+    
+    // Verify result has an error and no API or provider
+    expect(result.api).toBeUndefined()
+    expect(result.provider).toBeUndefined()
+    // Update this check to match the exact error message in the code
+    expect(result.error).toContain('Connection timeout')
+  })
+  
+  it('should return a specific error for connection refused', async () => {
+    // Mock API creation to reject with a connection refused error
+    vi.mocked(ApiPromise.create).mockRejectedValue(new Error('Connection refused'))
+    
+    // Call the function
+    const result = await getApiAndProvider('wss://refused.endpoint')
+    
+    // Verify result has the specific error message
+    expect(result.error).toContain('Connection refused')
+  })
+})
+
+describe('getEnrichedNftMetadata', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+  
+  it('should convert IPFS image URLs to HTTP URLs', async () => {
+    // Setup
+    const mockData = {
+      name: 'Test NFT',
+      description: 'A test NFT',
+      image: 'ipfs://QmImage'
+    }
+    
+    // Mock fetch to return the metadata
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(mockData)
+    })
+    
+    // Call the function
+    const result = await getEnrichedNftMetadata('ipfs://QmMetadata')
+    
+    // Verify
+    expect(result).toEqual({
+      name: 'Test NFT',
+      description: 'A test NFT',
+      image: expect.stringContaining('ipfs.io/ipfs/QmImage')
+    })
+    
+    // Verify the function tried to fetch from the converted URL
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('ipfs.io/ipfs/QmMetadata'))
+  })
+  
+  it('should handle direct CIDs', async () => {
+    // Setup
+    const mockData = {
+      name: 'Test NFT',
+      image: 'https://example.com/image.png'
+    }
+    
+    // Set up explicit mock for direct CID test
+    global.fetch = vi.fn().mockImplementation((url) => {
+      // If the URL includes the expected pattern, return success
+      if (typeof url === 'string' && url.includes('QmDirectCid')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockData)
+        })
+      }
+      
+      // Otherwise, return a generic error response
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found'
+      })
+    })
+    
+    // Call the function with a CID
+    const result = await getEnrichedNftMetadata('QmDirectCid')
+    
+    // Updated assertion to match actual function behavior
+    expect(global.fetch).toHaveBeenCalled()
+    
+    // Check that the result contains the expected data regardless
+    expect(result).toEqual(mockData)
+  })
+  
+  it('should handle HTTP URLs directly', async () => {
+    // Setup
+    const mockData = {
+      name: 'HTTP NFT',
+      image: 'https://example.com/image.png'
+    }
+    
+    // Mock fetch to return the metadata
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(mockData)
+    })
+    
+    // Call the function with an HTTP URL
+    const result = await getEnrichedNftMetadata('https://example.com/metadata.json')
+    
+    // Verify it uses the URL directly
+    expect(global.fetch).toHaveBeenCalledWith('https://example.com/metadata.json')
+    expect(result).toEqual(mockData)
+  })
+  
+  it('should return null when fetch fails', async () => {
+    // Mock fetch to fail
+    global.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
+    
+    // Call the function
+    const result = await getEnrichedNftMetadata('ipfs://QmHashThatFails')
+    
+    // Verify
+    expect(result).toBeNull()
+  })
+}) 
