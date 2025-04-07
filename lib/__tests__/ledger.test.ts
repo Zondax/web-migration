@@ -260,11 +260,14 @@ describe('LedgerService', () => {
 
     it('should throw error when app is not open', async () => {
       const ledgerService = new LedgerService()
+      const mockGenericApp = createMockGenericApp({
+        signWithMetadata: vi.fn().mockRejectedValue(new Error('28161')),
+      })
 
-      // Set up device connection with no genericApp
+      // Set up device connection with closed app
       ledgerService['deviceConnection'] = {
         transport: new MockTransport(createMockResponse(0x9000)),
-        genericApp: undefined,
+        genericApp: mockGenericApp,
         isAppOpen: false,
       }
 
