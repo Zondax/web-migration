@@ -1,0 +1,100 @@
+import { vi } from 'vitest'
+import { ReactElement } from 'react'
+import { render, RenderOptions } from '@testing-library/react'
+
+// Mock for window.matchMedia
+export function setupMatchMedia(matches: boolean = true) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(query => ({
+      matches,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // Deprecated
+      removeListener: vi.fn(), // Deprecated
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
+}
+
+// Mock for IntersectionObserver
+export function setupIntersectionObserver() {
+  const mockIntersectionObserver = vi.fn()
+  mockIntersectionObserver.mockReturnValue({
+    observe: () => null,
+    unobserve: () => null,
+    disconnect: () => null,
+  })
+  window.IntersectionObserver = mockIntersectionObserver as any
+}
+
+// Mock for ResizeObserver
+export function setupResizeObserver() {
+  const mockResizeObserver = vi.fn()
+  mockResizeObserver.mockReturnValue({
+    observe: () => null,
+    unobserve: () => null,
+    disconnect: () => null,
+  })
+  window.ResizeObserver = mockResizeObserver as any
+}
+
+// Mock for fetch
+export function setupFetchMock(response: any = {}, status: number = 200) {
+  global.fetch = vi.fn().mockResolvedValue({
+    json: vi.fn().mockResolvedValue(response),
+    text: vi.fn().mockResolvedValue(JSON.stringify(response)),
+    status,
+    ok: status >= 200 && status < 300,
+  }) as any
+}
+
+// Custom render function with providers if needed
+interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+  // Add custom options here
+}
+
+export function customRender(
+  ui: ReactElement,
+  options?: CustomRenderOptions
+) {
+  return render(ui, {
+    // You can provide wrapper components here if needed
+    // wrapper: ({ children }) => (
+    //   <SomeProvider>{children}</SomeProvider>
+    // ),
+    ...options,
+  })
+}
+
+// Mock localStorage
+export function setupLocalStorageMock() {
+  const localStorageMock = (() => {
+    let store: Record<string, string> = {}
+    return {
+      getItem: vi.fn((key: string) => store[key] || null),
+      setItem: vi.fn((key: string, value: string) => {
+        store[key] = value.toString()
+      }),
+      removeItem: vi.fn((key: string) => {
+        delete store[key]
+      }),
+      clear: vi.fn(() => {
+        store = {}
+      }),
+      key: vi.fn((index: number) => Object.keys(store)[index] || null),
+      length: Object.keys(store).length,
+    }
+  })()
+
+  Object.defineProperty(window, 'localStorage', {
+    value: localStorageMock,
+  })
+  
+  return localStorageMock
+}
+
+// Helper to wait for promises to resolve
+export const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0))
