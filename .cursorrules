@@ -24,3 +24,6 @@
 - Use utility-first CSS with Tailwind for component styling, but extract common patterns into reusable component libraries
 - Define specific color values in components rather than using generic theme variables when creating specialized UI elements
 - Add smooth transitions and animations to interactive elements like progress bars for a more polished user experience 
+- Organize utility functions into domain-specific modules (e.g., format.ts, error.ts, etc.) while maintaining backward compatibility through a main index.ts that re-exports everything
+- Use appropriate file extensions (.ts for pure TypeScript utilities, .tsx for utilities that contain JSX) to ensure proper compiler handling and type checking
+- Mock external dependencies in tests, especially those with browser-specific functionality, using vi.mock() to create controlled test environments 

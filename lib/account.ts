@@ -63,8 +63,6 @@ export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: Ap
   }
 }
 
-export const getBip44Path = (bip44Path: string, index: number) => bip44Path.replace(/\/0'$/, `/${index}'`)
-
 // Get Balance
 export async function getBalance(
   address: Address,

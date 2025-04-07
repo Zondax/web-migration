@@ -4,8 +4,9 @@ import { errorDetails, InternalErrors } from 'config/errors'
 import { errorApps, syncApps } from 'config/mockData'
 
 import { getApiAndProvider, getBalance } from '@/lib/account'
-import { convertSS58Format } from '@/lib/addresses'
-import { handleLedgerError, hasBalance } from '@/lib/utils'
+import { convertSS58Format } from '@/lib/utils/address'
+import { handleLedgerError } from '@/lib/utils/error'
+import { hasBalance } from '@/lib/utils/ledger'
 
 import { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
@@ -310,8 +311,9 @@ export const ledgerState$ = observable({
 
       // Only set the app if there are accounts after filtering
       if (filteredAccounts.length > 0) {
+        console.log('polkadotAccounts', polkadotAccounts)
         const polkadotAddresses = polkadotAccounts.map(account => convertSS58Format(account.address, app.ss58Prefix || 0))
-
+        console.log('polkadotAddresses', polkadotAddresses)
         ledgerState$.polkadotAddresses[app.id].set(polkadotAddresses)
 
         if (api) {

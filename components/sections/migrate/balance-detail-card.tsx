@@ -1,8 +1,8 @@
 import { Collection } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
-import { muifyHtml } from '@/lib/muifyHtml'
-import { formatBalance } from '@/lib/utils'
+import { formatBalance } from '@/lib/utils/format'
+import { muifyHtml } from '@/lib/utils/html'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface NftDetailCardProps {
