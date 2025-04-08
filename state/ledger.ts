@@ -311,9 +311,7 @@ export const ledgerState$ = observable({
 
       // Only set the app if there are accounts after filtering
       if (filteredAccounts.length > 0) {
-        console.log('polkadotAccounts', polkadotAccounts)
         const polkadotAddresses = polkadotAccounts.map(account => convertSS58Format(account.address, app.ss58Prefix || 0))
-        console.log('polkadotAddresses', polkadotAddresses)
         ledgerState$.polkadotAddresses[app.id].set(polkadotAddresses)
 
         if (api) {
