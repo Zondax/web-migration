@@ -17,6 +17,7 @@
 
     // Productivity
     "streetsidesoftware.code-spell-checker", // Spell checking
-    "yoavbls.pretty-ts-errors" // Better TypeScript errors
+    "yoavbls.pretty-ts-errors",
+    "ryanluker.vscode-coverage-gutters" // Better TypeScript errors
   ]
 }

@@ -8,7 +8,7 @@ interface UseTabsProps<T extends string> {
 
 interface UseTabsReturn<T extends string> {
   activeTab: number
-  handleTabChange: (tab: TabItem<T>) => void
+  handleTabChange: (tabIndex: number) => void
   goToNextTab: () => void
   goToPreviousTab: () => void
 }
@@ -18,14 +18,13 @@ export const useTabs = <T extends string>({ tabs }: UseTabsProps<T>): UseTabsRet
 
   // Tab change handler with additional logic
   const handleTabChange = useCallback(
-    (tab: TabItem<T>) => {
+    (tabIndex: number) => {
       // Find the index of the tab in tabs array
-      const tabIndex = tabs.findIndex(t => t.value === tab.value)
       if (tabIndex !== -1) {
         setActiveTab(tabIndex)
       }
     },
-    [tabs]
+    [] // Removed tabs dependency as it's not actually used in the function
   )
 
   // Helper to go to the next tab in sequence

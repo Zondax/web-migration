@@ -61,7 +61,7 @@ export default function MigratePage() {
     // or the app is not open, go back to the first tab
     if (activeTab !== 0 && (!isLedgerConnected || !isAppOpen)) {
       // Reset to the first tab
-      handleTabChange(migrationTabs[0])
+      handleTabChange(0)
     }
   }, [isLedgerConnected, isAppOpen, activeTab, handleTabChange])
   // Prepare props for each tab component

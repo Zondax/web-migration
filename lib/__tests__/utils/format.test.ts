@@ -18,6 +18,22 @@ describe('truncateMiddleOfString', () => {
   it('should handle odd maxLength', () => {
     expect(truncateMiddleOfString('1234567890', 5)).toBe('12...90')
   })
+
+  it('should handle maxLength equal to string length', () => {
+    expect(truncateMiddleOfString('1234567890', 10)).toBe('1234567890')
+  })
+
+  it('should handle maxLength less than 5', () => {
+    expect(truncateMiddleOfString('1234567890', 4)).toBe('12...90')
+  })
+
+  it('should handle maxLength of 3', () => {
+    expect(truncateMiddleOfString('1234567890', 3)).toBe('1...0')
+  })
+
+  it('should return first character with ellipsis for maxLength of 2', () => {
+    expect(truncateMiddleOfString('1234567890', 2)).toBe('1...0')
+  })
 })
 
 describe('formatBalance', () => {
@@ -35,6 +51,26 @@ describe('formatBalance', () => {
 
   it('should handle large numbers', () => {
     expect(formatBalance(1000000000, 'DOT')).toBe('1,000,000,000 DOT')
+  })
+
+  it('should handle negative numbers', () => {
+    expect(formatBalance(-1000, 'DOT')).toBe('-1,000 DOT')
+  })
+
+  it('should handle very small decimal values', () => {
+    expect(formatBalance(1, 'DOT', 8, 8)).toBe('0.00000001 DOT')
+  })
+
+  it('should handle custom decimal places', () => {
+    expect(formatBalance(123456, 'DOT', 4)).toBe('12.3456 DOT')
+  })
+
+  it('should handle undefined token symbol', () => {
+    expect(formatBalance(1000)).toBe('1,000')
+  })
+
+  it('should round to specified decimal places', () => {
+    expect(formatBalance(123456789, 'DOT', 8, 2)).toBe('1.23 DOT')
   })
 })
 
