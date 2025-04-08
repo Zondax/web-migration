@@ -1,6 +1,6 @@
-import axios from 'axios';
-import { App } from 'state/ledger';
-import { Address } from 'state/types/ledger';
+import axios from 'axios'
+import { App } from 'state/ledger'
+import { Address } from 'state/types/ledger'
 
 /**
  * Retrieves a light icon for a given app from the Hub backend.
@@ -11,29 +11,29 @@ import { Address } from 'state/types/ledger';
 export const getAppLightIcon = async (appId: string) => {
   try {
     // First check if the image exists locally
-    const localImagePath = `/logos/chains/${appId}.png`;
-    
+    const localImagePath = `/logos/chains/${appId}.png`
+
     // Try to fetch the local image first
     try {
-      const res = await fetch(localImagePath, { method: 'HEAD' });
+      const res = await fetch(localImagePath, { method: 'HEAD' })
       if (res.ok) {
-        return { data: localImagePath, error: undefined };
+        return { data: localImagePath, error: undefined }
       }
     } catch (localError) {
       // Local image doesn't exist, continue to API call
     }
-    
+
     // If local image doesn't exist, fetch from API
-    const hubUrl = process.env.NEXT_PUBLIC_HUB_BACKEND_URL;
+    const hubUrl = process.env.NEXT_PUBLIC_HUB_BACKEND_URL
 
     if (!hubUrl) {
-      return { data: undefined, error: 'Hub URL not configured' };
+      return { data: undefined, error: 'Hub URL not configured' }
     }
 
-    const response = await axios.get(hubUrl + `/app/${appId}/icon/light`);
-    return { data: response.data, error: undefined };
+    const response = await axios.get(hubUrl + `/app/${appId}/icon/light`)
+    return { data: response.data, error: undefined }
   } catch (error) {
-    return { data: undefined, error: 'Error fetching app icon' };
+    return { data: undefined, error: 'Error fetching app icon' }
   }
 }
 

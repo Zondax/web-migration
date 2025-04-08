@@ -2,7 +2,8 @@ import { useMemo } from 'react'
 import { Balance } from '@/state/types/ledger'
 import { Collections } from 'state/ledger'
 
-import { createNftBalances, formatBalance } from '@/lib/utils'
+import { formatBalance } from '@/lib/utils'
+import { createNftBalances } from '@/lib/utils/nft'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 
 import BalanceGallery from './balance-gallery'
