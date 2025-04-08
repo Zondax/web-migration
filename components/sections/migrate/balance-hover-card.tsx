@@ -42,7 +42,7 @@ const BalanceHoverCard = ({ balance, collections, ticker, decimals, appId }: Bal
       : undefined
 
     return { nfts: nftBalance, uniques: uniquesBalance, nativeTokens }
-  }, [balance, collections])
+  }, [balance, collections, appId, decimals, ticker])
 
   const formattedNativeBalance = balance.native ? formatBalance(balance.native, ticker, decimals) : null
 

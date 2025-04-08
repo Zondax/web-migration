@@ -24,7 +24,7 @@ export const useTabs = <T extends string>({ tabs }: UseTabsProps<T>): UseTabsRet
         setActiveTab(tabIndex)
       }
     },
-    [tabs]
+    [] // Removed tabs dependency as it's not actually used in the function
   )
 
   // Helper to go to the next tab in sequence

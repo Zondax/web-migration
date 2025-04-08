@@ -1,4 +1,5 @@
 import { default as pluginJs } from '@eslint/js'
+import pluginJsxA11y from 'eslint-plugin-jsx-a11y'
 import prettier from 'eslint-plugin-prettier'
 import pluginReact from 'eslint-plugin-react'
 import pluginReactHooks from 'eslint-plugin-react-hooks'
@@ -16,12 +17,14 @@ export default [
     plugins: {
       prettier,
       'react-hooks': pluginReactHooks,
+      'jsx-a11y': pluginJsxA11y,
     },
 
     languageOptions: {
       globals: {
         ...globals.browser,
         ...globals.node,
+        ...globals.jest,
       },
 
       ecmaVersion: 2018,
@@ -50,6 +53,7 @@ export default [
       'react/react-in-jsx-scope': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      'jsx-a11y/alt-text': 'warn',
     },
   },
 ]

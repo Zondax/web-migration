@@ -53,7 +53,8 @@ export function setupFetchMock(response: any = {}, status: number = 200) {
 
 // Custom render function with providers if needed
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
-  // Add custom options here
+  // Custom options could be added here when needed
+  testId?: string // Adding a member to avoid empty interface error
 }
 
 export function customRender(ui: ReactElement, options?: CustomRenderOptions) {
