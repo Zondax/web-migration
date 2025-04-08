@@ -58,7 +58,7 @@ describe('formatBalance', () => {
   })
 
   it('should handle very small decimal values', () => {
-    expect(formatBalance(1, 'DOT', 8)).toBe('0.00000001 DOT')
+    expect(formatBalance(1, 'DOT', 8, 8)).toBe('0.00000001 DOT')
   })
 
   it('should handle custom decimal places', () => {

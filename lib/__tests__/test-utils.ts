@@ -1,6 +1,6 @@
-import { vi } from 'vitest'
 import { ReactElement } from 'react'
 import { render, RenderOptions } from '@testing-library/react'
+import { vi } from 'vitest'
 
 // Mock for window.matchMedia
 export function setupMatchMedia(matches: boolean = true) {
@@ -56,10 +56,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   // Add custom options here
 }
 
-export function customRender(
-  ui: ReactElement,
-  options?: CustomRenderOptions
-) {
+export function customRender(ui: ReactElement, options?: CustomRenderOptions) {
   return render(ui, {
     // You can provide wrapper components here if needed
     // wrapper: ({ children }) => (
@@ -92,7 +89,7 @@ export function setupLocalStorageMock() {
   Object.defineProperty(window, 'localStorage', {
     value: localStorageMock,
   })
-  
+
   return localStorageMock
 }
 

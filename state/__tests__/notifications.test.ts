@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { notifications$ } from '../notifications'
 
 describe('Notifications State', () => {
@@ -22,9 +23,9 @@ describe('Notifications State', () => {
         description: 'Operation successful',
         type: 'success' as const,
       }
-      
+
       notifications$.push(notification)
-      
+
       const activeNotifications = notifications$.active.get()
       expect(activeNotifications.length).toBe(1)
       expect(activeNotifications[0].title).toBe('Success')
@@ -38,9 +39,9 @@ describe('Notifications State', () => {
         description: 'Information message',
         type: 'info' as const,
       }
-      
+
       notifications$.push(notification)
-      
+
       const activeNotifications = notifications$.active.get()
       expect(activeNotifications.length).toBe(1)
       expect(activeNotifications[0].id).toBeDefined()
@@ -49,22 +50,22 @@ describe('Notifications State', () => {
     })
 
     it('should add multiple notifications', () => {
-      notifications$.push({ 
-        title: 'Success', 
-        description: 'Success message', 
-        type: 'success' as const 
+      notifications$.push({
+        title: 'Success',
+        description: 'Success message',
+        type: 'success' as const,
       })
-      notifications$.push({ 
-        title: 'Error', 
-        description: 'Error message', 
-        type: 'error' as const 
+      notifications$.push({
+        title: 'Error',
+        description: 'Error message',
+        type: 'error' as const,
       })
-      notifications$.push({ 
-        title: 'Info', 
-        description: 'Info message', 
-        type: 'info' as const 
+      notifications$.push({
+        title: 'Info',
+        description: 'Info message',
+        type: 'info' as const,
       })
-      
+
       const activeNotifications = notifications$.active.get()
       expect(activeNotifications.length).toBe(3)
       expect(activeNotifications.map(n => n.title)).toEqual(['Success', 'Error', 'Info'])
@@ -74,23 +75,23 @@ describe('Notifications State', () => {
   describe('dismiss', () => {
     it('should remove a notification by ID', () => {
       // Add notifications
-      notifications$.push({ 
-        title: 'Success', 
-        description: 'Success message', 
-        type: 'success' as const 
+      notifications$.push({
+        title: 'Success',
+        description: 'Success message',
+        type: 'success' as const,
       })
-      notifications$.push({ 
-        title: 'Error', 
-        description: 'Error message', 
-        type: 'error' as const 
+      notifications$.push({
+        title: 'Error',
+        description: 'Error message',
+        type: 'error' as const,
       })
-      
+
       // Get the ID of the first notification
       const firstId = notifications$.active.get()[0].id
-      
+
       // Remove one
       notifications$.dismiss(firstId)
-      
+
       // Check result
       const activeNotifications = notifications$.active.get()
       expect(activeNotifications.length).toBe(1)
@@ -99,15 +100,15 @@ describe('Notifications State', () => {
 
     it('should do nothing if ID does not exist', () => {
       // Add a notification
-      notifications$.push({ 
-        title: 'Success', 
-        description: 'Success message', 
-        type: 'success' as const 
+      notifications$.push({
+        title: 'Success',
+        description: 'Success message',
+        type: 'success' as const,
       })
-      
+
       // Try to remove non-existent notification
       notifications$.dismiss('non-existent-id')
-      
+
       // Check that the state is unchanged
       const activeNotifications = notifications$.active.get()
       expect(activeNotifications.length).toBe(1)
@@ -118,25 +119,25 @@ describe('Notifications State', () => {
   describe('dismissAll', () => {
     it('should remove all notifications', () => {
       // Add multiple notifications
-      notifications$.push({ 
-        title: 'Success', 
-        description: 'Success message', 
-        type: 'success' as const 
+      notifications$.push({
+        title: 'Success',
+        description: 'Success message',
+        type: 'success' as const,
       })
-      notifications$.push({ 
-        title: 'Error', 
-        description: 'Error message', 
-        type: 'error' as const 
+      notifications$.push({
+        title: 'Error',
+        description: 'Error message',
+        type: 'error' as const,
       })
-      notifications$.push({ 
-        title: 'Info', 
-        description: 'Info message', 
-        type: 'info' as const 
+      notifications$.push({
+        title: 'Info',
+        description: 'Info message',
+        type: 'info' as const,
       })
-      
+
       // Clear all
       notifications$.dismissAll()
-      
+
       // Check result
       expect(notifications$.active.get()).toEqual([])
       // History should still contain the notifications but with dismissedAt set

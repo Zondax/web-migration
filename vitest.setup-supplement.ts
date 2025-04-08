@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom'
-import { vi } from 'vitest'
 
 // Extend the expect interface with custom matchers
 import matchers from '@testing-library/jest-dom/matchers'
+import { vi } from 'vitest'
+
 expect.extend(matchers)
 
 // Mocking browser APIs that might not be available in the test environment
@@ -25,13 +26,13 @@ class MockIntersectionObserver {
   readonly root: Element | null = null
   readonly rootMargin: string = ''
   readonly thresholds: ReadonlyArray<number> = []
-  
+
   constructor() {
     this.observe = vi.fn()
     this.unobserve = vi.fn()
     this.disconnect = vi.fn()
   }
-  
+
   observe = vi.fn()
   unobserve = vi.fn()
   disconnect = vi.fn()
@@ -40,7 +41,7 @@ class MockIntersectionObserver {
 Object.defineProperty(window, 'IntersectionObserver', {
   writable: true,
   configurable: true,
-  value: MockIntersectionObserver
+  value: MockIntersectionObserver,
 })
 
 // Mock ResizeObserver
@@ -50,7 +51,7 @@ class MockResizeObserver {
     this.unobserve = vi.fn()
     this.disconnect = vi.fn()
   }
-  
+
   observe = vi.fn()
   unobserve = vi.fn()
   disconnect = vi.fn()
@@ -59,7 +60,7 @@ class MockResizeObserver {
 Object.defineProperty(window, 'ResizeObserver', {
   writable: true,
   configurable: true,
-  value: MockResizeObserver
+  value: MockResizeObserver,
 })
 
 // Mock Web Animations API
@@ -81,8 +82,8 @@ console.error = (...args) => {
   if (
     typeof args[0] === 'string' &&
     (args[0].includes('Warning: ReactDOM.render is no longer supported') ||
-     args[0].includes('Warning: React.createFactory') ||
-     args[0].includes('Warning: validateDOMNesting'))
+      args[0].includes('Warning: React.createFactory') ||
+      args[0].includes('Warning: validateDOMNesting'))
   ) {
     return
   }

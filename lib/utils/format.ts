@@ -27,19 +27,19 @@ export const truncateMiddleOfString = (str: string, maxLength: number) => {
  * @param {number} decimals - Optional decimal places to adjust the balance.
  * @returns {string} The formatted balance.
  */
-export const formatBalance = (balance: number, ticker?: string, decimals?: number): string => {
+export const formatBalance = (balance: number, ticker?: string, decimals?: number, maxDecimals?: number): string => {
   if (balance === 0) {
-    return `0 ${ticker ?? ''}`
+    return ticker ? `0 ${ticker}` : '0'
   }
 
   const adjustedBalance = decimals ? balance / Math.pow(10, decimals) : balance
 
   const formattedBalance = adjustedBalance.toLocaleString(undefined, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 5,
+    maximumFractionDigits: maxDecimals !== undefined ? maxDecimals : 5,
   })
 
-  return `${formattedBalance} ${ticker ?? ''}`
+  return ticker ? `${formattedBalance} ${ticker}` : formattedBalance
 }
 
 /**
