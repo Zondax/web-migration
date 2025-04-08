@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 
 // Extend the expect interface with custom matchers
 import matchers from '@testing-library/jest-dom/matchers'
-import { vi } from 'vitest'
+import { beforeEach, expect, vi } from 'vitest'
 
 expect.extend(matchers)
 
