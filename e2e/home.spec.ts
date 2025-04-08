@@ -11,13 +11,14 @@ test.describe('Home Page', () => {
     await expect(page).toHaveTitle(/Polkadot Migration/)
   })
 
-  test('should have main navigation elements', async ({ page }) => {
-    // Check for main navigation elements
-    await expect(page.locator('nav')).toBeVisible()
+  test('should have primary and secondary migration buttons', async ({ page }) => {
+    // Check for primary "Start Migration" button
+    const primaryMigrationButton = page.getByText('Start Migration', { exact: true }).nth(0)
+    await expect(primaryMigrationButton).toBeVisible()
 
-    // Look for key navigation links (adjust selectors as needed)
-    const navLinks = page.locator('nav a')
-    await expect(navLinks).toHaveCount(await navLinks.count())
+    // Check for secondary "Start Migration" button
+    const secondaryMigrationButton = page.getByText('Start Migration', { exact: true }).nth(1)
+    await expect(secondaryMigrationButton).toBeVisible()
   })
 
   test('should display main content sections', async ({ page }) => {
@@ -32,16 +33,12 @@ test.describe('Home Page', () => {
   test('should handle responsive layout', async ({ page }) => {
     // Test responsive behavior - mobile viewport
     await page.setViewportSize({ width: 375, height: 667 })
-    await expect(page.locator('nav')).toBeVisible()
-
-    // You might check for mobile menu button
-    const mobileMenuButton = page.locator('button[aria-label="Menu"]', { strict: false })
-    if ((await mobileMenuButton.count()) > 0) {
-      await expect(mobileMenuButton).toBeVisible()
-    }
+    let primaryMigrationButton = page.getByText('Start Migration', { exact: true }).nth(0)
+    await expect(primaryMigrationButton).toBeVisible()
 
     // Test responsive behavior - desktop viewport
     await page.setViewportSize({ width: 1280, height: 800 })
-    await expect(page.locator('nav')).toBeVisible()
+    primaryMigrationButton = page.getByText('Start Migration', { exact: true }).nth(0)
+    await expect(primaryMigrationButton).toBeVisible()
   })
 })
