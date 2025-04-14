@@ -22,7 +22,10 @@ jobs:
     with:
       package_manager: pnpm
 
+  logo-size-check:
+    uses: ./.github/workflows/logo-check.yml
+
   playwright-tests:
-    needs: [ts-checks]
+    needs: [ts-checks, logo-size-check]
     uses: ./.github/workflows/playwright.yml
     secrets: inherit
