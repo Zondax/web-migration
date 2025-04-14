@@ -21,13 +21,13 @@ interface UseMigrationReturn {
  */
 export const useMigration = (): UseMigrationReturn => {
   const apps$ = ledgerState$.apps.apps
-  const migrationResult$ = ledgerState$.apps.migrationResult
 
   // Get all apps from the observable state
   const apps = use$(() => apps$.get())
 
   // Get migration results from the observable state
-  const migrationResults = use$(() => migrationResult$.get())
+  const successMigration = use$(ledgerState$.apps.migrationResult.success)
+  const failsMigration = use$(ledgerState$.apps.migrationResult.fails)
 
   // Compute derived values from apps
   const appsWithoutErrors = use$(() => {
@@ -54,8 +54,8 @@ export const useMigration = (): UseMigrationReturn => {
     // Computed values
     filteredAppsWithoutErrors: appsWithoutErrors,
     migrationResults: {
-      success: migrationResults.success,
-      total: migrationResults.success + migrationResults.fails,
+      success: successMigration,
+      total: successMigration + failsMigration,
     },
 
     // Actions

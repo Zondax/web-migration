@@ -11,7 +11,7 @@ export interface NativeBalance {
   balance: number
   ticker: string
   decimals: number
-  appId: string
+  tokenIconId: string
 }
 
 interface BalanceGalleryProps {
@@ -29,7 +29,7 @@ const BalanceGallery = ({ nfts, uniques, nativeBalance }: BalanceGalleryProps) =
             balance={nativeBalance.balance}
             ticker={nativeBalance.ticker}
             decimals={nativeBalance.decimals}
-            appId={nativeBalance.appId}
+            tokenIconId={nativeBalance.tokenIconId}
           />
         </div>
       )}

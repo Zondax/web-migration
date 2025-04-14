@@ -1,20 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { observer, use$ } from '@legendapp/state/react'
 import { AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { App } from 'state/ledger'
 import { Address } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
-import { muifyHtml } from '@/lib/utils/html'
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { SimpleTooltip } from '@/components/ui/tooltip'
 import { AddressLink } from '@/components/AddressLink'
 import { useMigration } from '@/components/hooks/useMigration'
 import { Spinner } from '@/components/icons'
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { SimpleTooltip } from '@/components/ui/tooltip'
+import { muifyHtml } from '@/lib/utils/html'
 
 import BalanceHoverCard from './balance-hover-card'
 import { SuccessDialog } from './success-dialog'
@@ -121,7 +121,7 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
                 collections={collections}
                 ticker={app.ticker}
                 decimals={app.decimals}
-                appId={app.id}
+                tokenIconId={app.tokenIconId ?? app.id}
               />
             </TableCell>
             <TableCell>

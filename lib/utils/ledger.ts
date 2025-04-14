@@ -11,13 +11,15 @@ import { Address } from 'state/types/ledger'
 export const getAppLightIcon = async (appId: string) => {
   try {
     // First check if the image exists locally
-    const localImagePath = `/logos/chains/${appId}.png`
+    const localImagePath = `/logos/chains/${appId}.svg`
 
     // Try to fetch the local image first
     try {
-      const res = await fetch(localImagePath, { method: 'HEAD' })
+      const res = await fetch(localImagePath)
       if (res.ok) {
-        return { data: localImagePath, error: undefined }
+        // For SVG files, we need to get the text content
+        const svgContent = await res.text()
+        return { data: svgContent, error: undefined }
       }
     } catch (localError) {
       // Local image doesn't exist, continue to API call

@@ -1,16 +1,16 @@
-import { useCallback, useMemo, useState } from 'react'
 import { Observable } from '@legendapp/state'
 import { observer, use$ } from '@legendapp/state/react'
 import { AlertCircle, ChevronDown } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
 import { App, ledgerState$ } from 'state/ledger'
 import { uiState$ } from 'state/ui'
 
-import { formatBalance } from '@/lib/utils/format'
-import { muifyHtml } from '@/lib/utils/html'
+import { Spinner } from '@/components/icons'
 import { Badge } from '@/components/ui/badge'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { SimpleTooltip } from '@/components/ui/tooltip'
-import { Spinner } from '@/components/icons'
+import { formatBalance } from '@/lib/utils/format'
+import { muifyHtml } from '@/lib/utils/html'
 
 import AccountsTable from './accounts-table'
 
@@ -92,7 +92,7 @@ function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolea
           decimals={app.decimals.get()}
           polkadotAddresses={polkadotAddresses ?? []}
           collections={collections}
-          appId={id}
+          tokenIconId={app.tokenIconId?.get() ?? id}
         />
       ) : null}
     </>

@@ -1,7 +1,7 @@
 import { AppId } from './apps'
 
 export const mockBalances =
-  process.env.NEXT_PUBLIC_MOCK_BALANCES === 'true'
+  process.env.NEXT_PUBLIC_MOCK_SYNC_APPS === 'true'
     ? [
         {
           address: 'obPSGcVmQPZzgWZrVM4fPMYAjJYuduNCYckAqqnnDDHf4Wr',
@@ -28,4 +28,6 @@ export const syncApps = process.env.NEXT_PUBLIC_SYNC_APPS?.split(',') as AppId[]
 
 export const errorApps = process.env.NEXT_PUBLIC_ERROR_SYNC_APPS?.split(',') as AppId[]
 
-export const MINIMUM_AMOUNT = 100
+export const MINIMUM_AMOUNT = process.env.NEXT_PUBLIC_NATIVE_TRANSFER_AMOUNT
+  ? parseInt(process.env.NEXT_PUBLIC_NATIVE_TRANSFER_AMOUNT)
+  : 100

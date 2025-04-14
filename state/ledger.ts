@@ -31,6 +31,7 @@ export interface App {
   accounts?: Address[]
   collections?: Collections
   ticker: string
+  tokenIconId?: string
   decimals: number
   status?: AppStatus
   error?: {
@@ -219,7 +220,7 @@ export const ledgerState$ = observable({
   // Fetch and Process Accounts for a Single App
   async fetchAndProcessAccountsForApp(app: AppConfig, filterByBalance: boolean = true): Promise<App | undefined> {
     try {
-      if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && errorApps.includes(app.id)) {
+      if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && errorApps?.includes(app.id)) {
         throw new Error('Mock synchronization error')
       }
 
@@ -230,6 +231,7 @@ export const ledgerState$ = observable({
           name: app.name,
           id: app.id,
           ticker: app.ticker,
+          tokenIconId: app.tokenIconId,
           decimals: app.decimals,
           status: 'error',
           error: {
@@ -248,6 +250,7 @@ export const ledgerState$ = observable({
           name: app.name,
           id: app.id,
           ticker: app.ticker,
+          tokenIconId: app.tokenIconId,
           decimals: app.decimals,
           status: 'error',
           error: {
@@ -324,6 +327,7 @@ export const ledgerState$ = observable({
           name: app.name,
           id: app.id,
           ticker: app.ticker,
+          tokenIconId: app.tokenIconId,
           decimals: app.decimals,
           status: 'synchronized',
           accounts: filteredAccounts.map(account => ({
@@ -349,6 +353,7 @@ export const ledgerState$ = observable({
         name: app.name,
         id: app.id,
         ticker: app.ticker,
+        tokenIconId: app.tokenIconId,
         decimals: app.decimals,
         status: 'error',
         error: {
@@ -405,6 +410,7 @@ export const ledgerState$ = observable({
           name: app.name,
           id: app.id,
           ticker: app.ticker,
+          tokenIconId: app.tokenIconId,
           decimals: app.decimals,
           status: 'error',
         }
@@ -419,6 +425,7 @@ export const ledgerState$ = observable({
           name: app.name,
           id: app.id,
           ticker: app.ticker,
+          tokenIconId: app.tokenIconId,
           decimals: app.decimals,
           status: 'error',
           error: {
@@ -443,6 +450,7 @@ export const ledgerState$ = observable({
         name: app.name,
         id: app.id,
         ticker: app.ticker,
+        tokenIconId: app.tokenIconId,
         decimals: app.decimals,
         status: 'synchronized',
         accounts,
@@ -454,6 +462,7 @@ export const ledgerState$ = observable({
         name: app.name,
         id: app.id,
         ticker: app.ticker,
+        tokenIconId: app.tokenIconId,
         decimals: app.decimals,
         status: 'error',
       }
