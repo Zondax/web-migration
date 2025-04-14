@@ -23,23 +23,9 @@ jobs:
       package_manager: pnpm
 
   logo-size-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Check SVG logo file sizes
-        run: |
-          find public/logos/chains -name "*.svg" -type f -exec du -k {} \; | awk '$1 > 20 {print $2 " is " $1 "KB which exceeds the 20KB limit"}' > oversize_files.txt
-          if [ -s oversize_files.txt ]; then
-            echo "The following SVG files exceed the 20KB size limit:"
-            cat oversize_files.txt
-            exit 1
-          else
-            echo "All SVG logo files are within the 20KB size limit."
-          fi
+    uses: ./.github/workflows/logo-check.yml
 
   playwright-tests:
-    needs: [ts-checks]
+    needs: [ts-checks, logo-size-check]
     uses: ./.github/workflows/playwright.yml
     secrets: inherit
