@@ -5,11 +5,11 @@ import { AlertCircle, CheckCircle, ChevronDown, Clock, XCircle } from 'lucide-re
 import { Collections } from 'state/ledger'
 import { Address } from 'state/types/ledger'
 
-import { AddressLink } from '@/components/AddressLink'
-import { Spinner } from '@/components/icons'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip } from '@/components/ui/tooltip'
+import { AddressLink } from '@/components/AddressLink'
+import { Spinner } from '@/components/icons'
 
 import BalanceHoverCard from './balance-hover-card'
 import DestinationAddressSelect from './destination-address-select'
