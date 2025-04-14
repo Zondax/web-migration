@@ -10,9 +10,9 @@ Each logo file should follow this naming pattern:
 
 ## Image Requirements
 
-- Format: PNG with transparency
-- Recommended size: 128x128 pixels
-- Maximum file size: 50KB
+- Format: SVG with transparency
+- Recommended size: vector-based for SVG
+- Maximum file size: 20KB for SVG
 
 ## Usage
 
