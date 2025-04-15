@@ -73,7 +73,7 @@ export const ledgerClient = {
         }
         const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
 
-        const chainId = appConfig.ticker.toLowerCase()
+        const chainId = appConfig.token.symbol.toLowerCase()
 
         const { signature } = await ledgerService.signTransaction(account.path, payloadBytes, chainId, proof1)
 

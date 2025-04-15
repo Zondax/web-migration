@@ -176,8 +176,11 @@ export const mockAddressPartialBalance: Address = {
 export const mockApp1: App = {
   name: 'App 1',
   id: 'polkadot',
-  ticker: 'DOT',
-  decimals: 10,
+  token: {
+    symbol: 'DOT',
+    decimals: 10,
+    logoId: 'polkadot',
+  },
   status: 'synchronized',
   accounts: [mockAddress1, mockAddress2],
 }
@@ -185,8 +188,11 @@ export const mockApp1: App = {
 export const mockApp2: App = {
   name: 'App 2',
   id: 'kusama',
-  ticker: 'KSM',
-  decimals: 12,
+  token: {
+    symbol: 'KSM',
+    decimals: 12,
+    logoId: 'kusama',
+  },
   status: 'synchronized',
   accounts: [mockAddress3, mockAddressWithError],
 }
@@ -194,8 +200,11 @@ export const mockApp2: App = {
 export const mockAppWithMigrationError: App = {
   name: 'App 3',
   id: 'westend',
-  ticker: 'WND',
-  decimals: 12,
+  token: {
+    symbol: 'WND',
+    decimals: 12,
+    logoId: 'westend',
+  },
   status: 'synchronized',
   accounts: [mockAddressWithMigrationError],
 }
@@ -203,8 +212,11 @@ export const mockAppWithMigrationError: App = {
 export const mockAppWithAppError: App = {
   name: 'App 4',
   id: 'acala',
-  ticker: 'ACA',
-  decimals: 12,
+  token: {
+    symbol: 'ACA',
+    decimals: 12,
+    logoId: 'acala',
+  },
   status: 'error',
   error: {
     source: 'synchronization',
@@ -216,8 +228,11 @@ export const mockAppWithAppError: App = {
 export const mockAppMixedErrorTypes: App = {
   name: 'App 5',
   id: 'moonbeam',
-  ticker: 'GLMR',
-  decimals: 18,
+  token: {
+    symbol: 'GLMR',
+    decimals: 18,
+    logoId: 'moonbeam',
+  },
   status: 'synchronized',
   accounts: [mockAddress1, mockAddressWithError, mockAddressWithMigrationError],
 }
@@ -225,8 +240,11 @@ export const mockAppMixedErrorTypes: App = {
 export const mockAppNoAccounts: App = {
   name: 'App 6',
   id: 'astar',
-  ticker: 'ASTR',
-  decimals: 18,
+  token: {
+    symbol: 'ASTR',
+    decimals: 18,
+    logoId: 'astar',
+  },
   status: 'synchronized',
   accounts: [],
 }

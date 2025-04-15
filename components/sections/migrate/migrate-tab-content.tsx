@@ -116,13 +116,7 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
               <AddressLink value={account.destinationAddress!} className="font-mono" />
             </TableCell>
             <TableCell>
-              <BalanceHoverCard
-                balance={account.balance!}
-                collections={collections}
-                ticker={app.ticker}
-                decimals={app.decimals}
-                tokenIconId={app.tokenIconId ?? app.id}
-              />
+              <BalanceHoverCard balance={account.balance!} collections={collections} token={app.token} />
             </TableCell>
             <TableCell>
               <div className="flex items-center space-x-2">

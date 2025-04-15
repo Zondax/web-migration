@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle, ChevronDown, Clock, XCircle } from 'lucide-re
 import { Collections } from 'state/ledger'
 import { Address } from 'state/types/ledger'
 
+import { Token } from '@/config/apps'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip } from '@/components/ui/tooltip'
@@ -16,18 +17,14 @@ import DestinationAddressSelect from './destination-address-select'
 
 function AccountsTable({
   accounts,
-  ticker,
-  decimals,
+  token,
   polkadotAddresses,
   collections,
-  tokenIconId,
 }: {
   accounts: Observable<Address[] | undefined>
-  ticker: string
-  decimals: number
+  token: Token
   polkadotAddresses: string[]
   collections?: Collections
-  tokenIconId: string
 }) {
   const handleDestinationChange = (value: string, accountIndex: number) => {
     accounts[accountIndex].destinationAddress.set(value)
@@ -80,9 +77,7 @@ function AccountsTable({
   const renderBalance = (account: Observable<Address>) => {
     const balance = account.balance.get()
 
-    return balance ? (
-      <BalanceHoverCard balance={balance} collections={collections} ticker={ticker} decimals={decimals} tokenIconId={tokenIconId} />
-    ) : null
+    return balance ? <BalanceHoverCard balance={balance} collections={collections} token={token} /> : null
   }
 
   return (

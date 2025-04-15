@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { Token } from '@/config/apps'
+
 import { formatBalance, formatVersion, truncateMiddleOfString } from '../../utils/format'
 
 describe('truncateMiddleOfString', () => {
@@ -37,40 +39,41 @@ describe('truncateMiddleOfString', () => {
 })
 
 describe('formatBalance', () => {
+  const token = { symbol: 'DOT', decimals: 8 } as Token
   it('should format zero balance', () => {
-    expect(formatBalance(0, 'DOT')).toBe('0 DOT')
+    expect(formatBalance(0, token)).toBe('0 DOT')
   })
 
-  it('should format balance without decimals', () => {
-    expect(formatBalance(1000, 'DOT')).toBe('1,000 DOT')
+  it('should format balance without tokenDecimals', () => {
+    expect(formatBalance(1000, { ...token, decimals: 0 })).toBe('1,000 DOT')
   })
 
-  it('should format balance with decimals', () => {
-    expect(formatBalance(123456789, 'DOT', 8)).toBe('1.23457 DOT')
+  it('should format balance with tokenDecimals', () => {
+    expect(formatBalance(123456789, token)).toBe('1.23457 DOT')
   })
 
   it('should handle large numbers', () => {
-    expect(formatBalance(1000000000, 'DOT')).toBe('1,000,000,000 DOT')
+    expect(formatBalance(1000000000, { ...token, decimals: 0 })).toBe('1,000,000,000 DOT')
   })
 
   it('should handle negative numbers', () => {
-    expect(formatBalance(-1000, 'DOT')).toBe('-1,000 DOT')
+    expect(formatBalance(-1000, { ...token, decimals: 0 })).toBe('-1,000 DOT')
   })
 
   it('should handle very small decimal values', () => {
-    expect(formatBalance(1, 'DOT', 8, 8)).toBe('0.00000001 DOT')
+    expect(formatBalance(1, token, 8)).toBe('0.00000001 DOT')
   })
 
   it('should handle custom decimal places', () => {
-    expect(formatBalance(123456, 'DOT', 4)).toBe('12.3456 DOT')
+    expect(formatBalance(123456, { ...token, decimals: 4 })).toBe('12.3456 DOT')
   })
 
-  it('should handle undefined token symbol', () => {
+  it('should handle undefined token', () => {
     expect(formatBalance(1000)).toBe('1,000')
   })
 
   it('should round to specified decimal places', () => {
-    expect(formatBalance(123456789, 'DOT', 8, 2)).toBe('1.23 DOT')
+    expect(formatBalance(123456789, token, 2)).toBe('1.23 DOT')
   })
 })
 
