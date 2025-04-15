@@ -121,7 +121,7 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
                 collections={collections}
                 ticker={app.ticker}
                 decimals={app.decimals}
-                appId={app.id}
+                tokenIconId={app.tokenIconId ?? app.id}
               />
             </TableCell>
             <TableCell>

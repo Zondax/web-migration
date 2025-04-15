@@ -334,24 +334,15 @@
     "decimals": 12
   },
   {
-    "id": "statemine",
-    "name": "Statemine",
+    "id": "kusama-asset-hub",
+    "name": "Kusama Asset Hub",
     "cla": 151,
     "bip44Path": "m/44'/434'/0'/0'/0'",
     "ss58Prefix": 2,
     "rpcEndpoint": "wss://statemine.public.curie.radiumblock.co/ws",
     "ticker": "KSM",
+    "tokenIconId": "kusama",
     "decimals": 12
-  },
-  {
-    "id": "statemint",
-    "name": "Statemint",
-    "cla": 150,
-    "bip44Path": "m/44'/354'/0'/0'/0'",
-    "ss58Prefix": 0,
-    "rpcEndpoint": "wss://polkadot-asset-hub-rpc.polkadot.io",
-    "ticker": "DOT",
-    "decimals": 10
   },
   {
     "id": "ternoa",

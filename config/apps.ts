@@ -11,6 +11,7 @@ export interface AppConfig {
   ss58Prefix: number
   rpcEndpoint?: string
   ticker: string
+  tokenIconId?: string // Used when the ticker's icon is different from the app's icon (e.g., Asset Hubs)
   decimals: number
 }
 

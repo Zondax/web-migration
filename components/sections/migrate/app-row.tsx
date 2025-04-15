@@ -92,7 +92,7 @@ function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolea
           decimals={app.decimals.get()}
           polkadotAddresses={polkadotAddresses ?? []}
           collections={collections}
-          appId={id}
+          tokenIconId={app.tokenIconId?.get() ?? id}
         />
       ) : null}
     </>

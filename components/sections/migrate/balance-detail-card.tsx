@@ -16,7 +16,7 @@ const NftDetailCard = ({ balance, collection, isUnique }: NftDetailCardProps) =>
 
   return (
     <Card className="flex flex-row items-center p-3">
-      <div className="h-12 w-12 rounded-full overflow-hidden bg-muted mr-3 flex-shrink-0">
+      <div className="h-12 w-12 rounded-full overflow-hidden mr-3 flex-shrink-0">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -57,16 +57,16 @@ interface NativeTokensDetailCardProps {
   balance: number
   ticker: string
   decimals: number
-  appId: string
+  tokenIconId: string
 }
 
-const NativeTokensDetailCard = ({ balance, ticker, decimals, appId }: NativeTokensDetailCardProps) => {
-  const icon = uiState$.icons.get()[appId]
+const NativeTokensDetailCard = ({ balance, ticker, decimals, tokenIconId }: NativeTokensDetailCardProps) => {
+  const icon = uiState$.icons.get()[tokenIconId]
   const formattedBalance = formatBalance(balance, undefined, decimals)
 
   return (
     <Card className="flex flex-row items-center p-3">
-      <div className="h-12 w-12 rounded-full overflow-hidden bg-muted mr-3 flex-shrink-0">
+      <div className="h-12 w-12 rounded-full overflow-hidden mr-3 flex-shrink-0">
         {icon ? (
           <div className="flex h-full w-full items-center justify-center [&_svg]:h-12 [&_svg]:w-12">{muifyHtml(icon)}</div>
         ) : (

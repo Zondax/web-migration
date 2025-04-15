@@ -88,13 +88,14 @@ export async function getBalance(
           },
         }
       }
-      if (errorAddresses.includes(addressString)) {
+      if (errorAddresses?.includes(addressString)) {
         throw new Error('Error fetching balance')
       }
     }
 
     // Get native balance
     const nativeBalance = await getNativeBalance(addressString, api)
+    console.log('nativeBalance ', nativeBalance, 'addressString ', addressString)
 
     // Get Uniques if available
     const { nfts: uniquesNfts, collections: uniquesCollections } = await getUniquesOwnedByAccount(addressString, api)
@@ -476,6 +477,7 @@ export async function processCollectionMetadata(metadata: any, collectionId: num
       // Case 1: Data is a string (possibly an IPFS URI)
       if (typeof data === 'string') {
         const enrichedData = await getEnrichedNftMetadata(data)
+
         if (enrichedData) {
           collection = { ...enrichedData, collectionId }
         }
@@ -641,7 +643,7 @@ async function getNFTsCommon(address: string, apiOrEndpoint: string | ApiPromise
   try {
     const entries = await config.accountQuery.entries(address)
 
-    console.log(`Found ${entries.length} ${config.logPrefix} entries for address ${address}}`)
+    console.log(`Found ${entries.length} ${config.logPrefix} entries for address ${address}`)
 
     const itemsInfo = entries.map(([key, _info]) => {
       const info = key.args.map(k => k.toPrimitive())
@@ -673,12 +675,12 @@ async function getNFTsCommon(address: string, apiOrEndpoint: string | ApiPromise
 
     // Fetch metadata for all items
     // Filter items with unique collection IDs to avoid duplicate metadata requests
-    const uniqueItems = Array.from(new Set(myItems.map(item => Number(item.ids.collectionId))))
+    const collectionIds = Array.from(new Set(myItems.map(item => Number(item.ids.collectionId))))
 
-    const metadataPromises = uniqueItems.map(collectionId => config.metadataQuery(collectionId))
+    const metadataPromises = collectionIds.map(collectionId => config.metadataQuery(collectionId))
     const metadataRequests = await Promise.all(metadataPromises)
     const collectionInfo: Promise<Collection>[] = metadataRequests.map(async (metadata, index) => {
-      const collectionId = uniqueItems[index]
+      const collectionId = collectionIds[index]
       return processCollectionMetadata(metadata, collectionId)
     })
 
@@ -741,9 +743,9 @@ function ipfsToHttpUrl(ipfsUrl: string): string {
   // List of public gateways to try
   const gateways = [
     'https://ipfs.io/ipfs/',
+    'https://gateway.ipfs.io/ipfs/',
     'https://gateway.pinata.cloud/ipfs/',
     'https://cloudflare-ipfs.com/ipfs/',
-    'https://gateway.ipfs.io/ipfs/',
   ]
 
   // Gateway to use (default is the first one)

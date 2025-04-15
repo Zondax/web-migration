@@ -20,14 +20,14 @@ function AccountsTable({
   decimals,
   polkadotAddresses,
   collections,
-  appId,
+  tokenIconId,
 }: {
   accounts: Observable<Address[] | undefined>
   ticker: string
   decimals: number
   polkadotAddresses: string[]
   collections?: Collections
-  appId: string
+  tokenIconId: string
 }) {
   const handleDestinationChange = (value: string, accountIndex: number) => {
     accounts[accountIndex].destinationAddress.set(value)
@@ -81,7 +81,7 @@ function AccountsTable({
     const balance = account.balance.get()
 
     return balance ? (
-      <BalanceHoverCard balance={balance} collections={collections} ticker={ticker} decimals={decimals} appId={appId} />
+      <BalanceHoverCard balance={balance} collections={collections} ticker={ticker} decimals={decimals} tokenIconId={tokenIconId} />
     ) : null
   }
 
