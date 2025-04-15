@@ -133,15 +133,18 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
 export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
   const router = useRouter()
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+  const [isMigrated, setIsMigrated] = useState(false)
   const { filteredAppsWithoutErrors, migrateAll, migrationResults, restartSynchronization } = useMigration()
 
   const handleMigrate = async () => {
     await migrateAll()
     setShowSuccessDialog(true)
+    setIsMigrated(true)
   }
 
   const handleReturnHome = () => {
     setShowSuccessDialog(false)
+    setIsMigrated(false)
     router.push('/')
   }
 
@@ -182,7 +185,7 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
       </Table>
 
       <div className="flex justify-center gap-4 mt-8">
-        {!migrationResults.success && !migrationResults.total ? (
+        {!isMigrated ? (
           <>
             <Button variant="outline" onClick={onBack}>
               Back
