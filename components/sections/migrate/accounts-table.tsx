@@ -76,7 +76,7 @@ function AccountsTable({
 
   const renderBalance = (account: Observable<Address>) => {
     const balance = account.balance.get()
-    console.log('token ', token)
+
     return balance ? <BalanceHoverCard balance={balance} collections={collections} token={token} /> : null
   }
 
