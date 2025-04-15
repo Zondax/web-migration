@@ -77,7 +77,10 @@ export const filterAppsWithErrors = (apps: App[]): App[] => {
  */
 export const hasAccountsWithErrors = (apps: App[]): boolean => {
   return apps.some(
-    app => app.error?.source === 'synchronization' || app.accounts?.some(account => account.error && account.error?.source !== 'migration')
+    app =>
+      app.error?.source === 'synchronization' ||
+      app.status === 'rescanning' ||
+      app.accounts?.some(account => account.error && account.error?.source !== 'migration')
   )
 }
 

@@ -139,8 +139,11 @@ This project provides a flexible configuration system for adding custom blockcha
      "bip44Path": "m/44'/123'/0'/0'/0'",
      "ss58Prefix": 42,
      "rpcEndpoint": "wss://rpc.yourchain.network",
-     "ticker": "SYMBOL",
-     "decimals": 12
+     "token": {
+       "symbol": "SYMBOL",
+       "decimals": 12,
+       "logoId": "token-icon-id"
+     }
    }
    ```
 
@@ -152,8 +155,10 @@ Each chain configuration contains these key parameters:
 - `bip44Path`: The HD derivation path for the chain
 - `ss58Prefix`: The SS58 address format prefix
 - `rpcEndpoint`: WebSocket endpoint for connecting to the chain
-- `ticker`: The currency symbol
-- `decimals`: Number of decimal places for the currency
+- `token`: An object containing token information:
+  - `symbol`: The currency symbol
+  - `decimals`: Number of decimal places for the currency
+  - `logoId`: (Optional) Used when the token's icon is different from the chain's icon (e.g., Asset Hubs)
 
 For detailed examples of how to structure your chain configuration, refer to the existing entries in the appsConfig.json file.
 

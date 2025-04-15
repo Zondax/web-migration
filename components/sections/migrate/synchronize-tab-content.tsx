@@ -44,7 +44,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
           <p className="text-gray-600">Click Migrate All to start migrating your accounts.</p>
         </div>
         <div className="flex gap-2">
-          {status !== 'loading' && appsWithoutErrors.length === 0 && (
+          {status !== 'loading' && (
             <SimpleTooltip tooltipText="Synchronize Again">
               <Button onClick={restartSynchronization} variant="outline" className="flex items-center gap-1" disabled={isRescaning}>
                 <RefreshCw className="h-4 w-4" />

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Balance } from '@/state/types/ledger'
 import { Collections } from 'state/ledger'
 
+import { Token } from '@/lib/types/token'
 import { formatBalance } from '@/lib/utils'
 import { createNftBalances } from '@/lib/utils/nft'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
@@ -12,15 +13,13 @@ import NftCircles from './nft-circles'
 interface BalanceHoverCardProps {
   balance: Balance
   collections?: Collections
-  ticker: string
-  decimals: number
-  tokenIconId: string
+  token: Token
 }
 
 /**
  * A component that shows NFT circles with a hover card that displays the NFT gallery
  */
-const BalanceHoverCard = ({ balance, collections, ticker, decimals, tokenIconId }: BalanceHoverCardProps) => {
+const BalanceHoverCard = ({ balance, collections, token }: BalanceHoverCardProps) => {
   const { nfts, uniques, nativeTokens } = useMemo(() => {
     const nfts = balance.nfts
     const uniques = balance.uniques
@@ -36,16 +35,16 @@ const BalanceHoverCard = ({ balance, collections, ticker, decimals, tokenIconId 
     const nativeTokens = native
       ? {
           balance: native,
-          ticker,
-          decimals,
-          tokenIconId,
+          token,
         }
       : undefined
 
     return { nfts: nftBalance, uniques: uniquesBalance, nativeTokens }
-  }, [balance, collections, tokenIconId, decimals, ticker])
+  }, [balance, collections, token])
 
-  const formattedNativeBalance = balance.native ? formatBalance(balance.native, ticker, decimals) : null
+  const formattedNativeBalance = useMemo(() => {
+    return balance.native ? formatBalance(balance.native, token) : null
+  }, [balance.native, token])
 
   return (
     <HoverCard openDelay={200} closeDelay={100}>

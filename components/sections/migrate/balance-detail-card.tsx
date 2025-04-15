@@ -1,6 +1,7 @@
 import { Collection } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
+import { Token } from '@/lib/types/token'
 import { formatBalance } from '@/lib/utils/format'
 import { muifyHtml } from '@/lib/utils/html'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -55,14 +56,12 @@ const NftDetailCard = ({ balance, collection, isUnique }: NftDetailCardProps) =>
 
 interface NativeTokensDetailCardProps {
   balance: number
-  ticker: string
-  decimals: number
-  tokenIconId: string
+  token: Token
 }
 
-const NativeTokensDetailCard = ({ balance, ticker, decimals, tokenIconId }: NativeTokensDetailCardProps) => {
-  const icon = uiState$.icons.get()[tokenIconId]
-  const formattedBalance = formatBalance(balance, undefined, decimals)
+const NativeTokensDetailCard = ({ balance, token }: NativeTokensDetailCardProps) => {
+  const icon = uiState$.icons.get()[token.logoId || '']
+  const formattedBalance = formatBalance(balance, token, undefined, true)
 
   return (
     <Card className="flex flex-row items-center p-3">
@@ -71,14 +70,14 @@ const NativeTokensDetailCard = ({ balance, ticker, decimals, tokenIconId }: Nati
           <div className="flex h-full w-full items-center justify-center [&_svg]:h-12 [&_svg]:w-12">{muifyHtml(icon)}</div>
         ) : (
           <div className="flex h-full items-center justify-center bg-muted">
-            <span className="text-xs text-muted-foreground">{ticker}</span>
+            <span className="text-xs text-muted-foreground">{token.symbol}</span>
           </div>
         )}
       </div>
       <div className="flex-1">
         <CardHeader className="p-0 pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            {ticker}
+            {token.symbol}
             <span className="bg-blue-500 text-white text-[10px] px-2 py-0 rounded-full">NATIVE</span>
             <span className="ml-auto font-medium font-mono">{formattedBalance}</span>
           </CardTitle>

@@ -4,6 +4,7 @@ import { errorDetails, InternalErrors } from 'config/errors'
 import { errorApps, syncApps } from 'config/mockData'
 
 import { getApiAndProvider, getBalance } from '@/lib/account'
+import { Token } from '@/lib/types/token'
 import { convertSS58Format } from '@/lib/utils/address'
 import { handleLedgerError } from '@/lib/utils/error'
 import { hasBalance } from '@/lib/utils/ledger'
@@ -14,7 +15,7 @@ import { notifications$ } from './notifications'
 import { Address, Collection, DeviceConnectionProps, UpdateMigratedStatusFn } from './types/ledger'
 import { Notification } from './types/notifications'
 
-export type AppStatus = 'migrated' | 'synchronized' | 'loading' | 'error'
+export type AppStatus = 'migrated' | 'synchronized' | 'loading' | 'error' | 'rescanning'
 
 export type AppIcons = {
   [key in AppId]: string
@@ -30,9 +31,7 @@ export interface App {
   id: AppId
   accounts?: Address[]
   collections?: Collections
-  ticker: string
-  tokenIconId?: string
-  decimals: number
+  token: Token
   status?: AppStatus
   error?: {
     source: 'synchronization'
@@ -230,9 +229,7 @@ export const ledgerState$ = observable({
         return {
           name: app.name,
           id: app.id,
-          ticker: app.ticker,
-          tokenIconId: app.tokenIconId,
-          decimals: app.decimals,
+          token: app.token,
           status: 'error',
           error: {
             source: 'synchronization',
@@ -249,9 +246,7 @@ export const ledgerState$ = observable({
         return {
           name: app.name,
           id: app.id,
-          ticker: app.ticker,
-          tokenIconId: app.tokenIconId,
-          decimals: app.decimals,
+          token: app.token,
           status: 'error',
           error: {
             source: 'synchronization',
@@ -326,9 +321,7 @@ export const ledgerState$ = observable({
         return {
           name: app.name,
           id: app.id,
-          ticker: app.ticker,
-          tokenIconId: app.tokenIconId,
-          decimals: app.decimals,
+          token: app.token,
           status: 'synchronized',
           accounts: filteredAccounts.map(account => ({
             ...account,
@@ -352,9 +345,7 @@ export const ledgerState$ = observable({
       return {
         name: app.name,
         id: app.id,
-        ticker: app.ticker,
-        tokenIconId: app.tokenIconId,
-        decimals: app.decimals,
+        token: app.token,
         status: 'error',
         error: {
           source: 'synchronization',
@@ -366,7 +357,7 @@ export const ledgerState$ = observable({
 
   // Synchronize Single Account
   async synchronizeAccount(appId: AppId) {
-    updateApp(appId, { status: 'loading' })
+    updateApp(appId, { status: 'rescanning', error: undefined })
 
     const appConfig = appsConfigs.get(appId)
     if (!appConfig) {
@@ -409,9 +400,7 @@ export const ledgerState$ = observable({
         return {
           name: app.name,
           id: app.id,
-          ticker: app.ticker,
-          tokenIconId: app.tokenIconId,
-          decimals: app.decimals,
+          token: app.token,
           status: 'error',
         }
       }
@@ -424,9 +413,7 @@ export const ledgerState$ = observable({
         return {
           name: app.name,
           id: app.id,
-          ticker: app.ticker,
-          tokenIconId: app.tokenIconId,
-          decimals: app.decimals,
+          token: app.token,
           status: 'error',
           error: {
             source: 'synchronization',
@@ -449,9 +436,7 @@ export const ledgerState$ = observable({
       return {
         name: app.name,
         id: app.id,
-        ticker: app.ticker,
-        tokenIconId: app.tokenIconId,
-        decimals: app.decimals,
+        token: app.token,
         status: 'synchronized',
         accounts,
       }
@@ -461,9 +446,7 @@ export const ledgerState$ = observable({
       return {
         name: app.name,
         id: app.id,
-        ticker: app.ticker,
-        tokenIconId: app.tokenIconId,
-        decimals: app.decimals,
+        token: app.token,
         status: 'error',
       }
     }

@@ -179,8 +179,8 @@ export async function prepareTransactionPayload(
   if (!metadataV15) return
 
   const merkleizedMetadata = merkleizeMetadata(metadataV15, {
-    decimals: appConfig.decimals,
-    tokenSymbol: appConfig.ticker,
+    decimals: appConfig.token.decimals,
+    tokenSymbol: appConfig.token.symbol,
   })
 
   const metadataHash = merkleizedMetadata.digest()
@@ -203,7 +203,7 @@ export async function prepareTransactionPayload(
 
   const metadata = {
     ...merkleizedMetadata,
-    chainId: appConfig.ticker.toLowerCase(),
+    chainId: appConfig.token.symbol.toLowerCase(),
   }
 
   const proof1: Uint8Array = metadata.getProofForExtrinsicPayload(payloadBytes)

@@ -32,29 +32,36 @@ function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolea
   }
 
   const renderAction = useCallback(() => {
-    if (failedSync || !status) {
+    if (failedSync) {
+      if (status === 'rescanning') {
+        return <Spinner />
+      }
+
       return null
     }
-    if (status === 'loading') {
-      return <Spinner />
-    }
 
-    if (status === 'migrated') {
-      return (
-        <Badge variant="destructive" className="capitalize">
-          {status}
-        </Badge>
-      )
+    if (!status) {
+      return null
     }
-
-    return null
+    switch (status) {
+      case 'loading':
+        return <Spinner />
+      case 'migrated':
+        return (
+          <Badge variant="destructive" className="capitalize">
+            {status}
+          </Badge>
+        )
+      default:
+        return null
+    }
   }, [status, failedSync])
 
   const renderBalance = () => {
     if (failedSync) return null
     const balance = accounts?.reduce((total, account) => total + (account.balance?.native ?? 0), 0)
 
-    return balance !== undefined ? formatBalance(balance, app.ticker.get(), app.decimals.get()) : '-'
+    return balance !== undefined ? formatBalance(balance, app.token.get()) : '-'
   }
 
   return (
@@ -88,11 +95,9 @@ function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolea
       {isExpanded && accounts?.length !== 0 ? (
         <AccountsTable
           accounts={app.accounts}
-          ticker={app.ticker.get()}
-          decimals={app.decimals.get()}
+          token={app.token.get()}
           polkadotAddresses={polkadotAddresses ?? []}
           collections={collections}
-          tokenIconId={app.tokenIconId?.get() ?? id}
         />
       ) : null}
     </>

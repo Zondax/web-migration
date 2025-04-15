@@ -1,3 +1,5 @@
+import { Token } from '@/lib/types/token'
+
 import appsConfigData from './appsConfig.json'
 
 // Extract app IDs dynamically from the JSON data
@@ -10,9 +12,7 @@ export interface AppConfig {
   bip44Path: string
   ss58Prefix: number
   rpcEndpoint?: string
-  ticker: string
-  tokenIconId?: string // Used when the ticker's icon is different from the app's icon (e.g., Asset Hubs)
-  decimals: number
+  token: Token
 }
 
 // Polkadot app config
@@ -23,8 +23,11 @@ export const polkadotAppConfig: AppConfig = {
   bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
   ss58Prefix: 0,
   rpcEndpoint: 'wss://rpc.polkadot.io',
-  ticker: 'DOT',
-  decimals: 10,
+  token: {
+    symbol: 'DOT',
+    decimals: 10,
+    logoId: 'polkadot',
+  },
 }
 
 /**
@@ -39,6 +42,12 @@ export function loadAppConfigs(): Map<AppId, AppConfig> {
     appsConfigs.set(config.id as AppId, {
       ...config,
       id: config.id as AppId,
+      // Add token field for compatibility
+      token: {
+        symbol: config.token.symbol,
+        decimals: config.token.decimals,
+        logoId: config.token.logoId || config.id,
+      },
     })
   })
 
