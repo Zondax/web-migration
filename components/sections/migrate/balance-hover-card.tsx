@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Balance } from '@/state/types/ledger'
 import { Collections } from 'state/ledger'
 
-import { Token } from '@/lib/types/token'
+import { Token } from '@/config/apps'
 import { formatBalance } from '@/lib/utils'
 import { createNftBalances } from '@/lib/utils/nft'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'

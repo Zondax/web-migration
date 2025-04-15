@@ -1,6 +1,6 @@
 import { ResponseVersion } from '@zondax/ledger-js'
 
-import { Token } from '@/lib/types/token'
+import { Token } from '@/config/apps'
 
 /**
  * Truncates the middle of a string to a specified maximum length.

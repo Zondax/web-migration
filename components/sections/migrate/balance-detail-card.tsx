@@ -1,7 +1,7 @@
 import { Collection } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
-import { Token } from '@/lib/types/token'
+import { Token } from '@/config/apps'
 import { formatBalance } from '@/lib/utils/format'
 import { muifyHtml } from '@/lib/utils/html'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'

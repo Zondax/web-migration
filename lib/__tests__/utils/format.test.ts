@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { Token } from '@/lib/types/token'
+import { Token } from '@/config/apps'
 
 import { formatBalance, formatVersion, truncateMiddleOfString } from '../../utils/format'
 

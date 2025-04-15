@@ -5,7 +5,7 @@ import { AlertCircle, CheckCircle, ChevronDown, Clock, XCircle } from 'lucide-re
 import { Collections } from 'state/ledger'
 import { Address } from 'state/types/ledger'
 
-import { Token } from '@/lib/types/token'
+import { Token } from '@/config/apps'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip } from '@/components/ui/tooltip'

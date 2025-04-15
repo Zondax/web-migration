@@ -1,6 +1,10 @@
-import { Token } from '@/lib/types/token'
-
 import appsConfigData from './appsConfig.json'
+
+export interface Token {
+  symbol: string
+  decimals: number
+  logoId?: string
+}
 
 // Extract app IDs dynamically from the JSON data
 export type AppId = (typeof appsConfigData)[number]['id'] | 'polkadot'

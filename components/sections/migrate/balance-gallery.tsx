@@ -1,6 +1,6 @@
 import { Collection, Nft } from 'state/types/ledger'
 
-import { Token } from '@/lib/types/token'
+import { Token } from '@/config/apps'
 
 import { NativeTokensDetailCard, NftDetailCard } from './balance-detail-card'
 
