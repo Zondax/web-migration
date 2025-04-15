@@ -1,12 +1,12 @@
 import { observable } from '@legendapp/state'
 import { AppConfig, AppId, appsConfigs, polkadotAppConfig } from 'config/apps'
-import { errorDetails, InternalErrors } from 'config/errors'
+import { ErrorDetails, errorDetails, InternalErrors, LedgerErrors } from 'config/errors'
 import { errorApps, syncApps } from 'config/mockData'
 
 import { Token } from '@/config/apps'
 import { getApiAndProvider, getBalance } from '@/lib/account'
 import { convertSS58Format } from '@/lib/utils/address'
-import { handleLedgerError } from '@/lib/utils/error'
+import { mapLedgerError } from '@/lib/utils/error'
 import { hasBalance } from '@/lib/utils/ledger'
 
 import { LedgerClientError } from './client/base'
@@ -141,6 +141,19 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
       ledgerState$.apps.apps[appIndex].accounts.set(accounts)
     }
   }
+}
+
+function handleLedgerError(error: LedgerClientError, defaultError: InternalErrors | LedgerErrors): ErrorDetails {
+  const errorDetail = mapLedgerError(error, defaultError)
+
+  notifications$.push({
+    title: errorDetail.title,
+    description: errorDetail.description ?? '',
+    type: 'error',
+    autoHideDuration: 5000,
+  })
+
+  return errorDetail
 }
 
 export const ledgerState$ = observable({
