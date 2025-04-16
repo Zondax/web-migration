@@ -1,4 +1,4 @@
-export interface LedgerErrorDetails {
+export interface ErrorDetails {
   title: string
   description?: string
   content?: string
@@ -35,7 +35,7 @@ export enum LedgerErrors {
 }
 
 export type ErrorDetailsMap = {
-  [key in InternalErrors | LedgerErrors]: LedgerErrorDetails
+  [key in InternalErrors | LedgerErrors]: ErrorDetails
 }
 
 export const errorDetails: ErrorDetailsMap = {
