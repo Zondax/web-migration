@@ -65,7 +65,7 @@ export function AddressVerificationDialog({ open, onClose }: AddressVerification
         <DialogHeader>
           <DialogTitle className="text-xl">Verify Destination Addresses</DialogTitle>
           <DialogDescription className="pt-4 !mt-0">
-            <p>Please verify all destination addresses. You will need to confirm each address on your Ledger device.</p>
+            Please verify all destination addresses. You will need to confirm each address on your Ledger device.
           </DialogDescription>
         </DialogHeader>
         <div className="border rounded-lg overflow-hidden bg-gray-50">

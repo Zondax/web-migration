@@ -74,8 +74,9 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>{' '}
-          come from the Polkadot HD path. These addresses are shown with different encodings based on each network's unique prefix, so the
-          same key looks different depending on the network. You will have to verify all addresses before migration for security reasons.
+          come from the Polkadot HD path. These addresses are shown with different encodings based on each network&apos;s unique prefix, so
+          the same key looks different depending on the network. You will have to verify all addresses before migration for security
+          reasons.
         </span>
       </div>
     )
