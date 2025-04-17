@@ -41,7 +41,7 @@ function DestinationAddressSelect({ account, index, polkadotAddresses, onDestina
         {polkadotAddresses?.map((polkadotAddress, addrIndex) => (
           <SelectItem key={addrIndex} value={polkadotAddress}>
             <div className="flex items-center gap-2">
-              <span>Polkadot {addrIndex + 1}:</span>
+              <span className="font-semibold">Polkadot {addrIndex + 1}:</span>
               <AddressLink value={polkadotAddress} disableTooltip className="break-all" hasCopyButton={false} />
             </div>
           </SelectItem>

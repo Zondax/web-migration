@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { use$ } from '@legendapp/state/react'
+import { use$, useObservable } from '@legendapp/state/react'
 import { App, ledgerState$ } from 'state/ledger'
 
 import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors } from '@/lib/utils'
@@ -15,6 +15,7 @@ interface UseSynchronizationReturn {
   hasAccountsWithErrors: boolean
   filteredAppsWithoutErrors: App[]
   filteredAppsWithErrors: App[]
+  polkadotAddresses: string[]
 
   // Actions
   rescanFailedAccounts: () => Promise<void>
@@ -40,6 +41,13 @@ export const useSynchronization = (): UseSynchronizationReturn => {
   const accountsWithErrors = use$(() => hasAccountsWithErrors(apps))
   const appsWithoutErrors = use$(() => filterAppsWithoutErrors(apps))
   const appsWithErrors = use$(() => filterAppsWithErrors(apps))
+
+  // Extract Polkadot addresses
+  const polkadotAddresses$ = useObservable(() => {
+    return ledgerState$.apps.polkadotApp.accounts?.map(account => account.address)
+  })
+
+  const polkadotAddresses = use$(() => polkadotAddresses$.get())
 
   // Rescan all failed accounts and apps
   const rescanFailedAccounts = useCallback(async () => {
@@ -89,6 +97,7 @@ export const useSynchronization = (): UseSynchronizationReturn => {
     hasAccountsWithErrors: accountsWithErrors,
     filteredAppsWithoutErrors: appsWithoutErrors,
     filteredAppsWithErrors: appsWithErrors,
+    polkadotAddresses: polkadotAddresses,
 
     // Actions
     rescanFailedAccounts,

@@ -34,6 +34,17 @@ export const ledgerClient = {
     }, InternalErrors.SYNC_ERROR)
   },
 
+  async getAccountAddress(bip44Path: string, index: number, ss58Prefix: number): Promise<{ result?: Address }> {
+    return withErrorHandling(async () => {
+      // get address
+      const derivedPath = getBip44Path(bip44Path, index)
+      const genericAddress = await ledgerService.getAccountAddress(derivedPath, ss58Prefix, true)
+      const address: Address = { ...genericAddress, path: derivedPath } as Address
+
+      return { result: address }
+    }, InternalErrors.SYNC_ERROR)
+  },
+
   async migrateAccount(appId: AppId, account: Address, updateStatus: UpdateMigratedStatusFn): Promise<{ migrated?: boolean }> {
     const senderAddress = account.address
     const receiverAddress = account.destinationAddress

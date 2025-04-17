@@ -43,7 +43,7 @@ export class LedgerService implements ILedgerService {
       transport: undefined,
       genericApp: undefined,
     }
-    console.log('disconnecting')
+    console.debug('disconnecting')
   }
 
   /**
@@ -107,14 +107,14 @@ export class LedgerService implements ILedgerService {
    * Connects to the Ledger device
    */
   async connectDevice(onDisconnect?: () => void): Promise<ConnectionResponse | undefined> {
-    console.log('Attempting to connect device...')
+    console.debug('Attempting to connect device...')
     const connection = await this.establishDeviceConnection(onDisconnect)
     if (!connection) {
-      console.log('Failed to establish device connection')
+      console.debug('Failed to establish device connection')
       throw new Error('Failed to establish device connection')
     }
 
-    console.log(`Device connected successfully, the app is ${connection.isAppOpen ? 'open' : 'closed'}`)
+    console.debug(`Device connected successfully, the app is ${connection.isAppOpen ? 'open' : 'closed'}`)
     return { connection }
   }
 

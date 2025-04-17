@@ -354,7 +354,7 @@ export const ledgerState$ = observable({
 
       return undefined // No accounts after filtering
     } catch (error) {
-      console.log('Error fetching and processing accounts for app:', app.id)
+      console.debug('Error fetching and processing accounts for app:', app.id)
       return {
         name: app.name,
         id: app.id,
@@ -455,7 +455,7 @@ export const ledgerState$ = observable({
       }
     } catch (error) {
       const app = polkadotAppConfig
-      console.log('Error fetching and processing accounts for app:', app.id)
+      console.debug('Error fetching and processing accounts for app:', app.id)
       return {
         name: app.name,
         id: app.id,
@@ -622,13 +622,44 @@ export const ledgerState$ = observable({
     }
   },
 
+  async verifyDestinationAddresses(appId: AppId, address: string, path: string): Promise<{ isVerfied: boolean }> {
+    const appConfig = appsConfigs.get(appId)
+    if (!appConfig) {
+      console.error(`App with id ${appId} not found.`)
+      return { isVerfied: false }
+    }
+
+    // Find the index of the address in the polkadotAddresses array
+    const polkadotAddresses = ledgerState$.polkadotAddresses[appId].get()
+    if (!polkadotAddresses || polkadotAddresses.length === 0) {
+      console.error(`No Polkadot addresses found for app ${appId}.`)
+      return { isVerfied: false }
+    }
+
+    // Find the index of the address in the polkadotAddresses array
+    const addressIndex = polkadotAddresses.findIndex(addr => addr === address)
+    if (addressIndex === -1) {
+      console.error(`Address ${address} not found in Polkadot addresses for app ${appId}.`)
+      return { isVerfied: false }
+    }
+
+    const polkadotConfig = polkadotAppConfig
+    try {
+      const response = await ledgerClient.getAccountAddress(polkadotConfig.bip44Path, addressIndex, appConfig.ss58Prefix)
+
+      return { isVerfied: response.result?.address === address }
+    } catch (error) {
+      return { isVerfied: false }
+    }
+  },
+
   // Migrate Single Account
   async migrateAccount(appId: AppId, accountIndex: number) {
     const apps = ledgerState$.apps.apps.get()
     const app = apps.find(app => app.id === appId)
     const account = app?.accounts?.[accountIndex]
 
-    console.log(`Starting migration for account at index ${accountIndex} in app ${appId}`)
+    console.debug(`Starting migration for account at index ${accountIndex} in app ${appId}`)
     if (!account) {
       console.warn(`Account at index ${accountIndex} not found in app ${appId} for migration.`)
       return
@@ -640,10 +671,8 @@ export const ledgerState$ = observable({
     })
 
     try {
-      console.log('Migrating account 1', account)
       const response = await ledgerClient.migrateAccount(appId, account, updateMigratedStatus)
 
-      console.log('Migrating account 2', response)
       if (!response.migrated) {
         updateAccount(appId, account.address, {
           error: {
@@ -652,7 +681,7 @@ export const ledgerState$ = observable({
           },
           isLoading: false,
         })
-        console.log(`Account at path ${account.path} in app ${appId} migration failed:`, InternalErrors.MIGRATION_ERROR)
+        console.debug(`Account at path ${account.path} in app ${appId} migration failed:`, InternalErrors.MIGRATION_ERROR)
 
         // Increment fails counter
         const currentMigrationResult = ledgerState$.apps.migrationResult.get()
@@ -677,7 +706,7 @@ export const ledgerState$ = observable({
           success: currentMigrationResult.success + 1,
         })
 
-        console.log(`Account at index ${accountIndex} in app ${appId} migrated successfully`)
+        console.debug(`Account at index ${accountIndex} in app ${appId} migrated successfully`)
       } else {
         updateAccount(appId, account.address, { isLoading: false }) // Reset loading
       }
