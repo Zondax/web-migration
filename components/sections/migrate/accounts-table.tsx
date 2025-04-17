@@ -1,7 +1,7 @@
 import { Observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { motion } from 'framer-motion'
-import { AlertCircle, CheckCircle, ChevronDown, Clock, XCircle } from 'lucide-react'
+import { AlertCircle, ChevronDown } from 'lucide-react'
 import { Collections } from 'state/ledger'
 import { Address } from 'state/types/ledger'
 
@@ -31,44 +31,12 @@ function AccountsTable({
   }
 
   const renderStatusIcon = (account: Observable<Address>) => {
-    const txStatus = account.transaction.get()?.status
-    const txStatusMessage = account.transaction.get()?.statusMessage
     let statusIcon
-    let tooltipContent = txStatusMessage || 'Checking status...'
+    let tooltipContent = 'Checking status...'
 
     if (account.isLoading.get()) {
       statusIcon = <Spinner />
       tooltipContent = 'Loading...'
-    } else {
-      switch (txStatus) {
-        case 'pending':
-          statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-          tooltipContent = 'Transaction pending...'
-          break
-        case 'inBlock':
-          statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-          break
-        case 'finalized':
-          statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-          break
-        case 'success':
-          statusIcon = <CheckCircle className="h-4 w-4 text-green-500" />
-          break
-        case 'failed':
-          statusIcon = <XCircle className="h-4 w-4 text-red-500" />
-          break
-        case 'error':
-          statusIcon = <AlertCircle className="h-4 w-4 text-red-500" />
-          break
-        case 'warning':
-          statusIcon = <AlertCircle className="h-4 w-4 text-yellow-500" />
-          break
-        case 'completed':
-          statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-          break
-        default:
-          statusIcon = null
-      }
     }
 
     return statusIcon ? <SimpleTooltip tooltipText={tooltipContent}>{statusIcon}</SimpleTooltip> : null

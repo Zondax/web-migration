@@ -291,6 +291,7 @@ export async function submitAndHandleTransaction(
   return new Promise<void>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       updateStatus('unknown', 'Transaction timed out, check the transaction status in the explorer.')
+      api.disconnect().catch(console.error)
       reject(new Error('Transaction timed out'))
     }, 120000) // 2-minute timeout
 
@@ -329,6 +330,7 @@ export async function submitAndHandleTransaction(
               blockHash,
               blockNumber,
             })
+            api.disconnect().catch(console.error)
             resolve()
             return // Resolve here, as we have a final status
           }
@@ -341,6 +343,7 @@ export async function submitAndHandleTransaction(
               blockHash,
               blockNumber,
             })
+            api.disconnect().catch(console.error)
             resolve()
           } else if (result?.error) {
             updateStatus('failed', result.error, {
@@ -348,6 +351,7 @@ export async function submitAndHandleTransaction(
               blockHash,
               blockNumber,
             })
+            api.disconnect().catch(console.error)
             reject(new Error(result.error)) // Reject with the specific error
           } else {
             // Handle cases where result is undefined or doesn't have success/error
@@ -356,25 +360,33 @@ export async function submitAndHandleTransaction(
               blockHash,
               blockNumber,
             })
+            api.disconnect().catch(console.error)
             reject(new Error('Unknown transaction status'))
           }
         } else if (status.isError) {
           clearTimeout(timeoutId)
           console.error('Transaction is error ', status.dispatchError)
           updateStatus('error', 'Transaction is error')
+          api.disconnect().catch(console.error)
           reject(new Error('Transaction is error'))
         } else if (status.isWarning) {
           console.debug('Transaction is warning')
           updateStatus('warning', 'Transaction is warning')
         } else if (status.isCompleted) {
           console.debug('Transaction is completed')
-          updateStatus('completed', 'Transaction is completed')
+          txHash = status.txHash.toHex()
+          blockNumber = 'blockNumber' in status ? (status.blockNumber as Hash)?.toHex() : undefined
+          updateStatus('completed', 'Transaction is completed. Waiting confirmation...', {
+            txHash,
+            blockNumber,
+          })
         }
       })
       .catch((error: any) => {
         clearTimeout(timeoutId)
         console.error('Error sending transaction:', error)
         updateStatus('error', 'Error sending transaction')
+        api.disconnect().catch(console.error)
         reject(error)
       })
   })

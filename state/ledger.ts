@@ -51,10 +51,10 @@ interface LedgerState {
     status?: AppStatus
     error?: string
     syncProgress: number
-    completedTransactions: number
     migrationResult: {
       success: number
       fails: number
+      total: number
     }
   }
   polkadotAddresses: Partial<Record<AppId, string[]>>
@@ -72,10 +72,10 @@ const initialLedgerState: LedgerState = {
     status: undefined,
     error: undefined,
     syncProgress: 0,
-    completedTransactions: 0,
     migrationResult: {
       success: 0,
       fails: 0,
+      total: 0,
     },
   },
   polkadotAddresses: {},
@@ -115,6 +115,15 @@ function updateAccount(appId: AppId, address: string, update: Partial<Address>) 
   }
 }
 
+// Update Migration Result Counter
+function updateMigrationResultCounter(type: 'success' | 'fails' | 'total', increment: number = 1) {
+  const currentMigrationResult = ledgerState$.apps.migrationResult.get()
+  ledgerState$.apps.migrationResult.set({
+    ...currentMigrationResult,
+    [type]: currentMigrationResult[type] + increment,
+  })
+}
+
 // Update Migrated Status
 const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath: string, status, message, txDetails) => {
   const apps = ledgerState$.apps.apps.get()
@@ -125,7 +134,7 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
 
     const accountIndex = accounts.findIndex(account => account.path === accountPath)
 
-    if (accounts[accountIndex]) {
+    if (accountIndex !== -1 && accounts[accountIndex]) {
       // Update the account's transaction details
       accounts[accountIndex] = {
         ...accounts[accountIndex],
@@ -138,6 +147,15 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
         },
         isLoading: status === 'pending' || status === 'inBlock' || status === 'finalized',
       }
+
+      // If the transaction is successful, mark as migrated
+      if (status === 'success') {
+        accounts[accountIndex].status = 'migrated'
+        updateMigrationResultCounter('success')
+      } else if (status === 'failed' || status === 'error') {
+        updateMigrationResultCounter('fails')
+      }
+
       ledgerState$.apps.apps[appIndex].accounts.set(accounts)
     }
   }
@@ -220,10 +238,10 @@ export const ledgerState$ = observable({
       status: undefined,
       error: undefined,
       syncProgress: 0,
-      completedTransactions: 0,
       migrationResult: {
         success: 0,
         fails: 0,
+        total: 0,
       },
     })
     ledgerState$.polkadotAddresses.set({})
@@ -654,7 +672,7 @@ export const ledgerState$ = observable({
   },
 
   // Migrate Single Account
-  async migrateAccount(appId: AppId, accountIndex: number) {
+  async migrateAccount(appId: AppId, accountIndex: number): Promise<{ txPromise: Promise<void> | undefined } | undefined> {
     const apps = ledgerState$.apps.apps.get()
     const app = apps.find(app => app.id === appId)
     const account = app?.accounts?.[accountIndex]
@@ -662,7 +680,7 @@ export const ledgerState$ = observable({
     console.debug(`Starting migration for account at index ${accountIndex} in app ${appId}`)
     if (!account) {
       console.warn(`Account at index ${accountIndex} not found in app ${appId} for migration.`)
-      return
+      return undefined
     }
 
     updateAccount(appId, account.address, {
@@ -670,10 +688,12 @@ export const ledgerState$ = observable({
       error: undefined,
     })
 
+    updateMigrationResultCounter('total')
+
     try {
       const response = await ledgerClient.migrateAccount(appId, account, updateMigratedStatus)
 
-      if (!response.migrated) {
+      if (!response?.txPromise) {
         updateAccount(appId, account.address, {
           error: {
             source: 'migration',
@@ -684,32 +704,23 @@ export const ledgerState$ = observable({
         console.debug(`Account at path ${account.path} in app ${appId} migration failed:`, InternalErrors.MIGRATION_ERROR)
 
         // Increment fails counter
-        const currentMigrationResult = ledgerState$.apps.migrationResult.get()
-        ledgerState$.apps.migrationResult.set({
-          ...currentMigrationResult,
-          fails: currentMigrationResult.fails + 1,
-        })
-      } else if (response.migrated) {
-        updateAccount(appId, account.address, {
-          status: 'migrated',
-          isLoading: false,
-        })
-
-        // Increment completed transactions counter
-        const currentCompletedTransactions = ledgerState$.apps.completedTransactions.get()
-        ledgerState$.apps.completedTransactions.set(currentCompletedTransactions + 1)
-
-        // Increment success counter
-        const currentMigrationResult = ledgerState$.apps.migrationResult.get()
-        ledgerState$.apps.migrationResult.set({
-          ...currentMigrationResult,
-          success: currentMigrationResult.success + 1,
-        })
-
-        console.debug(`Account at index ${accountIndex} in app ${appId} migrated successfully`)
-      } else {
-        updateAccount(appId, account.address, { isLoading: false }) // Reset loading
+        updateMigrationResultCounter('fails')
+        return undefined
       }
+
+      // The transaction has been signed and sent, but has not yet been finalized
+      // Update the state to reflect that we are no longer in the signing phase
+      updateAccount(appId, account.address, {
+        transaction: {
+          status: 'pending',
+        },
+        isLoading: false,
+      })
+
+      console.debug(`Account at index ${accountIndex} in app ${appId} transaction submitted`)
+
+      // Return the transaction promise
+      return { txPromise: response.txPromise }
     } catch (error) {
       updateAccount(appId, account.address, {
         error: {
@@ -720,50 +731,55 @@ export const ledgerState$ = observable({
       })
 
       // Increment fails counter
-      const currentMigrationResult = ledgerState$.apps.migrationResult.get()
-      ledgerState$.apps.migrationResult.set({
-        ...currentMigrationResult,
-        fails: currentMigrationResult.fails + 1,
-      })
-    }
-  },
-
-  // Migrate All Accounts within a Single App
-  async migrateAppAccounts(app: App) {
-    if (!app.accounts || app.accounts.length === 0) return
-
-    // Set app status to loading before starting migration
-    updateApp(app.id, { status: 'loading' })
-
-    try {
-      // Migrate each account in the app
-      for (let accountIndex = 0; accountIndex < app.accounts.length; accountIndex++) {
-        const account = app.accounts[accountIndex]
-
-        // Skip accounts that are already migrated or have no balance
-        if (account.status === 'migrated' || !hasBalance(account)) {
-          continue
-        }
-        await ledgerState$.migrateAccount(app.id, accountIndex)
-      }
-    } catch (error) {
-      handleLedgerError(error as LedgerClientError, InternalErrors.MIGRATION_ERROR)
-    } finally {
-      updateApp(app.id, { status: 'synchronized' })
+      updateMigrationResultCounter('fails')
+      return undefined
     }
   },
 
   // Migrate All Accounts
   async migrateAll() {
-    // Reset completed transactions counter before starting
-    ledgerState$.apps.completedTransactions.set(0)
     // Reset migration result
-    ledgerState$.apps.migrationResult.set({ success: 0, fails: 0 })
+    ledgerState$.apps.migrationResult.set({ success: 0, fails: 0, total: 0 })
 
     try {
       const apps = ledgerState$.apps.apps.get()
+
+      // Array to collect all transaction promises from all apps
+      const allTransactionPromises: (Promise<void> | undefined)[] = []
+
+      // Process apps to start their transactions
       for (const app of apps) {
-        await ledgerState$.migrateAppAccounts(app)
+        if (!app.accounts || app.accounts.length === 0) continue
+
+        // Get accounts that need migration
+        const accountsToMigrate = app.accounts
+          .map((account, index) => ({ account, index }))
+          // Skip accounts that are already migrated or have no balance
+          .filter(({ account }) => account.status !== 'migrated' && hasBalance(account))
+
+        if (accountsToMigrate.length === 0) continue
+
+        // Mark the app as in migration process
+        updateApp(app.id, { status: 'loading' })
+
+        // Start transactions for each account in the app
+        for (const { index } of accountsToMigrate) {
+          const migrationResult = await ledgerState$.migrateAccount(app.id, index)
+          if (migrationResult) {
+            allTransactionPromises.push(migrationResult.txPromise)
+          }
+        }
+
+        // Mark the app as synchronized after processing all its accounts
+        updateApp(app.id, { status: 'synchronized' })
+      }
+
+      // We don't wait for transactions to complete, we process them in the background
+      if (allTransactionPromises.length > 0) {
+        const validPromises = allTransactionPromises.filter((p): p is Promise<void> => p !== undefined)
+
+        // Monitor total progress in the background, without blocking
+        await Promise.all(validPromises)
       }
     } catch (error) {
       handleLedgerError(error as LedgerClientError, InternalErrors.MIGRATION_ERROR)
