@@ -22,37 +22,14 @@ export function SuccessDialog({ open, onClose, onReturn, successCount, totalCoun
             <CheckCircle className="h-6 w-6 text-green-500" />
             Migration Completed
           </DialogTitle>
-          <DialogDescription className="space-y-2 text-center pt-4 !mt-0">
-            <p>Your accounts have been migrated to the Universal Ledger App.</p>
-            <p>
-              {successCount} of {totalCount} transactions completed.
-            </p>
-            <p>View details to see the results of the transactions.</p>
+          <DialogDescription className="text-center pt-4 !mt-0">
+            Your accounts have been migrated to the Universal Ledger App.
           </DialogDescription>
+          <DialogDescription className="text-center pt-3 !mt-0">
+            {successCount} of {totalCount} transactions completed.
+          </DialogDescription>
+          <DialogDescription className="text-center pt-3 !mt-0">View details to see the results of the transactions.</DialogDescription>
         </DialogHeader>
-        {/* <div className="border rounded-lg overflow-hidden bg-gray-50">
-          <div className="p-4">
-            <h4 className="font-medium mb-2 text-center">Migrated Addresses</h4>
-            <ul className="space-y-2">
-              <li className="flex items-center justify-between p-2 bg-white rounded border">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 bg-gradient-to-br from-[#FF2670] to-[#7916F3] rounded-full flex items-center justify-center text-white text-xs">
-                      K
-                    </div>
-                    <span className="font-medium text-sm">Kusama</span>
-                  </div>
-                  <div className="mt-1 text-xs font-mono text-gray-500">
-                    EvSBhym8...HpaFKacV
-                  </div>
-                </div>
-                <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                  Migrated
-                </span>
-              </li>
-            </ul>
-          </div>
-        </div> */}
         <div className="flex justify-center gap-2 mt-4">
           <Button variant="outline" onClick={onClose}>
             View Details
