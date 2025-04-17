@@ -4,13 +4,13 @@
 import { observable } from '@legendapp/state'
 import { Info, RefreshCw } from 'lucide-react'
 
-import { AddressLink } from '@/components/AddressLink'
-import { useSynchronization } from '@/components/hooks/useSynchronization'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
+import { AddressLink } from '@/components/AddressLink'
+import { useSynchronization } from '@/components/hooks/useSynchronization'
 
 import AppRow from './app-row'
 
@@ -30,7 +30,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
     filteredAppsWithoutErrors: appsWithoutErrors,
     filteredAppsWithErrors: appsWithErrors,
     polkadotAddresses,
-    
+
     // Actions
     rescanFailedAccounts,
     restartSynchronization,

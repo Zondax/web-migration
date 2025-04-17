@@ -159,10 +159,6 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
     verifyDestinationAddresses()
   }
 
-  const handleVerificationComplete = () => {
-    setShowVerificationDialog(false)
-  }
-
   const hasAddressesToVerify = filteredAppsWithoutErrors.length > 0
 
   return (

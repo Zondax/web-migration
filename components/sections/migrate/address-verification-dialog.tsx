@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { uiState$ } from '@/state/ui'
 import { use$ } from '@legendapp/state/react'
 import { AlertCircle, CheckCircle, Clock } from 'lucide-react'
@@ -27,21 +28,21 @@ export function AddressVerificationDialog({ open, onClose }: AddressVerification
   const startVerification = async () => {
     // If there are failed addresses, only verify those, otherwise verify all
     if (anyFailed) {
-      await verifyFailedAddresses()
+      verifyFailedAddresses()
     } else {
-      await verifyDestinationAddresses()
-    }
-
-    // Check if all addresses are verified
-    const allVerified = Object.values(destinationAddressesByApp)
-      .flat()
-      .every(addr => addr.status === 'verified')
-    if (allVerified) {
-      setTimeout(() => {
-        onClose()
-      }, 1000)
+      verifyDestinationAddresses()
     }
   }
+
+  useEffect(() => {
+    if (allVerified && !isVerifying) {
+      const timer = setTimeout(() => {
+        onClose()
+      }, 1000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [allVerified, isVerifying, onClose])
 
   const renderStatusIcon = (status: VerificationStatus) => {
     switch (status) {

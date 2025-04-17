@@ -1,6 +1,6 @@
+import { useCallback, useEffect } from 'react'
 import { observable } from '@legendapp/state'
 import { use$ } from '@legendapp/state/react'
-import { useCallback, useEffect } from 'react'
 import { App, ledgerState$ } from 'state/ledger'
 
 import { AppId } from '@/config/apps'
@@ -22,7 +22,7 @@ interface UseMigrationReturn {
     total: number
   }
   destinationAddressesByApp: Record<AppId, AddressWithVerificationStatus[]>
-  
+
   // Verification related
   allVerified: boolean
   anyFailed: boolean
@@ -191,8 +191,13 @@ export const useMigration = (): UseMigrationReturn => {
    * Clear synchronization data and restart the synchronization process
    */
   const restartSynchronization = useCallback(() => {
+    // Clear synchronization data
     ledgerState$.clearSynchronization()
+    // Restart synchronization process
     ledgerState$.synchronizeAccounts()
+    // Reset verification status
+    destinationAddressesStatus$.set({})
+    isVerifying$.set(false)
   }, [])
 
   return {
@@ -203,7 +208,7 @@ export const useMigration = (): UseMigrationReturn => {
       total: successMigration + failsMigration,
     },
     destinationAddressesByApp: destinationAddressesStatus,
-    
+
     // Verification related
     allVerified,
     anyFailed,
