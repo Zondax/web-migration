@@ -622,10 +622,6 @@ export const ledgerState$ = observable({
     }
   },
 
-  async getAppsWithoutErrors() {
-    return ledgerState$.apps.apps.get().filter(app => app.accounts && app.accounts.length > 0)
-  },
-
   async verifyDestinationAddresses(appId: AppId, address: string, path: string): Promise<{ isVerfied: boolean }> {
     const appConfig = appsConfigs.get(appId)
     if (!appConfig) {
