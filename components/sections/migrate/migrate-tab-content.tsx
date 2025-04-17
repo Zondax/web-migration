@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { observer, use$ } from '@legendapp/state/react'
-import { AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle, Clock, ShieldCheck, XCircle } from 'lucide-react'
 import { App } from 'state/ledger'
 import { Address } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
@@ -16,6 +16,7 @@ import { AddressLink } from '@/components/AddressLink'
 import { useMigration } from '@/components/hooks/useMigration'
 import { Spinner } from '@/components/icons'
 
+import { AddressVerificationDialog } from './address-verification-dialog'
 import BalanceHoverCard from './balance-hover-card'
 import { SuccessDialog } from './success-dialog'
 import TransactionDropdown from './transaction-dropdown'
@@ -100,11 +101,9 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
         .map((account, index) => (
           <TableRow key={`${app.id}-${account.address}-${index}`}>
             <TableCell className="px-2 hidden sm:table-cell">
-              {index === 0 && (
-                <div className="max-h-8 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8 flex justify-center items-center">
-                  {icon && muifyHtml(icon)}
-                </div>
-              )}
+              <div className="max-h-8 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8 flex justify-center items-center">
+                {icon && muifyHtml(icon)}
+              </div>
             </TableCell>
             <TableCell>
               <AddressLink value={account.address} className="font-mono" tooltipText={`${account.address} - ${account.path}`} />
@@ -133,8 +132,10 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
 export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
   const router = useRouter()
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false)
   const [isMigrated, setIsMigrated] = useState(false)
-  const { filteredAppsWithoutErrors, migrateAll, migrationResults, restartSynchronization } = useMigration()
+  const { filteredAppsWithoutErrors, migrateAll, migrationResults, restartSynchronization, allVerified, verifyDestinationAddresses } =
+    useMigration()
 
   const handleMigrate = async () => {
     await migrateAll()
@@ -153,11 +154,28 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
     onBack()
   }
 
+  const handleOpenVerificationDialog = () => {
+    setShowVerificationDialog(true)
+    verifyDestinationAddresses()
+  }
+
+  const handleVerificationComplete = () => {
+    setShowVerificationDialog(false)
+  }
+
+  const hasAddressesToVerify = filteredAppsWithoutErrors.length > 0
+
   return (
     <div>
       <div className="mb-6">
         <h2 className="text-2xl font-bold">Migrate Accounts</h2>
-        <p className="text-gray-600">Review your accounts and click Migrate to complete the process.</p>
+        <p className="text-gray-600">Review your accounts and verify addresses before migration.</p>
+        {allVerified && (
+          <div className="mt-2 flex items-center gap-2 text-green-600">
+            <ShieldCheck className="h-5 w-5" />
+            <span>All addresses have been verified successfully</span>
+          </div>
+        )}
       </div>
 
       <Table className="shadow-sm border border-gray-200">
@@ -176,7 +194,7 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
             filteredAppsWithoutErrors.map(app => <MigrateRow key={app.id?.toString()} app={app} />)
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground p-4">
+              <TableCell colSpan={6} className="text-center text-muted-foreground p-4">
                 No accounts to migrate
               </TableCell>
             </TableRow>
@@ -190,7 +208,16 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
             <Button variant="outline" onClick={onBack}>
               Back
             </Button>
-            <Button variant="purple" size="wide" onClick={handleMigrate} disabled={filteredAppsWithoutErrors.length === 0}>
+            <Button
+              variant="purple"
+              onClick={handleOpenVerificationDialog}
+              disabled={!hasAddressesToVerify || allVerified}
+              className="flex items-center gap-2"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              {allVerified ? 'Addresses Verified' : 'Verify Addresses'}
+            </Button>
+            <Button variant="purple" size="wide" onClick={handleMigrate} disabled={filteredAppsWithoutErrors.length === 0 || !allVerified}>
               Migrate Accounts
             </Button>
           </>
@@ -214,6 +241,9 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
         successCount={migrationResults.success}
         totalCount={migrationResults.total}
       />
+
+      {/* Address Verification Dialog */}
+      <AddressVerificationDialog open={showVerificationDialog} onClose={() => setShowVerificationDialog(false)} />
     </div>
   )
 }

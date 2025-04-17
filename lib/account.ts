@@ -95,7 +95,6 @@ export async function getBalance(
 
     // Get native balance
     const nativeBalance = await getNativeBalance(addressString, api)
-    console.log('nativeBalance ', nativeBalance, 'addressString ', addressString)
 
     // Get Uniques if available
     const { nfts: uniquesNfts, collections: uniquesCollections } = await getUniquesOwnedByAccount(addressString, api)
@@ -245,10 +244,16 @@ export async function prepareTransaction(
     calls.push(api.tx.balances.transferKeepAlive(receiverAddress, nativeAmount))
   }
 
-  // Create a batch transaction
-  const batchTransfer = api.tx.utility.batchAll(calls)
+  let transfer: SubmittableExtrinsic<'promise', ISubmittableResult> | undefined
 
-  return prepareTransactionPayload(api, senderAddress, appConfig, batchTransfer)
+  if (calls.length > 1) {
+    // Create a batch transaction
+    transfer = api.tx.utility.batchAll(calls)
+  } else {
+    transfer = calls[0]
+  }
+
+  return prepareTransactionPayload(api, senderAddress, appConfig, transfer)
 }
 
 // Create Signed Extrinsic
@@ -311,7 +316,7 @@ export async function submitAndHandleTransaction(
           txHash = status.txHash.toHex()
           blockNumber = 'blockNumber' in status ? (status.blockNumber as Hash)?.toHex() : undefined
 
-          console.log(`Transaction finalized in block: ${blockHash}`)
+          console.debug(`Transaction finalized in block: ${blockHash}`)
           updateStatus('finalized', `Finalized in block: ${blockHash}`, {
             txHash,
             blockHash,
@@ -330,7 +335,7 @@ export async function submitAndHandleTransaction(
 
           const result = await getTransactionDetails(api, blockHash, status.txIndex)
           if (result?.success) {
-            console.log(`Transaction successful: ${txHash}, ${blockHash}, ${blockNumber}`)
+            console.debug(`Transaction successful: ${txHash}, ${blockHash}, ${blockNumber}`)
             updateStatus('success', 'Successful Transaction', {
               txHash,
               blockHash,
@@ -359,10 +364,10 @@ export async function submitAndHandleTransaction(
           updateStatus('error', 'Transaction is error')
           reject(new Error('Transaction is error'))
         } else if (status.isWarning) {
-          console.log('Transaction is warning')
+          console.debug('Transaction is warning')
           updateStatus('warning', 'Transaction is warning')
         } else if (status.isCompleted) {
-          console.log('Transaction is completed')
+          console.debug('Transaction is completed')
           updateStatus('completed', 'Transaction is completed')
         }
       })
@@ -405,7 +410,7 @@ export async function getTransactionDetails(
     if (apiAt.events.system.ExtrinsicSuccess.is(event)) {
       success = true
     } else if (apiAt.events.system.ExtrinsicFailed.is(event)) {
-      console.log('Transaction failed!')
+      console.debug('Transaction failed!')
       const [dispatchError] = event.data
 
       if ((dispatchError as any).isModule) {
@@ -420,7 +425,7 @@ export async function getTransactionDetails(
   })
 
   if (success) {
-    console.log('Transaction successful!')
+    console.debug('Transaction successful!')
     return { success: true }
   } else if (errorInfo) {
     return {
@@ -440,17 +445,17 @@ export async function disconnectSafely(api?: ApiPromise, provider?: WsProvider):
   try {
     // First disconnect the API if it exists
     if (api) {
-      console.log('Disconnecting API...')
+      console.debug('Disconnecting API...')
       await api.disconnect()
     }
 
     // Then disconnect the provider if it exists
     if (provider) {
-      console.log('Disconnecting WebSocket provider...')
+      console.debug('Disconnecting WebSocket provider...')
       await provider.disconnect()
     }
 
-    console.log('Disconnection complete')
+    console.debug('Disconnection complete')
   } catch (error) {
     console.error('Error during disconnection:', error)
   }
@@ -496,7 +501,7 @@ export async function processCollectionMetadata(metadata: any, collectionId: num
       }
       // Default case: Log that it couldn't be processed in JSON format
       else {
-        console.log('Metadata is not in a recognizable JSON format:', mdPrimitive.data)
+        console.debug('Metadata is not in a recognizable JSON format:', mdPrimitive.data)
       }
     }
   } catch (error) {
@@ -630,7 +635,7 @@ async function getNFTsCommon(address: string, apiOrEndpoint: string | ApiPromise
 
   // Check if the pallet is available
   if (!config.accountQuery) {
-    console.log(`${config.logPrefix} pallet is not available on this chain`)
+    console.debug(`${config.logPrefix} pallet is not available on this chain`)
 
     // Disconnect if we created a new connection
     if (providerToDisconnect) {
@@ -643,7 +648,7 @@ async function getNFTsCommon(address: string, apiOrEndpoint: string | ApiPromise
   try {
     const entries = await config.accountQuery.entries(address)
 
-    console.log(`Found ${entries.length} ${config.logPrefix} entries for address ${address}`)
+    console.debug(`Found ${entries.length} ${config.logPrefix} entries for address ${address}`)
 
     const itemsInfo = entries.map(([key, _info]) => {
       const info = key.args.map(k => k.toPrimitive())

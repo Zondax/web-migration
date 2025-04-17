@@ -27,11 +27,23 @@ const TooltipContent = React.forwardRef<
 ))
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
-const SimpleTooltip = ({ children, tooltipText, className }: { children: React.ReactNode; tooltipText?: string; className?: string }) => {
+const SimpleTooltip = ({
+  children,
+  tooltipText,
+  className,
+  disabled,
+}: {
+  children: React.ReactNode
+  tooltipText?: string
+  className?: string
+  disabled?: boolean
+}) => {
   return (
     <TooltipProvider>
       <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipTrigger asChild disabled={disabled}>
+          {children}
+        </TooltipTrigger>
         <TooltipContent
           side="top"
           align="center"

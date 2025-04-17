@@ -78,7 +78,7 @@ const NativeTokensDetailCard = ({ balance, token }: NativeTokensDetailCardProps)
         <CardHeader className="p-0 pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             {token.symbol}
-            <span className="bg-blue-500 text-white text-[10px] px-2 py-0 rounded-full">NATIVE</span>
+            <span className="bg-font-semibold text-white text-[10px] px-2 py-0 rounded-full">NATIVE</span>
             <span className="ml-auto font-medium font-mono">{formattedBalance}</span>
           </CardTitle>
         </CardHeader>
