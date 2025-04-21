@@ -1,4 +1,4 @@
-import { App } from 'state/ledger'
+import { App, AppStatus } from 'state/ledger'
 import { Address, Collection, Nft } from 'state/types/ledger'
 
 // =========== Common Test Addresses ===========
@@ -181,7 +181,7 @@ export const mockApp1: App = {
     decimals: 10,
     logoId: 'polkadot',
   },
-  status: 'synchronized',
+  status: AppStatus.SYNCHRONIZED,
   accounts: [mockAddress1, mockAddress2],
 }
 
@@ -193,7 +193,7 @@ export const mockApp2: App = {
     decimals: 12,
     logoId: 'kusama',
   },
-  status: 'synchronized',
+  status: AppStatus.SYNCHRONIZED,
   accounts: [mockAddress3, mockAddressWithError],
 }
 
@@ -205,7 +205,7 @@ export const mockAppWithMigrationError: App = {
     decimals: 12,
     logoId: 'westend',
   },
-  status: 'synchronized',
+  status: AppStatus.SYNCHRONIZED,
   accounts: [mockAddressWithMigrationError],
 }
 
@@ -217,7 +217,7 @@ export const mockAppWithAppError: App = {
     decimals: 12,
     logoId: 'acala',
   },
-  status: 'error',
+  status: AppStatus.ERROR,
   error: {
     source: 'synchronization',
     description: 'App sync failed',
@@ -233,7 +233,7 @@ export const mockAppMixedErrorTypes: App = {
     decimals: 18,
     logoId: 'moonbeam',
   },
-  status: 'synchronized',
+  status: AppStatus.SYNCHRONIZED,
   accounts: [mockAddress1, mockAddressWithError, mockAddressWithMigrationError],
 }
 
@@ -245,7 +245,7 @@ export const mockAppNoAccounts: App = {
     decimals: 18,
     logoId: 'astar',
   },
-  status: 'synchronized',
+  status: AppStatus.SYNCHRONIZED,
   accounts: [],
 }
 

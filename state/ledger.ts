@@ -12,10 +12,16 @@ import { hasBalance } from '@/lib/utils/ledger'
 import { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
 import { notifications$ } from './notifications'
-import { Address, Collection, DeviceConnectionProps, UpdateMigratedStatusFn } from './types/ledger'
+import { Address, AddressStatus, Collection, DeviceConnectionProps, TransactionStatus, UpdateMigratedStatusFn } from './types/ledger'
 import { Notification } from './types/notifications'
 
-export type AppStatus = 'migrated' | 'synchronized' | 'loading' | 'error' | 'rescanning'
+export enum AppStatus {
+  MIGRATED = 'migrated',
+  SYNCHRONIZED = 'synchronized',
+  LOADING = 'loading',
+  ERROR = 'error',
+  RESCANNING = 'rescanning',
+}
 
 export type AppIcons = {
   [key in AppId]: string
@@ -145,14 +151,14 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
           blockHash: txDetails?.blockHash,
           blockNumber: txDetails?.blockNumber,
         },
-        isLoading: status === 'pending' || status === 'inBlock' || status === 'finalized',
+        isLoading: status === TransactionStatus.PENDING || status === TransactionStatus.IN_BLOCK || status === TransactionStatus.FINALIZED,
       }
 
       // If the transaction is successful, mark as migrated
-      if (status === 'success') {
-        accounts[accountIndex].status = 'migrated'
+      if (status === TransactionStatus.SUCCESS) {
+        accounts[accountIndex].status = AddressStatus.MIGRATED
         updateMigrationResultCounter('success')
-      } else if (status === 'failed' || status === 'error') {
+      } else if (status === TransactionStatus.FAILED || status === TransactionStatus.ERROR) {
         updateMigrationResultCounter('fails')
       }
 
@@ -261,7 +267,7 @@ export const ledgerState$ = observable({
           name: app.name,
           id: app.id,
           token: app.token,
-          status: 'error',
+          status: AppStatus.ERROR,
           error: {
             source: 'synchronization',
             description: 'Failed to synchronize accounts',
@@ -278,7 +284,7 @@ export const ledgerState$ = observable({
           name: app.name,
           id: app.id,
           token: app.token,
-          status: 'error',
+          status: AppStatus.ERROR,
           error: {
             source: 'synchronization',
             description: errorDetails.blockchain_connection_error.description ?? '',
@@ -329,7 +335,7 @@ export const ledgerState$ = observable({
           return {
             ...address,
             balance,
-            status: 'synchronized',
+            status: AddressStatus.SYNCHRONIZED,
             error: undefined,
             isLoading: false,
           }
@@ -353,7 +359,7 @@ export const ledgerState$ = observable({
           name: app.name,
           id: app.id,
           token: app.token,
-          status: 'synchronized',
+          status: AppStatus.SYNCHRONIZED,
           accounts: filteredAccounts.map(account => ({
             ...account,
             destinationAddress: polkadotAddresses[0],
@@ -377,7 +383,7 @@ export const ledgerState$ = observable({
         name: app.name,
         id: app.id,
         token: app.token,
-        status: 'error',
+        status: AppStatus.ERROR,
         error: {
           source: 'synchronization',
           description: error instanceof Error ? error.message : 'Error fetching and processing accounts for app.',
@@ -388,7 +394,7 @@ export const ledgerState$ = observable({
 
   // Synchronize Single Account
   async synchronizeAccount(appId: AppId) {
-    updateApp(appId, { status: 'rescanning', error: undefined })
+    updateApp(appId, { status: AppStatus.RESCANNING, error: undefined })
 
     const appConfig = appsConfigs.get(appId)
     if (!appConfig) {
@@ -403,7 +409,7 @@ export const ledgerState$ = observable({
       }
     } catch (error) {
       updateApp(appId, {
-        status: 'error',
+        status: AppStatus.ERROR,
         error: {
           source: 'synchronization',
           description: 'Failed to synchronize accounts',
@@ -432,7 +438,7 @@ export const ledgerState$ = observable({
           name: app.name,
           id: app.id,
           token: app.token,
-          status: 'error',
+          status: AppStatus.ERROR,
         }
       }
 
@@ -445,7 +451,7 @@ export const ledgerState$ = observable({
           name: app.name,
           id: app.id,
           token: app.token,
-          status: 'error',
+          status: AppStatus.ERROR,
           error: {
             source: 'synchronization',
             description: errorDetails.blockchain_connection_error.description ?? '',
@@ -468,7 +474,7 @@ export const ledgerState$ = observable({
         name: app.name,
         id: app.id,
         token: app.token,
-        status: 'synchronized',
+        status: AppStatus.SYNCHRONIZED,
         accounts,
       }
     } catch (error) {
@@ -478,14 +484,14 @@ export const ledgerState$ = observable({
         name: app.name,
         id: app.id,
         token: app.token,
-        status: 'error',
+        status: AppStatus.ERROR,
       }
     }
   },
 
   // Synchronize Accounts
   async synchronizeAccounts() {
-    ledgerState$.apps.assign({ status: 'loading', apps: [], syncProgress: 0 })
+    ledgerState$.apps.assign({ status: AppStatus.LOADING, apps: [], syncProgress: 0 })
 
     try {
       const connection = ledgerState$.device.connection.get()
@@ -509,7 +515,7 @@ export const ledgerState$ = observable({
       if (polkadotApp) {
         ledgerState$.apps.polkadotApp.set({
           ...polkadotApp,
-          status: 'synchronized',
+          status: AppStatus.SYNCHRONIZED,
         })
       }
 
@@ -546,7 +552,7 @@ export const ledgerState$ = observable({
         ledgerState$.apps.syncProgress.set(progress)
       }
 
-      ledgerState$.apps.status.set('synchronized')
+      ledgerState$.apps.status.set(AppStatus.SYNCHRONIZED)
     } catch (error) {
       handleLedgerError(error as LedgerClientError, InternalErrors.SYNC_ERROR)
       ledgerState$.apps.error.set('Failed to synchronize accounts')
@@ -589,7 +595,7 @@ export const ledgerState$ = observable({
         updateAccount(appId, address.address, {
           ...address,
           balance,
-          status: 'synchronized',
+          status: AddressStatus.SYNCHRONIZED,
           error: undefined,
           isLoading: false,
         })
@@ -712,7 +718,7 @@ export const ledgerState$ = observable({
       // Update the state to reflect that we are no longer in the signing phase
       updateAccount(appId, account.address, {
         transaction: {
-          status: 'pending',
+          status: TransactionStatus.PENDING,
         },
         isLoading: false,
       })
@@ -760,7 +766,7 @@ export const ledgerState$ = observable({
         if (accountsToMigrate.length === 0) continue
 
         // Mark the app as in migration process
-        updateApp(app.id, { status: 'loading' })
+        updateApp(app.id, { status: AppStatus.LOADING })
 
         // Start transactions for each account in the app
         for (const { index } of accountsToMigrate) {
@@ -771,7 +777,7 @@ export const ledgerState$ = observable({
         }
 
         // Mark the app as synchronized after processing all its accounts
-        updateApp(app.id, { status: 'synchronized' })
+        updateApp(app.id, { status: AppStatus.SYNCHRONIZED })
       }
 
       // We don't wait for transactions to complete, we process them in the background

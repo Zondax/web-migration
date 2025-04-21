@@ -1,6 +1,7 @@
 'use client'
 'use client'
 
+import { AppStatus } from '@/state/ledger'
 import { observable } from '@legendapp/state'
 import { Info, RefreshCw } from 'lucide-react'
 
@@ -82,6 +83,9 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
     )
   }
 
+  const isLoading = status === AppStatus.LOADING
+  const isSynchronized = status === AppStatus.SYNCHRONIZED
+
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start gap-6 md:gap-4 mb-6 md:mb-4 ">
@@ -91,21 +95,21 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
           <div className="md:hidden mt-2">{renderDestinationAddressesInfo()}</div>
         </div>
         <div className="flex gap-2 self-start">
-          {status !== 'loading' && (
+          {status !== AppStatus.LOADING && (
             <SimpleTooltip tooltipText="Synchronize Again">
               <Button onClick={restartSynchronization} variant="outline" className="flex items-center gap-1" disabled={isRescaning}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </SimpleTooltip>
           )}
-          <Button onClick={handleMigrate} disabled={status === 'loading' || appsWithoutErrors.length === 0} variant="purple">
-            {status === 'loading' ? 'Synchronizing...' : 'Migrate All'}
+          <Button onClick={handleMigrate} disabled={isLoading || appsWithoutErrors.length === 0} variant="purple">
+            {isLoading ? 'Synchronizing...' : 'Migrate All'}
           </Button>
         </div>
       </div>
       <div className="hidden md:block mb-4">{renderDestinationAddressesInfo()}</div>
 
-      {status === 'loading' && (
+      {isLoading && (
         <div className="space-y-2 mb-8">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Synchronizing apps</span>
@@ -127,12 +131,12 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
           </TableRow>
         </TableHeader>
         <TableBody>
-          {(status === 'synchronized' || status === 'loading') && appsWithoutErrors.length ? (
+          {isSynchronized && appsWithoutErrors.length ? (
             appsWithoutErrors.map(app => <AppRow key={app.id.toString()} app={observable(app)} />)
           ) : (
             <TableRow>
               <TableCell colSpan={6} className="text-center text-muted-foreground p-4">
-                {status === 'synchronized' ? 'No accounts to migrate' : 'No synchronized accounts'}
+                {isSynchronized ? 'No accounts to migrate' : 'No synchronized accounts'}
               </TableCell>
             </TableRow>
           )}

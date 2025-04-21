@@ -140,16 +140,3 @@ export const errorDetails: ErrorDetailsMap = {
     content: 'Please disconnect the device and try again.',
   },
 }
-
-// export const decodeLedgerResponseCode = (
-//   errorCode: number
-// ): LedgerErrorDetails | undefined => {
-//   switch (errorCode) {
-//     case 21781:
-//       return errorDetails.LockedDeviceError;
-//     case 28161:
-//       return errorDetails.app_not_open;
-//     default:
-//       return undefined;
-//   }
-// };

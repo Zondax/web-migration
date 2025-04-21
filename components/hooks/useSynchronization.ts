@@ -1,12 +1,12 @@
 import { useCallback, useState } from 'react'
 import { use$, useObservable } from '@legendapp/state/react'
-import { App, ledgerState$ } from 'state/ledger'
+import { App, AppStatus, ledgerState$ } from 'state/ledger'
 
 import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors } from '@/lib/utils'
 
 interface UseSynchronizationReturn {
   // State
-  status: string | undefined
+  status: AppStatus | undefined
   syncProgress: number
   isLedgerConnected: boolean
   isRescaning: boolean
@@ -63,7 +63,7 @@ export const useSynchronization = (): UseSynchronizationReturn => {
         // Skip apps without a valid ID
         if (!app.id) continue
 
-        if (app.status === 'error') {
+        if (app.status === AppStatus.ERROR) {
           // Rescan the entire app if it has an error status
           await ledgerState$.synchronizeAccount(app.id)
         } else if (app.accounts) {

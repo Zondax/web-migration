@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { App } from 'state/ledger'
+import { App, AppStatus } from 'state/ledger'
 import { Address } from 'state/types/ledger'
 
 /**
@@ -79,7 +79,7 @@ export const hasAccountsWithErrors = (apps: App[]): boolean => {
   return apps.some(
     app =>
       app.error?.source === 'synchronization' ||
-      app.status === 'rescanning' ||
+      app.status === AppStatus.RESCANNING ||
       app.accounts?.some(account => account.error && account.error?.source !== 'migration')
   )
 }
