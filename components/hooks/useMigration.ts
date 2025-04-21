@@ -51,7 +51,7 @@ export const useMigration = (): UseMigrationReturn => {
 
   // Get migration results from the observable state
   const successMigration = use$(ledgerState$.apps.migrationResult.success)
-  const failsMigration = use$(ledgerState$.apps.migrationResult.fails)
+  const totalMigration = use$(ledgerState$.apps.migrationResult.total)
 
   // Compute derived values from apps
   const appsWithoutErrors = use$(() => filterAppsWithoutErrors(apps))
@@ -205,7 +205,7 @@ export const useMigration = (): UseMigrationReturn => {
     filteredAppsWithoutErrors: appsWithoutErrors,
     migrationResults: {
       success: successMigration,
-      total: successMigration + failsMigration,
+      total: totalMigration,
     },
     destinationAddressesByApp: destinationAddressesStatus,
 

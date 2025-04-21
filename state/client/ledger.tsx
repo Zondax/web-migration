@@ -45,7 +45,11 @@ export const ledgerClient = {
     }, InternalErrors.SYNC_ERROR)
   },
 
-  async migrateAccount(appId: AppId, account: Address, updateStatus: UpdateMigratedStatusFn): Promise<{ migrated?: boolean }> {
+  async migrateAccount(
+    appId: AppId,
+    account: Address,
+    updateStatus: UpdateMigratedStatusFn
+  ): Promise<{ txPromise?: Promise<void> } | undefined> {
     const senderAddress = account.address
     const receiverAddress = account.destinationAddress
     const hasAvailableBalance = hasBalance(account)
@@ -69,47 +73,44 @@ export const ledgerClient = {
         throw new Error(error ?? 'Failed to connect to the blockchain.')
       }
 
-      try {
-        // Collect all NFTs to transfer (both uniques and regular NFTs)
-        const nftsToTransfer = [...(account.balance?.uniques || []), ...(account.balance?.nfts || [])]
+      // Collect all NFTs to transfer (both uniques and regular NFTs)
+      const nftsToTransfer = [...(account.balance?.uniques || []), ...(account.balance?.nfts || [])]
 
-        // Get native amount if available
-        const nativeAmount = process.env.NEXT_PUBLIC_NODE_ENV === 'development' ? MINIMUM_AMOUNT : account.balance?.native
+      // Get native amount if available
+      const nativeAmount = process.env.NEXT_PUBLIC_NODE_ENV === 'development' ? MINIMUM_AMOUNT : account.balance?.native
 
-        // Prepare transaction with all assets
-        const preparedTx = await prepareTransaction(api, senderAddress, receiverAddress, nftsToTransfer, appConfig, nativeAmount)
-        // const preparedTx = await prepareTransaction(api, senderAddress, receiverAddress, appConfig)
-        if (!preparedTx) {
-          throw new Error('Prepare transaction failed')
-        }
-        const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
-
-        const chainId = appConfig.token.symbol.toLowerCase()
-
-        const { signature } = await ledgerService.signTransaction(account.path, payloadBytes, chainId, proof1)
-
-        if (signature) {
-          const signedExtrinsic = createSignedExtrinsic(api, transfer, senderAddress, signature, payload, nonce, metadataHash)
-
-          const updateMigratedStatus = (
-            status: TransactionStatus,
-            message?: string,
-            txDetails?: {
-              txHash?: string
-              blockHash?: string
-              blockNumber?: string
-            }
-          ) => {
-            updateStatus(appConfig.id, account.path, status, message, txDetails)
-          }
-          await submitAndHandleTransaction(transfer, updateMigratedStatus, api)
-
-          return { migrated: true }
-        }
-        return { migrated: false }
-      } finally {
-        await api.disconnect()
+      // Prepare transaction with all assets
+      const preparedTx = await prepareTransaction(api, senderAddress, receiverAddress, nftsToTransfer, appConfig, nativeAmount)
+      if (!preparedTx) {
+        throw new Error('Prepare transaction failed')
       }
+      const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
+
+      const chainId = appConfig.token.symbol.toLowerCase()
+
+      const { signature } = await ledgerService.signTransaction(account.path, payloadBytes, chainId, proof1)
+
+      if (signature) {
+        createSignedExtrinsic(api, transfer, senderAddress, signature, payload, nonce, metadataHash)
+
+        const updateMigratedStatus = (
+          status: TransactionStatus,
+          message?: string,
+          txDetails?: {
+            txHash?: string
+            blockHash?: string
+            blockNumber?: string
+          }
+        ) => {
+          updateStatus(appConfig.id, account.path, status, message, txDetails)
+        }
+
+        // Create transaction promise but don't await it
+        const txPromise = submitAndHandleTransaction(transfer, updateMigratedStatus, api)
+
+        return { txPromise }
+      }
+      return
     }, InternalErrors.UNKNOWN_ERROR)
   },
 

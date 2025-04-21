@@ -133,19 +133,20 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
   const router = useRouter()
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [showVerificationDialog, setShowVerificationDialog] = useState(false)
-  const [isMigrated, setIsMigrated] = useState(false)
+  const [migrationStatus, setMigrationStatus] = useState<undefined | 'loading' | 'finished'>()
   const { filteredAppsWithoutErrors, migrateAll, migrationResults, restartSynchronization, allVerified, verifyDestinationAddresses } =
     useMigration()
 
   const handleMigrate = async () => {
+    setMigrationStatus('loading')
     await migrateAll()
     setShowSuccessDialog(true)
-    setIsMigrated(true)
+    setMigrationStatus('finished')
   }
 
   const handleReturnHome = () => {
     setShowSuccessDialog(false)
-    setIsMigrated(false)
+    setMigrationStatus(undefined)
     router.push('/')
   }
 
@@ -199,7 +200,16 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
       </Table>
 
       <div className="flex justify-center gap-4 mt-8">
-        {!isMigrated ? (
+        {migrationStatus === 'finished' ? (
+          <>
+            <Button variant="outline" onClick={handleRestartSynchronization}>
+              Synchronize Again
+            </Button>
+            <Button variant="purple" size="wide" onClick={handleReturnHome}>
+              Go Home
+            </Button>
+          </>
+        ) : (
           <>
             <Button variant="outline" onClick={onBack}>
               Back
@@ -213,17 +223,13 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
               <ShieldCheck className="h-4 w-4" />
               {allVerified ? 'Addresses Verified' : 'Verify Addresses'}
             </Button>
-            <Button variant="purple" size="wide" onClick={handleMigrate} disabled={filteredAppsWithoutErrors.length === 0 || !allVerified}>
-              Migrate Accounts
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button variant="outline" onClick={handleRestartSynchronization}>
-              Synchronize Again
-            </Button>
-            <Button variant="purple" size="wide" onClick={handleReturnHome}>
-              Go Home
+            <Button
+              variant="purple"
+              size="wide"
+              onClick={handleMigrate}
+              disabled={filteredAppsWithoutErrors.length === 0 || !allVerified || migrationStatus === 'loading'}
+            >
+              {migrationStatus === 'loading' ? 'Migrating...' : 'Migrate Accounts'}
             </Button>
           </>
         )}

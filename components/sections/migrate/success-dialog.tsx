@@ -26,7 +26,7 @@ export function SuccessDialog({ open, onClose, onReturn, successCount, totalCoun
             Your accounts have been migrated to the Universal Ledger App.
           </DialogDescription>
           <DialogDescription className="text-center pt-3 !mt-0">
-            {successCount} of {totalCount} transactions completed.
+            {successCount} of {totalCount} transactions successful.
           </DialogDescription>
           <DialogDescription className="text-center pt-3 !mt-0">View details to see the results of the transactions.</DialogDescription>
         </DialogHeader>
