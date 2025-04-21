@@ -227,16 +227,19 @@ export async function prepareTransaction(
   appConfig: AppConfig,
   nativeAmount?: number
 ) {
+  // Validate all NFTs
+  for (const item of nfts) {
+    if (item.collectionId === undefined || item.itemId === undefined) {
+      throw new Error('Invalid item: must provide either amount for native transfer or collectionId and itemId for NFT transfer')
+    }
+  }
+
   // Create transfer calls for each item (NFT or native token)
   const calls = nfts.map(item => {
     // Handle NFT transfer
-    if (item.collectionId !== undefined && item.itemId !== undefined) {
-      return !item.isUnique
-        ? api.tx.nfts.transfer(item.collectionId, item.itemId, receiverAddress)
-        : api.tx.uniques.transfer(item.collectionId, item.itemId, receiverAddress)
-    }
-
-    throw new Error('Invalid item: must provide either amount for native transfer or collectionId and itemId for NFT transfer')
+    return !item.isUnique
+      ? api.tx.nfts.transfer(item.collectionId, item.itemId, receiverAddress)
+      : api.tx.uniques.transfer(item.collectionId, item.itemId, receiverAddress)
   })
 
   // Add native amount transfer if provided
@@ -289,7 +292,7 @@ export async function submitAndHandleTransaction(
   api: ApiPromise
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
+    let timeoutId = setTimeout(() => {
       updateStatus(TransactionStatus.UNKNOWN, 'Transaction timed out, check the transaction status in the explorer.')
       api.disconnect().catch(console.error)
       reject(new Error('Transaction timed out'))

@@ -45,6 +45,8 @@ export interface App {
   }
 }
 
+type MigrationResultKey = 'success' | 'fails' | 'total'
+
 interface LedgerState {
   device: {
     connection?: DeviceConnectionProps
@@ -58,9 +60,7 @@ interface LedgerState {
     error?: string
     syncProgress: number
     migrationResult: {
-      success: number
-      fails: number
-      total: number
+      [key in MigrationResultKey]: number
     }
   }
   polkadotAddresses: Partial<Record<AppId, string[]>>
@@ -122,11 +122,11 @@ function updateAccount(appId: AppId, address: string, update: Partial<Address>) 
 }
 
 // Update Migration Result Counter
-function updateMigrationResultCounter(type: 'success' | 'fails' | 'total', increment: number = 1) {
-  const currentMigrationResult = ledgerState$.apps.migrationResult.get()
+function updateMigrationResultCounter(type: MigrationResultKey, increment: number = 1) {
+  const currentMigrationResult = ledgerState$.apps.migrationResult.get() || { success: 0, fails: 0, total: 0 }
   ledgerState$.apps.migrationResult.set({
     ...currentMigrationResult,
-    [type]: currentMigrationResult[type] + increment,
+    [type]: (currentMigrationResult[type] || 0) + increment,
   })
 }
 
@@ -256,7 +256,7 @@ export const ledgerState$ = observable({
   // Fetch and Process Accounts for a Single App
   async fetchAndProcessAccountsForApp(app: AppConfig, filterByBalance: boolean = true): Promise<App | undefined> {
     try {
-      if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && errorApps?.includes(app.id)) {
+      if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && errorApps && errorApps?.includes(app.id)) {
         throw new Error('Mock synchronization error')
       }
 
@@ -523,7 +523,7 @@ export const ledgerState$ = observable({
       let appsToSync: (AppConfig | undefined)[] = Array.from(appsConfigs.values())
 
       // If in development environment, use apps specified in environment variable
-      if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && syncApps.length > 0) {
+      if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && syncApps && syncApps.length > 0) {
         try {
           appsToSync = syncApps.map(appId => appsConfigs.get(appId as AppId))
         } catch (error) {

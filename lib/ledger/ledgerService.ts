@@ -1,6 +1,5 @@
 import Transport from '@ledgerhq/hw-transport'
 import TransportWebUSB from '@ledgerhq/hw-transport-webhid'
-import { LedgerError } from '@zondax/ledger-js'
 import { PolkadotGenericApp } from '@zondax/ledger-substrate'
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
 import { ConnectionResponse, DeviceConnectionProps } from 'state/types/ledger'
@@ -140,7 +139,7 @@ export class LedgerService implements ILedgerService {
     proof1: Uint8Array
   ): Promise<{ signature?: Buffer<ArrayBufferLike> }> {
     if (!this.deviceConnection?.genericApp) {
-      throw LedgerError.AppDoesNotSeemToBeOpen
+      throw new Error('App not open')
     }
 
     const genericApp = this.deviceConnection.genericApp as unknown as PolkadotGenericApp
