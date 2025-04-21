@@ -292,7 +292,7 @@ export async function submitAndHandleTransaction(
   api: ApiPromise
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    let timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       updateStatus(TransactionStatus.UNKNOWN, 'Transaction timed out, check the transaction status in the explorer.')
       api.disconnect().catch(console.error)
       reject(new Error('Transaction timed out'))

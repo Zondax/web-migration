@@ -1,9 +1,8 @@
 'use client'
-'use client'
 
-import { AppStatus } from '@/state/ledger'
 import { observable } from '@legendapp/state'
 import { Info, RefreshCw } from 'lucide-react'
+import { AppStatus } from 'state/ledger'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
