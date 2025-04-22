@@ -23,12 +23,25 @@ export interface DeviceConnectionProps {
 /**
  * Status of an address in the migration process
  */
-export type AddressStatus = 'synchronized' | 'migrated'
+export enum AddressStatus {
+  SYNCHRONIZED = 'synchronized',
+  MIGRATED = 'migrated',
+}
 
 /**
  * Status of a transaction through its lifecycle
  */
-export type TransactionStatus = 'pending' | 'inBlock' | 'finalized' | 'success' | 'failed' | 'error' | 'warning' | 'unknown' | 'completed'
+export enum TransactionStatus {
+  PENDING = 'pending',
+  IN_BLOCK = 'inBlock',
+  FINALIZED = 'finalized',
+  SUCCESS = 'success',
+  FAILED = 'failed',
+  ERROR = 'error',
+  WARNING = 'warning',
+  UNKNOWN = 'unknown',
+  COMPLETED = 'completed',
+}
 
 /**
  * Details of a blockchain transaction

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { App } from 'state/ledger'
+import { App, AppStatus } from 'state/ledger'
 import { Address } from 'state/types/ledger'
 
 /**
@@ -10,10 +10,23 @@ import { Address } from 'state/types/ledger'
  */
 export const getAppLightIcon = async (appId: string) => {
   try {
-    // First check if the image exists locally
+    // First try to fetch from API
+    const hubUrl = process.env.NEXT_PUBLIC_HUB_BACKEND_URL
+
+    if (!hubUrl) {
+      return { data: undefined, error: 'Hub URL not configured' }
+    }
+
+    try {
+      const response = await axios.get(hubUrl + `/app/${appId}/icon/light`)
+      return { data: response.data, error: undefined }
+    } catch (apiError) {
+      // API call failed, try local image as fallback
+    }
+
+    // If API fetch fails, check if the image exists locally
     const localImagePath = `/logos/chains/${appId}.svg`
 
-    // Try to fetch the local image first
     try {
       const res = await fetch(localImagePath)
       if (res.ok) {
@@ -22,18 +35,11 @@ export const getAppLightIcon = async (appId: string) => {
         return { data: svgContent, error: undefined }
       }
     } catch (localError) {
-      // Local image doesn't exist, continue to API call
+      // Local image doesn't exist either
     }
 
-    // If local image doesn't exist, fetch from API
-    const hubUrl = process.env.NEXT_PUBLIC_HUB_BACKEND_URL
-
-    if (!hubUrl) {
-      return { data: undefined, error: 'Hub URL not configured' }
-    }
-
-    const response = await axios.get(hubUrl + `/app/${appId}/icon/light`)
-    return { data: response.data, error: undefined }
+    // If we get here, both API and local fetches failed
+    return { data: undefined, error: 'Icon not found' }
   } catch (error) {
     return { data: undefined, error: 'Error fetching app icon' }
   }
@@ -79,7 +85,7 @@ export const hasAccountsWithErrors = (apps: App[]): boolean => {
   return apps.some(
     app =>
       app.error?.source === 'synchronization' ||
-      app.status === 'rescanning' ||
+      app.status === AppStatus.RESCANNING ||
       app.accounts?.some(account => account.error && account.error?.source !== 'migration')
   )
 }

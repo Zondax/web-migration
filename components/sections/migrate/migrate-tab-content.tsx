@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { observer, use$ } from '@legendapp/state/react'
 import { AlertCircle, CheckCircle, Clock, ShieldCheck, XCircle } from 'lucide-react'
 import { App } from 'state/ledger'
-import { Address } from 'state/types/ledger'
+import { Address, TransactionStatus } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
 import { muifyHtml } from '@/lib/utils/html'
@@ -53,29 +53,29 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
       tooltipContent = account.error.description
     } else {
       switch (txStatus) {
-        case 'pending':
+        case TransactionStatus.PENDING:
           statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
           tooltipContent = 'Transaction pending...'
           break
-        case 'inBlock':
+        case TransactionStatus.IN_BLOCK:
           statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
           break
-        case 'finalized':
+        case TransactionStatus.FINALIZED:
           statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
           break
-        case 'success':
+        case TransactionStatus.SUCCESS:
           statusIcon = <CheckCircle className="h-4 w-4 text-green-500" />
           break
-        case 'failed':
+        case TransactionStatus.FAILED:
           statusIcon = <XCircle className="h-4 w-4 text-red-500" />
           break
-        case 'error':
+        case TransactionStatus.ERROR:
           statusIcon = <AlertCircle className="h-4 w-4 text-red-500" />
           break
-        case 'warning':
+        case TransactionStatus.WARNING:
           statusIcon = <AlertCircle className="h-4 w-4 text-yellow-500" />
           break
-        case 'completed':
+        case TransactionStatus.COMPLETED:
           statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
           break
         default:

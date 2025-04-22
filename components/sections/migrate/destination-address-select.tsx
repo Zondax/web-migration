@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
-import { Address } from 'state/types/ledger'
+import { Address, AddressStatus } from 'state/types/ledger'
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AddressLink } from '@/components/AddressLink'
@@ -19,7 +19,7 @@ function DestinationAddressSelect({ account, index, polkadotAddresses, onDestina
       (account.balance.native.get() === undefined &&
         (account.balance.nfts.get() === undefined || account.balance.nfts.get()?.length === 0) &&
         (account.balance.uniques.get() === undefined || account.balance.uniques.get()?.length === 0)) ||
-      account.status.get() === 'migrated' ||
+      account.status.get() === AddressStatus.MIGRATED ||
       !polkadotAddresses ||
       polkadotAddresses.length === 0
     )

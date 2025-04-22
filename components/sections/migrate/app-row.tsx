@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { Observable } from '@legendapp/state'
 import { observer, use$ } from '@legendapp/state/react'
 import { AlertCircle, ChevronDown } from 'lucide-react'
-import { App, ledgerState$ } from 'state/ledger'
+import { App, AppStatus, ledgerState$ } from 'state/ledger'
 import { uiState$ } from 'state/ui'
 
 import { formatBalance } from '@/lib/utils/format'
@@ -33,7 +33,7 @@ function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolea
 
   const renderAction = useCallback(() => {
     if (failedSync) {
-      if (status === 'rescanning') {
+      if (status === AppStatus.RESCANNING) {
         return <Spinner />
       }
 
@@ -44,9 +44,9 @@ function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolea
       return null
     }
     switch (status) {
-      case 'loading':
+      case AppStatus.LOADING:
         return <Spinner />
-      case 'migrated':
+      case AppStatus.MIGRATED:
         return (
           <Badge variant="destructive" className="capitalize">
             {status}
