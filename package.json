@@ -12,7 +12,8 @@
   "scripts": {
     "build": "next build",
     "deps:update": "pnpm exec npm-check-updates -u -t semver && pnpm install",
-    "dev": "next dev --turbo",
+    "dev": "NEXT_PUBLIC_NODE_ENV=development NEXT_PUBLIC_NATIVE_TRANSFER_AMOUNT=100 next dev --turbo",
+    "dev:full-amount": "NEXT_PUBLIC_NODE_ENV=development next dev",
     "env:init": "cp .env.backup .env",
     "format": "prettier --write . && sort-package-json",
     "format:check": "FORCE_COLOR=1 prettier --check . && sort-package-json -c",

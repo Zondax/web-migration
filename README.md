@@ -74,7 +74,11 @@ pnpm env:init
 4. Start the development server:
 
 ```bash
+# For development with limited transfer amount (100 units)
 pnpm dev
+
+# For development with full transfer amount
+pnpm dev:full-amount
 ```
 
 The application will be available at `http://localhost:3000`.
@@ -83,7 +87,8 @@ The application will be available at `http://localhost:3000`.
 
 ### Available Scripts
 
-- `pnpm dev` - Start development server with Turbo
+- `pnpm dev` - Starts the development server with limited native transfer amounts (100 units), useful for testing with controlled amounts
+- `pnpm dev:full-amount` - Starts the development server without transfer amount limitations, allowing full balance transfers
 - `pnpm build` - Build for production
 - `pnpm start` - Start production server
 - `pnpm test` - Run tests with coverage
