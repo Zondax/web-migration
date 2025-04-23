@@ -11,6 +11,7 @@
   "author": "Zondax AG <hello@zondax.ch>",
   "scripts": {
     "build": "next build",
+    "build:docker": "docker build -t polkadot-migration .",
     "deps:update": "pnpm exec npm-check-updates -u -t semver && pnpm install",
     "dev": "NEXT_PUBLIC_NODE_ENV=development NEXT_PUBLIC_NATIVE_TRANSFER_AMOUNT=100 next dev --turbo",
     "dev:full-amount": "NEXT_PUBLIC_NODE_ENV=development next dev",
