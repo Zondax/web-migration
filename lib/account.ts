@@ -516,7 +516,7 @@ export async function processCollectionMetadata(metadata: any, collectionId: num
       }
       // Default case: Log that it couldn't be processed in JSON format
       else {
-        console.debug('Metadata is not in a recognizable JSON format:', mdPrimitive.data)
+        console.debug('Metadata is not in a recognizable JSON format')
       }
     }
   } catch (error) {
