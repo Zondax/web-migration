@@ -236,7 +236,7 @@ describe('LedgerService', () => {
       const mockSignature = Buffer.from('mockSignature')
 
       const mockGenericApp = createMockGenericApp({
-        signWithMetadata: vi.fn().mockResolvedValue({ signature: mockSignature }),
+        signWithMetadataEd25519: vi.fn().mockResolvedValue({ signature: mockSignature }),
       })
 
       // Set up device connection
@@ -254,14 +254,14 @@ describe('LedgerService', () => {
       const result = await ledgerService.signTransaction(bip44Path, payloadBytes, chainId, proof1)
 
       expect(result).toEqual({ signature: mockSignature })
-      expect(mockGenericApp.signWithMetadata).toHaveBeenCalledWith(bip44Path, Buffer.from(payloadBytes), Buffer.from(proof1))
+      expect(mockGenericApp.signWithMetadataEd25519).toHaveBeenCalledWith(bip44Path, Buffer.from(payloadBytes), Buffer.from(proof1))
       expect(mockGenericApp.txMetadataChainId).toBe(chainId)
     })
 
     it('should throw error when app is not open', async () => {
       const ledgerService = new LedgerService()
       const mockGenericApp = createMockGenericApp({
-        signWithMetadata: vi.fn().mockRejectedValue(new Error('28161')),
+        signWithMetadataEd25519: vi.fn().mockRejectedValue(new Error('28161')),
       })
 
       // Set up device connection with closed app
@@ -279,12 +279,12 @@ describe('LedgerService', () => {
       await expect(ledgerService.signTransaction(bip44Path, payloadBytes, chainId, proof1)).rejects.toThrow('28161')
     })
 
-    it('should handle errors from signWithMetadata call', async () => {
+    it('should handle errors from signWithMetadataEd25519 call', async () => {
       const ledgerService = new LedgerService()
       const error = new Error('Failed to sign transaction')
 
       const mockGenericApp = createMockGenericApp({
-        signWithMetadata: vi.fn().mockRejectedValue(error),
+        signWithMetadataEd25519: vi.fn().mockRejectedValue(error),
       })
 
       // Set up device connection
@@ -307,7 +307,7 @@ describe('LedgerService', () => {
       const mockSignature = Buffer.from('mockSignature')
 
       const mockGenericApp = createMockGenericApp({
-        signWithMetadata: vi.fn().mockResolvedValue({ signature: mockSignature }),
+        signWithMetadataEd25519: vi.fn().mockResolvedValue({ signature: mockSignature }),
       })
 
       // Set up device connection
@@ -325,7 +325,7 @@ describe('LedgerService', () => {
       const result = await ledgerService.signTransaction(bip44Path, payloadBytes, chainId, proof1)
 
       expect(result).toEqual({ signature: mockSignature })
-      expect(mockGenericApp.signWithMetadata).toHaveBeenCalledWith(bip44Path, Buffer.from(payloadBytes), Buffer.from(proof1))
+      expect(mockGenericApp.signWithMetadataEd25519).toHaveBeenCalledWith(bip44Path, Buffer.from(payloadBytes), Buffer.from(proof1))
     })
   })
 })
