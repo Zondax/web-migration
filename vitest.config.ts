@@ -11,9 +11,9 @@ export default defineConfig({
     exclude: ['e2e/**', 'node_modules/**'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'json-summary', 'html'],
       all: true,
-      exclude: ['e2e/**', 'node_modules/**', 'vitest.config.ts', 'components/ui/**'],
+      exclude: ['e2e/**', 'node_modules/**', '.next/**', 'vitest.config.ts', 'components/ui/**'],
     },
   },
   resolve: {
