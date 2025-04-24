@@ -56,7 +56,7 @@
     "@radix-ui/react-tooltip": "^1.1.8",
     "@vercel/analytics": "^1.5.0",
     "@zondax/ledger-js": "^1.2.0",
-    "@zondax/ledger-substrate": "^1.0.1",
+    "@zondax/ledger-substrate": "^1.1.1",
     "autoprefixer": "^10.4.21",
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",

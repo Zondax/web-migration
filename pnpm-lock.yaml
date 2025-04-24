@@ -78,8 +78,8 @@ dependencies:
     specifier: ^1.2.0
     version: 1.2.0
   '@zondax/ledger-substrate':
-    specifier: ^1.0.1
-    version: 1.0.1
+    specifier: ^1.1.1
+    version: 1.1.1
   autoprefixer:
     specifier: ^10.4.21
     version: 10.4.21(postcss@8.5.3)
@@ -1558,24 +1558,6 @@ packages:
       '@ledgerhq/errors': 6.19.1
       '@ledgerhq/hw-transport': 6.31.4
       '@ledgerhq/logs': 6.12.0
-    dev: false
-
-  /@ledgerhq/hw-transport@6.30.6:
-    resolution: {integrity: sha512-fT0Z4IywiuJuZrZE/+W0blkV5UCotDPFTYKLkKCLzYzuE6javva7D/ajRaIeR+hZ4kTmKF4EqnsmDCXwElez+w==}
-    dependencies:
-      '@ledgerhq/devices': 8.4.4
-      '@ledgerhq/errors': 6.19.1
-      '@ledgerhq/logs': 6.12.0
-      events: 3.3.0
-    dev: false
-
-  /@ledgerhq/hw-transport@6.31.2:
-    resolution: {integrity: sha512-B27UIzMzm2IXPGYnEB95R7eHxpXBkTBHh6MUJJQZVknt8LilEz1tfpTYUdzAKDGQ+Z5MZyYb01Eh3Zqm3kn3uw==}
-    dependencies:
-      '@ledgerhq/devices': 8.4.4
-      '@ledgerhq/errors': 6.19.1
-      '@ledgerhq/logs': 6.12.0
-      events: 3.3.0
     dev: false
 
   /@ledgerhq/hw-transport@6.31.4:
@@ -3803,23 +3785,17 @@ packages:
       tinyrainbow: 2.0.0
     dev: true
 
-  /@zondax/ledger-js@0.11.0:
-    resolution: {integrity: sha512-Y+hbuIVIT+QcIrZgJZN8BjpvmLJ9v2+yQtbpYVTtosAw/NNOg/NI6QKMxP4fwomW/6SEK6jaIqsLhTvTZP7qDA==}
-    dependencies:
-      '@ledgerhq/hw-transport': 6.30.6
-    dev: false
-
   /@zondax/ledger-js@1.2.0:
     resolution: {integrity: sha512-HGvDU0s4zg0scu8ebGenFHFB6g5SLDqmrctncZUY9ie5pGibOU8C0VdjZSHbttSOCyh+IloLi/a4jyMPOEQGuQ==}
     dependencies:
       '@ledgerhq/hw-transport': 6.31.4
     dev: false
 
-  /@zondax/ledger-substrate@1.0.1:
-    resolution: {integrity: sha512-ZeHqvBPFn8DoNwgkASR7XWKI+blemy5nwTMWfFadBDdypSnOStedPIeDYrgr3q0vjHqyvnWoH0D7BEy6vCYu8g==}
+  /@zondax/ledger-substrate@1.1.1:
+    resolution: {integrity: sha512-qgsLNJb6ijKZ+gSOsUfsm7DSlyZhFQCsHI1om1LB/PVhQd4SWuD8f9KMgOh9ayfCdXoVaMBJp6+o9p3P+J1szA==}
     dependencies:
-      '@ledgerhq/hw-transport': 6.31.2
-      '@zondax/ledger-js': 0.11.0
+      '@ledgerhq/hw-transport': 6.31.4
+      '@zondax/ledger-js': 1.2.0
       axios: 1.8.4
     transitivePeerDependencies:
       - debug
