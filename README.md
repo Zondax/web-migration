@@ -1,5 +1,7 @@
 # Zondax Migration Web Interface
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 ---
 
 ![zondax_light](public/assets/zondax_light.png#gh-light-mode-only)
@@ -74,7 +76,11 @@ pnpm env:init
 4. Start the development server:
 
 ```bash
+# For development with limited transfer amount (100 units)
 pnpm dev
+
+# For development with full transfer amount
+pnpm dev:full-amount
 ```
 
 The application will be available at `http://localhost:3000`.
@@ -83,15 +89,20 @@ The application will be available at `http://localhost:3000`.
 
 ### Available Scripts
 
-- `pnpm dev` - Start development server with Turbo
+- `pnpm dev` - Starts the development server with limited native transfer amounts (100 units), useful for testing with controlled amounts
+- `pnpm dev:full-amount` - Starts the development server without transfer amount limitations, allowing full balance transfers
 - `pnpm build` - Build for production
+- `pnpm build:docker` - Build Docker image for the application
 - `pnpm start` - Start production server
 - `pnpm test` - Run tests with coverage
+- `pnpm test:coverage` - Run tests with detailed coverage report
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm test:e2e` - Run E2E tests with Playwright
 - `pnpm test:e2e:debug` - Run E2E tests in debug mode
 - `pnpm test:e2e:ui` - Run E2E tests with UI
+- `pnpm test:e2e:install` - Install Playwright browsers
 - `pnpm test:e2e:report` - Show Playwright test report
+- `pnpm test:e2e:sharding` - Run E2E tests with sharding configuration
 - `pnpm lint` - Run ESLint
 - `pnpm lint:fix` - Fix ESLint issues
 - `pnpm format` - Format code with Prettier and sort package.json

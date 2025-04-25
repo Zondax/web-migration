@@ -145,7 +145,7 @@ export class LedgerService implements ILedgerService {
     const genericApp = this.deviceConnection.genericApp as unknown as PolkadotGenericApp
 
     genericApp.txMetadataChainId = chainId
-    const { signature } = await genericApp.signWithMetadata(bip44Path, Buffer.from(payloadBytes), Buffer.from(proof1))
+    const { signature } = await genericApp.signWithMetadataEd25519(bip44Path, Buffer.from(payloadBytes), Buffer.from(proof1))
     return { signature }
   }
 

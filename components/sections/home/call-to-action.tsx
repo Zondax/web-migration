@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Link } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 
@@ -34,17 +34,19 @@ export default function CallToAction() {
                 background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1))',
               }}
             >
-              <Button
-                variant="ghost"
-                className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md 
+              <Link href="/migrate">
+                <Button
+                  variant="ghost"
+                  className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md 
                           bg-white/95 hover:bg-white/100 
                           border border-white/20 hover:shadow-md
                           group-hover:-translate-y-0.5 transition-all duration-300"
-                style={{ color: '#FF2670' }}
-              >
-                <span className="opacity-90 group-hover:opacity-100 transition-opacity">Start Migration</span>
-                <ArrowRight className="ml-2 h-5 w-5 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
-              </Button>
+                  style={{ color: '#FF2670' }}
+                >
+                  <span className="opacity-90 group-hover:opacity-100 transition-opacity">Start Migration</span>
+                  <ArrowRight className="ml-2 h-5 w-5 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+                </Button>
+              </Link>
             </div>
 
             <div

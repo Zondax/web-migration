@@ -63,7 +63,6 @@
     "cla": 174,
     "bip44Path": "m/44'/788'/0'/0'/0'",
     "ss58Prefix": 6,
-    "rpcEndpoint": "wss://bifrost-rpc.liebi.com/ws",
     "token": {
       "symbol": "BNC",
       "decimals": 12
@@ -86,7 +85,6 @@
     "cla": 147,
     "bip44Path": "m/44'/747'/0'/0'/0'",
     "ss58Prefix": 36,
-    "rpcEndpoint": "wss://centrifuge-rpc.dwellir.com",
     "token": {
       "symbol": "CFG",
       "decimals": 18
@@ -98,7 +96,6 @@
     "cla": 168,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 49,
-    "rpcEndpoint": "wss://composable-rpc.dwellir.com",
     "token": {
       "symbol": "LAYR",
       "decimals": 12
@@ -190,7 +187,6 @@
     "cla": 165,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 2032,
-    "rpcEndpoint": "wss://interlay-rpc.dwellir.com",
     "token": {
       "symbol": "INTR",
       "decimals": 10
