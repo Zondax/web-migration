@@ -1,0 +1,31 @@
+name: CI-ts
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+  schedule:
+    - cron: '0 0 * * *' # Every day at midnight UTC
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ts-checks:
+    uses: zondax/_workflows/.github/workflows/_checks-ts.yaml@main
+    with:
+      package_manager: pnpm
+
+  logo-size-check:
+    uses: ./.github/workflows/logo-check.yml
+
+  playwright-tests:
+    needs: [ts-checks, logo-size-check]
+    uses: ./.github/workflows/playwright.yml
+    secrets: inherit

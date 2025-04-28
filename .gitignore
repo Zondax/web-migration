@@ -27,7 +27,7 @@ yarn-error.log*
 
 # env files
 .env*
-!.env.example
+!.env.backup
 
 # vercel
 .vercel
@@ -35,3 +35,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+test-results/
+playwright-report/
+.qodo

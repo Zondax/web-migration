@@ -1,0 +1,34 @@
+name: Logo Size Check
+
+on:
+  workflow_call:
+
+jobs:
+  logo-size-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check that only SVG files exist in logos directory
+        run: |
+          # Check if any non-SVG files exist
+          NON_SVG=$(find public/logos/chains -type f -not -name "*.svg" -not -name "README.md" -not -name ".gitkeep" | wc -l)
+          if [ "$NON_SVG" -gt 0 ]; then
+            echo "Error: Found non-SVG files in public/logos/chains directory:"
+            find public/logos/chains -type f -not -name "*.svg" -not -name "README.md" -not -name ".gitkeep"
+            exit 1
+          else
+            echo "All files in public/logos/chains are SVG files (excluding README.md and .gitkeep)."
+          fi
+
+      - name: Check SVG logo file sizes
+        run: |
+          find public/logos/chains -name "*.svg" -type f -exec du -k {} \; | awk '$1 > 20 {print $2 " is " $1 "KB which exceeds the 20KB limit"}' > oversize_files.txt
+          if [ -s oversize_files.txt ]; then
+            echo "The following SVG files exceed the 20KB size limit:"
+            cat oversize_files.txt
+            exit 1
+          else
+            echo "All SVG logo files are within the 20KB size limit."
+          fi

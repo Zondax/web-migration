@@ -1,4 +1,7 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "cSpell.words": ["bunx", "ianvs", "ledgerhq", "legendapp", "merkleize", "muify", "neondatabase", "polkadot", "webhid", "zondax"],
+  "vitest.configSearchPatternExclude": "{**/node_modules/**,**/.*/**,**/*.d.ts,e2e/**}",
+  "codium.codeCompletion.enable": false
 }

@@ -1,0 +1,23 @@
+{
+  "recommendations": [
+    // Code formatting & linting
+    "dbaeumer.vscode-eslint", // ESLint integration
+    "esbenp.prettier-vscode", // Prettier code formatting
+
+    // Bun support
+    "oven.bun-vscode",
+
+    // Frontend development
+    "bradlc.vscode-tailwindcss", // Tailwind CSS IntelliSense
+    "bradlc.hsl", // HSL color picker (useful with Tailwind)
+
+    // Testing
+    "ms-playwright.playwright", // Playwright test support
+    "vitest.explorer", // Vitest test explorer
+
+    // Productivity
+    "streetsidesoftware.code-spell-checker", // Spell checking
+    "yoavbls.pretty-ts-errors",
+    "ryanluker.vscode-coverage-gutters" // Better TypeScript errors
+  ]
+}

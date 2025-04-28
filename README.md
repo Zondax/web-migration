@@ -1,64 +1,178 @@
-<div align="center"><strong>Next.js 14 Admin Dashboard Template</strong></div>
-<div align="center">Built with the Next.js App Router</div>
-<br />
-<div align="center">
-<a href="https://next-admin-dash.vercel.app/">Demo</a>
-<span> · </span>
-<a href="https://vercel.com/templates/next.js/admin-dashboard-tailwind-postgres-react-nextjs">Clone & Deploy</a>
-<span>
-</div>
+# Zondax Migration Web Interface
 
-## Overview
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-This is a starter template using the following stack:
+---
 
-- Framework - [Next.js (App Router)](https://nextjs.org)
-- Language - [TypeScript](https://www.typescriptlang.org)
-- Auth - [Auth.js](https://authjs.dev)
-- Database - [Postgres](https://vercel.com/postgres)
-- Deployment - [Vercel](https://vercel.com/docs/concepts/next.js/overview)
-- Styling - [Tailwind CSS](https://tailwindcss.com)
-- Components - [Shadcn UI](https://ui.shadcn.com/)
-- Analytics - [Vercel Analytics](https://vercel.com/analytics)
-- Formatting - [Prettier](https://prettier.io)
+![zondax_light](public/assets/zondax_light.png#gh-light-mode-only)
+![zondax_dark](public/assets/zondax_dark.png#gh-dark-mode-only)
 
-This template uses the new Next.js App Router. This includes support for enhanced layouts, colocation of components, tests, and styles, component-level data fetching, and more.
+_Please visit our website at [zondax.ch](https://zondax.ch)_
 
-## Getting Started
+---
 
-During the deployment, Vercel will prompt you to create a new Postgres database. This will add the necessary environment variables to your project.
+# Polkadot Ledger Migration Tool
 
-Inside the Vercel Postgres dashboard, create a table based on the schema defined in this repository.
+A comprehensive web application designed to streamline the migration process to the new Polkadot Universal Ledger App. This platform offers:
 
-```
-CREATE TYPE status AS ENUM ('active', 'inactive', 'archived');
+- **Elegant User Interface**: A modern, intuitive landing page that clearly explains the migration benefits
+- **Step-by-Step Guidance**: An interactive assistant that walks users through each phase of the migration
+- **Secure Transition**: Robust protocols ensuring safe transfer from legacy Ledger applications
+- **Multi-Chain Support**: Seamless handling of various Substrate-based chains in one unified experience
+- **Real-Time Progress Tracking**: Visual indicators showing migration status and completion
 
-CREATE TABLE products (
-  id SERIAL PRIMARY KEY,
-  image_url TEXT NOT NULL,
-  name TEXT NOT NULL,
-  status status NOT NULL,
-  price NUMERIC(10, 2) NOT NULL,
-  stock INTEGER NOT NULL,
-  available_at TIMESTAMP NOT NULL
-);
-```
+Built by Zondax to simplify the complex process of adopting the consolidated Universal Ledger App for the Polkadot ecosystem.
 
-Then, uncomment `app/api/seed.ts` and hit `http://localhost:3000/api/seed` to seed the database with products.
+## :gear: Features
 
-Next, copy the `.env.example` file to `.env` and update the values. Follow the instructions in the `.env.example` file to set up your GitHub OAuth application.
+- **Modern Stack**
+
+  - Next.js 15 with App Router
+  - React 19
+  - TypeScript
+  - Tailwind CSS
+  - Shadcn UI Components
+  - Vercel Analytics
+
+- **Polkadot Integration**
+
+  - Ledger Hardware Wallet Support
+  - Polkadot API Integration
+  - Substrate Protocol Support
+
+- **Development Tools**
+  - ESLint for code linting
+  - Prettier for code formatting
+  - Vitest for testing
+  - Playwright for E2E testing
+
+### Prerequisites
+
+- Node.js (LTS version)
+- pnpm (for package management)
+- A Polkadot-compatible Ledger device (optional)
+
+## 🧑‍💻 Getting Started
+
+1. Clone the repository:
 
 ```bash
-npm i -g vercel
-vercel link
-vercel env pull
+git clone [repository-url]
+cd web-migration
 ```
 
-Finally, run the following commands to start the development server:
+2. Install dependencies:
 
-```
+```bash
 pnpm install
-pnpm dev
 ```
 
-You should now be able to access the application at http://localhost:3000.
+3. Initialize your dev environment:
+
+```bash
+pnpm env:init
+```
+
+4. Start the development server:
+
+```bash
+# For development with limited transfer amount (100 units)
+pnpm dev
+
+# For development with full transfer amount
+pnpm dev:full-amount
+```
+
+The application will be available at `http://localhost:3000`.
+
+## Development
+
+### Available Scripts
+
+- `pnpm dev` - Starts the development server with limited native transfer amounts (100 units), useful for testing with controlled amounts
+- `pnpm dev:full-amount` - Starts the development server without transfer amount limitations, allowing full balance transfers
+- `pnpm build` - Build for production
+- `pnpm build:docker` - Build Docker image for the application
+- `pnpm start` - Start production server
+- `pnpm test` - Run tests with coverage
+- `pnpm test:coverage` - Run tests with detailed coverage report
+- `pnpm test:watch` - Run tests in watch mode
+- `pnpm test:e2e` - Run E2E tests with Playwright
+- `pnpm test:e2e:debug` - Run E2E tests in debug mode
+- `pnpm test:e2e:ui` - Run E2E tests with UI
+- `pnpm test:e2e:install` - Install Playwright browsers
+- `pnpm test:e2e:report` - Show Playwright test report
+- `pnpm test:e2e:sharding` - Run E2E tests with sharding configuration
+- `pnpm lint` - Run ESLint
+- `pnpm lint:fix` - Fix ESLint issues
+- `pnpm format` - Format code with Prettier and sort package.json
+- `pnpm format:check` - Check code formatting
+- `pnpm deps:update` - Update dependencies
+- `pnpm env:init` - Initialize environment variables
+
+### Project Structure
+
+- `app/` - Next.js app router pages and layouts
+- `components/` - Reusable React components
+- `config/` - Application configuration
+- `lib/` - Utility functions and shared libraries
+- `public/` - Static assets
+- `state/` - State management logic with legendapp/state
+
+### Architecture
+
+The application follows clean architecture principles:
+
+- Business logic is separated from state management
+- Services are agnostic of state management libraries
+- Core business logic and interfaces are in separate files
+- UI components are modular and composable
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Adding New Chains
+
+This project provides a flexible configuration system for adding custom blockchain networks:
+
+1. Add your chain logo to the `public/logos/chains` directory (the image filename must match the chain `id` you'll use in the configuration)
+2. Add chain configuration in the `config/appsConfig.json` file with the following structure:
+   ```json
+   {
+     "id": "your-chain-id",
+     "name": "Your Chain Name",
+     "cla": 123,
+     "bip44Path": "m/44'/123'/0'/0'/0'",
+     "ss58Prefix": 42,
+     "rpcEndpoint": "wss://rpc.yourchain.network",
+     "token": {
+       "symbol": "SYMBOL",
+       "decimals": 12,
+       "logoId": "token-icon-id"
+     }
+   }
+   ```
+
+Each chain configuration contains these key parameters:
+
+- `id`: Unique identifier for the chain (must match the logo filename in the chains directory)
+- `name`: Display name of the chain
+- `cla`: Chain-specific class identifier
+- `bip44Path`: The HD derivation path for the chain
+- `ss58Prefix`: The SS58 address format prefix
+- `rpcEndpoint`: WebSocket endpoint for connecting to the chain
+- `token`: An object containing token information:
+  - `symbol`: The currency symbol
+  - `decimals`: Number of decimal places for the currency
+  - `logoId`: (Optional) Used when the token's icon is different from the chain's icon (e.g., Asset Hubs)
+
+For detailed examples of how to structure your chain configuration, refer to the existing entries in the appsConfig.json file.
+
+## License
+
+This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
