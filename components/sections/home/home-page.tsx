@@ -79,7 +79,7 @@ export function HomePage({
             className="mb-6"
           >
             <div className="inline-block px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
-              <span className="text-sm text-white/80 italic">Beta: This project is still in development</span>
+              <span className="text-sm text-white/80 italic ">Beta: This project is still in development</span>
             </div>
           </motion.div>
 
