@@ -46,6 +46,28 @@ Built by Zondax to simplify the complex process of adopting the consolidated Uni
   - Vitest for testing
   - Playwright for E2E testing
 
+## :chains: Supported Parachains
+
+The following parachains are currently supported with direct RPC endpoints:
+
+- **Acala** (ACA)
+- **Ajuna** (AJUN)
+- **Astar** (ASTR)
+- **Darwinia** (RING)
+- **Enjin** (ENJ)
+- **HydraDX** (HDX)
+- **Karura** (KAR)
+- **Kusama** (KSM)
+- **Kusama Asset Hub** (KSM)
+- **Nodle** (NODL)
+- **Parallel** (PARA)
+- **Pendulum** (PEN)
+- **Phala** (PHA)
+- **Picasso** (PICA)
+- **Polkadex** (PDEX)
+- **Sora** (XOR)
+- **XXNetwork** (XX)
+
 ### Prerequisites
 
 - Node.js (LTS version)
