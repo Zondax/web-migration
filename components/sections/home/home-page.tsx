@@ -73,6 +73,20 @@ export function HomePage({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
+              delay: 1.6 / animationSpeed,
+              duration: 1 / animationSpeed,
+            }}
+            className="mb-6"
+          >
+            <div className="inline-block px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+              <span className="text-sm text-white/80 italic">Beta: This project is still in development</span>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
               delay: 1.8 / animationSpeed,
               duration: 1 / animationSpeed,
             }}
