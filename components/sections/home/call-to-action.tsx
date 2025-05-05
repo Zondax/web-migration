@@ -1,7 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, Link } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 
@@ -69,6 +70,23 @@ export default function CallToAction() {
           </div>
 
           <p className="mt-8 text-white/70 text-sm">This application is currently under development.</p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-5"
+          >
+            <Link
+              href="https://zondax.ch/terms-of-use"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/70 hover:text-white/90 text-sm underline underline-offset-2 transition-colors duration-200"
+            >
+              Terms & Conditions
+            </Link>
+          </motion.div>
         </motion.div>
       </div>
     </section>
