@@ -80,7 +80,7 @@ The following parachains are currently supported with direct RPC endpoints:
 
 ```bash
 git clone [repository-url]
-cd web-migration
+cd polkadot-web-migration
 ```
 
 2. Install dependencies:
