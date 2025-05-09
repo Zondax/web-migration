@@ -115,6 +115,7 @@ The application will be available at `http://localhost:3000`.
 - `pnpm dev:full-amount` - Starts the development server without transfer amount limitations, allowing full balance transfers
 - `pnpm build` - Build for production
 - `pnpm build:docker` - Build Docker image for the application
+- `pnpm start:docker` - Start the Docker container for the application
 - `pnpm start` - Start production server
 - `pnpm test` - Run tests with coverage
 - `pnpm test:coverage` - Run tests with detailed coverage report
@@ -198,3 +199,29 @@ For detailed examples of how to structure your chain configuration, refer to the
 ## License
 
 This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
+
+## Using Docker Scripts
+
+You can use the provided npm scripts to simplify building and running the Docker container:
+
+### Build the Docker image
+
+```sh
+pnpm build:docker
+```
+
+This runs `docker build -t polkadot-migration .` to create the Docker image.
+
+### Run the Docker container
+
+```sh
+pnpm start:docker
+```
+
+By default, this will map port 3000 from the container to port 3000 on your local machine. The script uses the `PORT` environment variable, so you can specify a custom port if needed:
+
+```sh
+PORT=4000 pnpm start:docker
+```
+
+This will map port 4000 on your machine to port 3000 in the container. Then access the app at http://localhost:4000
