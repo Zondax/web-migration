@@ -60,7 +60,6 @@ The following parachains are currently supported with direct RPC endpoints:
 - **Kusama** (KSM)
 - **Kusama Asset Hub** (KSM)
 - **Nodle** (NODL)
-- **Parallel** (PARA)
 - **Pendulum** (PEN)
 - **Phala** (PHA)
 - **Picasso** (PICA)
@@ -80,7 +79,7 @@ The following parachains are currently supported with direct RPC endpoints:
 
 ```bash
 git clone [repository-url]
-cd web-migration
+cd polkadot-web-migration
 ```
 
 2. Install dependencies:

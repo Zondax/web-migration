@@ -77,7 +77,7 @@ export const ledgerClient = {
       const nftsToTransfer = [...(account.balance?.uniques || []), ...(account.balance?.nfts || [])]
 
       // Get native amount if available
-      const nativeAmount = process.env.NEXT_PUBLIC_NODE_ENV === 'development' ? MINIMUM_AMOUNT : account.balance?.native
+      const nativeAmount = process.env.NEXT_PUBLIC_NODE_ENV === 'development' && MINIMUM_AMOUNT ? MINIMUM_AMOUNT : account.balance?.native
 
       // Prepare transaction with all assets
       const preparedTx = await prepareTransaction(api, senderAddress, receiverAddress, nftsToTransfer, appConfig, nativeAmount)

@@ -18,4 +18,4 @@ export const errorApps = process.env.NEXT_PUBLIC_ERROR_SYNC_APPS?.split(',') as 
 
 export const MINIMUM_AMOUNT = process.env.NEXT_PUBLIC_NATIVE_TRANSFER_AMOUNT
   ? parseInt(process.env.NEXT_PUBLIC_NATIVE_TRANSFER_AMOUNT)
-  : 100
+  : undefined
