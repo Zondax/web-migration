@@ -278,7 +278,6 @@
     "cla": 166,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 172,
-    "rpcEndpoint": "wss://parallel.gatotech.network",
     "token": {
       "symbol": "PARA",
       "decimals": 12
