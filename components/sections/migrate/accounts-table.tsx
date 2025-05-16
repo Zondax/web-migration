@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { Observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { motion } from 'framer-motion'
@@ -44,6 +45,13 @@ function AccountsTable({
 
   const accountsList = accounts.get() ?? []
 
+  const handleDestinationChange = useCallback(
+    (value: string, accountIndex: number, balanceIndex: number) => {
+      accounts[accountIndex].balances[balanceIndex].transaction.destinationAddress.set(value)
+    },
+    [accounts]
+  )
+
   return (
     <TableRow>
       <TableCell colSpan={6} className="p-0">
@@ -71,9 +79,7 @@ function AccountsTable({
                   return balances.map((balance: AddressBalance, balanceIndex: number) => {
                     const isFirst = balanceIndex === 0
                     const rowSpan = balances.length
-                    const handleDestinationChange = (value: string, index: number) => {
-                      accounts[accountIndex].balances[index].transaction.destinationAddress.set(value)
-                    }
+
                     return (
                       <TableRow key={`${account.address ?? accountIndex}-${balance.type}`}>
                         {/* Source Address */}
@@ -98,7 +104,7 @@ function AccountsTable({
                             balance={balance}
                             index={balanceIndex}
                             polkadotAddresses={polkadotAddresses}
-                            onDestinationChange={value => handleDestinationChange(value, balanceIndex)}
+                            onDestinationChange={value => handleDestinationChange(value, accountIndex, balanceIndex)}
                           />
                         </TableCell>
                         {/* Balance */}

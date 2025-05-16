@@ -8,7 +8,7 @@ import { maxAddressesToFetch } from '@/config/config'
 import { getApiAndProvider, getBalance } from '@/lib/account'
 import { convertSS58Format } from '@/lib/utils/address'
 import { mapLedgerError } from '@/lib/utils/error'
-import { hasAddressBalance } from '@/lib/utils/ledger'
+import { hasAddressBalance, hasBalance } from '@/lib/utils/ledger'
 
 import { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
@@ -317,7 +317,9 @@ export const ledgerState$ = observable({
 
       const accounts: Address[] = await Promise.all(
         response.result.map(async address => {
-          const { balances, collections, error } = await getBalance(address, api)
+          const { balances: balancesResponse, collections, error } = await getBalance(address, api)
+          const balances = balancesResponse.filter(balance => hasBalance([balance]))
+
           if (error) {
             return {
               ...address,
@@ -359,7 +361,9 @@ export const ledgerState$ = observable({
         })
       )
 
-      const filteredAccounts = accounts.filter(account => !filterByBalance || hasAddressBalance(account) || account.error)
+      const filteredAccounts = accounts.filter(
+        account => !filterByBalance || (account.balances && account.balances.length > 0) || account.error
+      )
 
       // Only set the app if there are accounts after filtering
       if (filteredAccounts.length > 0) {
@@ -668,34 +672,34 @@ export const ledgerState$ = observable({
     }
   },
 
-  async verifyDestinationAddresses(appId: AppId, address: string, path: string): Promise<{ isVerfied: boolean }> {
+  async verifyDestinationAddresses(appId: AppId, address: string, path: string): Promise<{ isVerified: boolean }> {
     const appConfig = appsConfigs.get(appId)
     if (!appConfig) {
       console.error(`App with id ${appId} not found.`)
-      return { isVerfied: false }
+      return { isVerified: false }
     }
 
     // Find the index of the address in the polkadotAddresses array
     const polkadotAddresses = ledgerState$.polkadotAddresses[appId].get()
     if (!polkadotAddresses || polkadotAddresses.length === 0) {
       console.error(`No Polkadot addresses found for app ${appId}.`)
-      return { isVerfied: false }
+      return { isVerified: false }
     }
 
     // Find the index of the address in the polkadotAddresses array
     const addressIndex = polkadotAddresses.findIndex(addr => addr === address)
     if (addressIndex === -1) {
       console.error(`Address ${address} not found in Polkadot addresses for app ${appId}.`)
-      return { isVerfied: false }
+      return { isVerified: false }
     }
 
     const polkadotConfig = polkadotAppConfig
     try {
       const response = await ledgerClient.getAccountAddress(polkadotConfig.bip44Path, addressIndex, appConfig.ss58Prefix)
 
-      return { isVerfied: response.result?.address === address }
+      return { isVerified: response.result?.address === address }
     } catch (error) {
-      return { isVerfied: false }
+      return { isVerified: false }
     }
   },
 

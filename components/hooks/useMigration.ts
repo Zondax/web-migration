@@ -125,8 +125,8 @@ export const useMigration = (): UseMigrationReturn => {
 
     const response = await ledgerState$.verifyDestinationAddresses(appId, address.address, address.path)
 
-    // The property is spelled 'isVerfied' in the API response
-    destinationAddressesStatus$[appId][addressIndex].status.set(response.isVerfied ? 'verified' : 'failed')
+    // The property is spelled 'isVerified' in the API response
+    destinationAddressesStatus$[appId][addressIndex].status.set(response.isVerified ? 'verified' : 'failed')
   }
 
   /**
