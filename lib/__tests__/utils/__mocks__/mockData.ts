@@ -1,5 +1,5 @@
 import { App, AppStatus } from 'state/ledger'
-import { Address, Collection, Nft } from 'state/types/ledger'
+import { Address, BalanceType, Collection, Nft } from 'state/types/ledger'
 
 // =========== Common Test Addresses ===========
 export const TEST_ADDRESSES = {
@@ -100,33 +100,60 @@ export const mockAddress1: Address = {
   path: "m/44'/354'/0'/0'",
   pubKey: '0x123',
   address: TEST_ADDRESSES.ADDRESS1,
-  balance: {
-    native: 1000,
-    nfts: [],
-    uniques: [],
-  },
+  balances: [
+    {
+      type: BalanceType.NATIVE,
+      balance: 1000,
+    },
+    {
+      type: BalanceType.NFT,
+      balance: [],
+    },
+    {
+      type: BalanceType.UNIQUE,
+      balance: [],
+    },
+  ],
 }
 
 export const mockAddress2: Address = {
   path: "m/44'/354'/0'/1'",
   pubKey: '0x456',
   address: TEST_ADDRESSES.ADDRESS2,
-  balance: {
-    native: 0,
-    nfts: [mockNft1],
-    uniques: [],
-  },
+  balances: [
+    {
+      type: BalanceType.NATIVE,
+      balance: 0,
+    },
+    {
+      type: BalanceType.NFT,
+      balance: [mockNft1],
+    },
+    {
+      type: BalanceType.UNIQUE,
+      balance: [],
+    },
+  ],
 }
 
 export const mockAddress3: Address = {
   path: "m/44'/354'/0'/2'",
   pubKey: '0x789',
   address: TEST_ADDRESSES.ADDRESS3,
-  balance: {
-    native: 0,
-    nfts: [],
-    uniques: [mockUnique],
-  },
+  balances: [
+    {
+      type: BalanceType.NATIVE,
+      balance: 0,
+    },
+    {
+      type: BalanceType.NFT,
+      balance: [],
+    },
+    {
+      type: BalanceType.UNIQUE,
+      balance: [mockUnique],
+    },
+  ],
 }
 
 export const mockAddressWithError: Address = {
@@ -137,7 +164,7 @@ export const mockAddressWithError: Address = {
     source: 'balance_fetch',
     description: 'Failed to sync',
   },
-  balance: undefined,
+  balances: undefined,
 }
 
 export const mockAddressWithMigrationError: Address = {
@@ -148,28 +175,47 @@ export const mockAddressWithMigrationError: Address = {
     source: 'migration',
     description: 'Migration failed',
   },
-  balance: undefined,
+  balances: undefined,
 }
 
 export const mockAddressNoBalance: Address = {
   path: "m/44'/354'/0'/5'",
   pubKey: '0xeee',
   address: TEST_ADDRESSES.ADDRESS6,
-  balance: {
-    native: 0,
-    nfts: [],
-    uniques: [],
-  },
+  balances: [
+    {
+      type: BalanceType.NATIVE,
+      balance: 0,
+    },
+    {
+      type: BalanceType.NFT,
+      balance: [],
+    },
+    {
+      type: BalanceType.UNIQUE,
+      balance: [],
+    },
+  ],
 }
 
 export const mockAddressPartialBalance: Address = {
   path: "m/44'/354'/0'/6'",
   pubKey: '0xfff',
   address: TEST_ADDRESSES.ADDRESS7,
-  balance: {
-    native: 0,
-    nfts: [],
-  },
+  balances: [
+    {
+      type: BalanceType.NATIVE,
+      balance: 0,
+    },
+    {
+      type: BalanceType.NFT,
+      balance: [],
+    },
+    {
+      type: BalanceType.UNIQUE,
+      balance: [],
+    },
+  ],
 }
 
 // =========== Mock Apps ===========
