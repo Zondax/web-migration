@@ -67,6 +67,10 @@ The following parachains are currently supported with direct RPC endpoints:
 - **Sora** (XOR)
 - **XXNetwork** (XX)
 
+## Account Discovery
+
+By default, the application synchronizes the first 10 accounts of each app when connecting to a Ledger device. This behavior can be customized by setting the 'NEXT_PUBLIC_MAX_ADDRESSES_TO_FETCH' environment variable to your desired number of accounts.
+
 ### Prerequisites
 
 - Node.js (LTS version)
