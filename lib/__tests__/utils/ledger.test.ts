@@ -1,5 +1,5 @@
 import { App } from 'state/ledger'
-import { Address } from 'state/types/ledger'
+import { Address, BalanceType } from 'state/types/ledger'
 import { describe, expect, it } from 'vitest'
 
 import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors, hasAddressBalance } from '../../utils/ledger'
@@ -186,9 +186,12 @@ describe('hasBalance', () => {
   it('should handle balance with only uniques property', () => {
     const addressWithOnlyUniques: Address = {
       ...mockAddress1,
-      balance: {
-        uniques: [mockUnique],
-      },
+      balances: [
+        {
+          type: BalanceType.UNIQUE,
+          balance: [mockUnique],
+        },
+      ],
     }
     expect(hasAddressBalance(addressWithOnlyUniques)).toBe(true)
   })
@@ -196,9 +199,12 @@ describe('hasBalance', () => {
   it('should handle balance with only nfts property', () => {
     const addressWithOnlyNfts: Address = {
       ...mockAddress1,
-      balance: {
-        nfts: [mockNft1],
-      },
+      balances: [
+        {
+          type: BalanceType.NFT,
+          balance: [mockNft1],
+        },
+      ],
     }
     expect(hasAddressBalance(addressWithOnlyNfts)).toBe(true)
   })
@@ -206,9 +212,12 @@ describe('hasBalance', () => {
   it('should handle balance with only native property', () => {
     const addressWithOnlyNative: Address = {
       ...mockAddress1,
-      balance: {
-        native: 100,
-      },
+      balances: [
+        {
+          type: BalanceType.NATIVE,
+          balance: 100,
+        },
+      ],
     }
     expect(hasAddressBalance(addressWithOnlyNative)).toBe(true)
   })
@@ -216,11 +225,20 @@ describe('hasBalance', () => {
   it('should return false for zero native balance and empty arrays', () => {
     const addressWithZeroBalances: Address = {
       ...mockAddress1,
-      balance: {
-        native: 0,
-        nfts: [],
-        uniques: [],
-      },
+      balances: [
+        {
+          type: BalanceType.NATIVE,
+          balance: 0,
+        },
+        {
+          type: BalanceType.NFT,
+          balance: [],
+        },
+        {
+          type: BalanceType.UNIQUE,
+          balance: [],
+        },
+      ],
     }
     expect(hasAddressBalance(addressWithZeroBalances)).toBe(false)
   })
