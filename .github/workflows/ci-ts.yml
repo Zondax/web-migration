@@ -21,6 +21,7 @@ jobs:
     uses: zondax/_workflows/.github/workflows/_checks-ts.yaml@v1.0.0
     with:
       package_manager: pnpm
+      submodules: false
 
   logo-size-check:
     uses: ./.github/workflows/logo-check.yml
