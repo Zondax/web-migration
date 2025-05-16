@@ -4,6 +4,7 @@ import { ErrorDetails, errorDetails, InternalErrors, LedgerErrors } from 'config
 import { errorApps, syncApps } from 'config/mockData'
 
 import { Token } from '@/config/apps'
+import { maxAddressesToFetch } from '@/config/config'
 import { getApiAndProvider, getBalance } from '@/lib/account'
 import { convertSS58Format } from '@/lib/utils/address'
 import { mapLedgerError } from '@/lib/utils/error'
@@ -506,7 +507,7 @@ export const ledgerState$ = observable({
 
       notifications$.push({
         title: `Synchronizing accounts`,
-        description: `The first 5 accounts will be synchronized for each blockchain.`,
+        description: `The first ${maxAddressesToFetch} accounts will be synchronized for each blockchain.`,
         type: 'info',
         autoHideDuration: 5000,
       })

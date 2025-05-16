@@ -42,7 +42,7 @@ export class LedgerService implements ILedgerService {
       transport: undefined,
       genericApp: undefined,
     }
-    console.debug('disconnecting')
+    console.debug('[ledgerService] disconnecting')
   }
 
   /**
@@ -50,8 +50,10 @@ export class LedgerService implements ILedgerService {
    */
   async openApp(transport: Transport, appName: string): Promise<{ connection?: DeviceConnectionProps }> {
     if (!transport) {
+      console.debug('[ledgerService] Transport not available')
       throw new Error('TransportStatusError')
     }
+    console.debug(`[ledgerService] Opening ${appName} app`)
     await openApp(transport, appName)
     return { connection: { transport } }
   }
@@ -60,6 +62,7 @@ export class LedgerService implements ILedgerService {
    * Initializes the Ledger transport
    */
   async initializeTransport(onDisconnect?: () => void): Promise<Transport> {
+    console.debug('[ledgerService] Initializing transport')
     const transport = await TransportWebUSB.create()
     this.deviceConnection.transport = transport
 
@@ -77,9 +80,11 @@ export class LedgerService implements ILedgerService {
    */
   async isAppOpen(genericApp: PolkadotGenericApp): Promise<boolean> {
     try {
+      console.debug('[ledgerService] Checking if app is open')
       const version = await genericApp.getVersion()
       return Boolean(version)
     } catch (error) {
+      console.debug('[ledgerService] App not open:', error)
       return false
     }
   }
@@ -88,11 +93,13 @@ export class LedgerService implements ILedgerService {
    * Establishes a connection to the Ledger device
    */
   async establishDeviceConnection(onDisconnect?: () => void): Promise<DeviceConnectionProps | undefined> {
+    console.debug('[ledgerService] Establishing device connection')
     const transport = this.deviceConnection.transport || (await this.initializeTransport(onDisconnect))
     const genericApp = this.deviceConnection.genericApp || new PolkadotGenericApp(transport)
     const isOpen = await this.isAppOpen(genericApp)
 
     if (!isOpen) {
+      console.debug('[ledgerService] App not open, attempting to open')
       this.openApp(transport, 'Polkadot Migration')
       return { transport, genericApp, isAppOpen: false }
     }
@@ -106,14 +113,14 @@ export class LedgerService implements ILedgerService {
    * Connects to the Ledger device
    */
   async connectDevice(onDisconnect?: () => void): Promise<ConnectionResponse | undefined> {
-    console.debug('Attempting to connect device...')
+    console.debug('[ledgerService] Attempting to connect device...')
     const connection = await this.establishDeviceConnection(onDisconnect)
     if (!connection) {
-      console.debug('Failed to establish device connection')
+      console.debug('[ledgerService] Failed to establish device connection')
       throw new Error('Failed to establish device connection')
     }
 
-    console.debug(`Device connected successfully, the app is ${connection.isAppOpen ? 'open' : 'closed'}`)
+    console.debug(`[ledgerService] Device connected successfully, the app is ${connection.isAppOpen ? 'open' : 'closed'}`)
     return { connection }
   }
 
@@ -125,8 +132,11 @@ export class LedgerService implements ILedgerService {
       throw new Error('App not open')
     }
 
+    console.debug(`[ledgerService] Getting address for path: ${bip44Path}`)
     const genericApp = this.deviceConnection.genericApp as unknown as PolkadotGenericApp
-    return await genericApp.getAddress(bip44Path, ss58prefix, showAddrInDevice)
+    const address = await genericApp.getAddress(bip44Path, ss58prefix, showAddrInDevice)
+    console.debug(`[ledgerService] Found address: ${address} for path: ${bip44Path}`)
+    return address
   }
 
   /**
@@ -142,10 +152,12 @@ export class LedgerService implements ILedgerService {
       throw new Error('App not open')
     }
 
+    console.debug(`[ledgerService] Signing transaction for path: ${bip44Path}, chainId: ${chainId}`)
     const genericApp = this.deviceConnection.genericApp as unknown as PolkadotGenericApp
 
     genericApp.txMetadataChainId = chainId
     const { signature } = await genericApp.signWithMetadataEd25519(bip44Path, Buffer.from(payloadBytes), Buffer.from(proof1))
+    console.debug('[ledgerService] Transaction signed successfully')
     return { signature }
   }
 
@@ -153,6 +165,7 @@ export class LedgerService implements ILedgerService {
    * Clears the connection
    */
   clearConnection() {
+    console.debug('[ledgerService] Clearing connection')
     this.deviceConnection = {
       transport: undefined,
       genericApp: undefined,
@@ -163,6 +176,7 @@ export class LedgerService implements ILedgerService {
    * Disconnects from the Ledger device
    */
   disconnect() {
+    console.debug('[ledgerService] Disconnecting device')
     if (this.deviceConnection?.transport) {
       this.deviceConnection.transport.close()
       this.deviceConnection.transport.emit('disconnect')
