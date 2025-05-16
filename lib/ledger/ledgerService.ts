@@ -53,6 +53,7 @@ export class LedgerService implements ILedgerService {
       console.debug('[ledgerService] Transport not available')
       throw new Error('TransportStatusError')
     }
+
     console.debug(`[ledgerService] Opening ${appName} app`)
     await openApp(transport, appName)
     return { connection: { transport } }
