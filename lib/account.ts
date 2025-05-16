@@ -9,17 +9,7 @@ import { hexToU8a } from '@polkadot/util'
 import { AppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
-import {
-  Address,
-  AddressBalance,
-  BalanceType,
-  Collection,
-  NativeBalance,
-  Nft,
-  NftBalance,
-  NftsInfo,
-  TransactionStatus,
-} from 'state/types/ledger'
+import { Address, AddressBalance, BalanceType, Collection, Nft, NftsInfo, TransactionStatus } from 'state/types/ledger'
 
 // Get API and Provider
 export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
@@ -78,7 +68,7 @@ export async function getBalance(
   address: Address,
   api: ApiPromise
 ): Promise<{
-  balances: (NativeBalance | NftBalance)[]
+  balances: AddressBalance[]
   collections: { uniques: Collection[]; nfts: Collection[] }
   error?: string
 }> {
@@ -111,8 +101,8 @@ export async function getBalance(
 
     const balances: AddressBalance[] = [
       { type: BalanceType.NATIVE, balance: nativeBalance ?? 0 },
-      ...(uniquesNfts.length > 0 ? ([{ type: BalanceType.UNIQUE, balance: uniquesNfts }] as NftBalance[]) : []),
-      ...(nfts.length > 0 ? ([{ type: BalanceType.NFT, balance: nfts }] as NftBalance[]) : []),
+      { type: BalanceType.UNIQUE, balance: uniquesNfts },
+      { type: BalanceType.NFT, balance: nfts },
     ]
 
     return {
