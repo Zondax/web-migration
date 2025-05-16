@@ -1,4 +1,4 @@
-import { Collection } from 'state/types/ledger'
+import { BalanceType, Collection } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
 import { Token } from '@/config/apps'
@@ -87,4 +87,12 @@ const NativeTokensDetailCard = ({ balance, token }: NativeTokensDetailCardProps)
   )
 }
 
-export { NativeTokensDetailCard, NftDetailCard }
+interface BalanceTypeFlagProps {
+  type: BalanceType
+}
+
+const BalanceTypeFlag = ({ type }: BalanceTypeFlagProps) => {
+  return <span className="bg-gray-500 text-white text-[10px] uppercase px-2 py-0.5 rounded-full ml-2 flex-shrink-0">{type}</span>
+}
+
+export { BalanceTypeFlag, NativeTokensDetailCard, NftDetailCard }

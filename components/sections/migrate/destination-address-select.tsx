@@ -1,37 +1,31 @@
 import { useMemo } from 'react'
-import { Observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
-import { Address, AddressStatus } from 'state/types/ledger'
+import { AddressBalance } from 'state/types/ledger'
 
+import { hasBalance } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AddressLink } from '@/components/AddressLink'
 
 interface DestinationAddressSelectProps {
-  account: Observable<Address>
+  balance: AddressBalance
   index: number
   polkadotAddresses: string[] | undefined
   onDestinationChange: (value: string, index: number) => void
 }
 
-function DestinationAddressSelect({ account, index, polkadotAddresses, onDestinationChange }: DestinationAddressSelectProps) {
+function DestinationAddressSelect({ balance, index, polkadotAddresses, onDestinationChange }: DestinationAddressSelectProps) {
+  const destinationAddress = balance.transaction?.destinationAddress
   const isDisabled = useMemo(() => {
-    return (
-      (account.balance.native.get() === undefined &&
-        (account.balance.nfts.get() === undefined || account.balance.nfts.get()?.length === 0) &&
-        (account.balance.uniques.get() === undefined || account.balance.uniques.get()?.length === 0)) ||
-      account.status.get() === AddressStatus.MIGRATED ||
-      !polkadotAddresses ||
-      polkadotAddresses.length === 0
-    )
-  }, [account, polkadotAddresses])
+    return !hasBalance([balance]) || !polkadotAddresses || polkadotAddresses.length === 0
+  }, [balance, polkadotAddresses])
 
   return (
-    <Select value={account.destinationAddress.get() || ''} onValueChange={value => onDestinationChange(value, index)} disabled={isDisabled}>
+    <Select value={destinationAddress || ''} onValueChange={value => onDestinationChange(value, index)} disabled={isDisabled}>
       <SelectTrigger className="w-full">
         <SelectValue>
           <AddressLink
-            value={account.destinationAddress.get() || ''}
-            tooltipText={account.destinationAddress.get() || ''}
+            value={destinationAddress || ''}
+            tooltipText={destinationAddress || ''}
             className="break-all"
             hasCopyButton={false}
           />

@@ -32,6 +32,7 @@ export enum AddressStatus {
  * Status of a transaction through its lifecycle
  */
 export enum TransactionStatus {
+  IS_LOADING = 'isLoading',
   PENDING = 'pending',
   IN_BLOCK = 'inBlock',
   FINALIZED = 'finalized',
@@ -52,6 +53,7 @@ export interface Transaction {
   hash?: string
   blockHash?: string
   blockNumber?: string
+  destinationAddress?: string
 }
 
 export interface TransactionDetails {
@@ -60,9 +62,19 @@ export interface TransactionDetails {
   blockNumber?: string
 }
 
+/**
+ * Types of balances that can be migrated
+ */
+export enum BalanceType {
+  NATIVE = 'native',
+  UNIQUE = 'unique',
+  NFT = 'nft',
+}
+
 export type UpdateMigratedStatusFn = (
   appId: AppId,
   accountPath: string,
+  type: BalanceType,
   status: TransactionStatus,
   message?: string,
   txDetails?: TransactionDetails
@@ -71,25 +83,37 @@ export type UpdateMigratedStatusFn = (
 /**
  * Balance information for an account
  */
-export interface Balance {
-  native?: number
-  nfts?: Nft[]
-  uniques?: Nft[]
+export interface NativeBalance {
+  type: BalanceType.NATIVE
+  balance: number
+  transaction?: Transaction
 }
+
+/**
+ * Balance information for an account
+ */
+export interface NftBalance {
+  type: BalanceType.UNIQUE | BalanceType.NFT
+  balance: Nft[]
+  transaction?: Transaction
+}
+
+/**
+ * Union type for all balance types
+ */
+export type AddressBalance = NativeBalance | NftBalance
 
 /**
  * Extended address information including balance, status and transaction details
  */
 export interface Address extends GenericeResponseAddress {
-  balance?: Balance
+  balances?: AddressBalance[]
   status?: AddressStatus
   isLoading?: boolean
   error?: {
     source: 'migration' | 'balance_fetch'
     description: string
   }
-  transaction?: Transaction
-  destinationAddress?: string
   path: string
 }
 
