@@ -135,7 +135,7 @@ export class LedgerService implements ILedgerService {
     console.debug(`[ledgerService] Getting address for path: ${bip44Path}`)
     const genericApp = this.deviceConnection.genericApp as unknown as PolkadotGenericApp
     const address = await genericApp.getAddress(bip44Path, ss58prefix, showAddrInDevice)
-    console.debug(`[ledgerService] Found address: ${address} for path: ${bip44Path}`)
+    console.debug(`[ledgerService] Found address: ${address.address} for path: ${bip44Path}`)
     return address
   }
 
