@@ -3,6 +3,8 @@ import { ApiPromise, WsProvider } from '@polkadot/api'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { GenericExtrinsicPayload } from '@polkadot/types'
 import { Option } from '@polkadot/types-codec'
+import { Codec } from '@polkadot/types-codec/types'
+import type { StakingLedger } from '@polkadot/types/interfaces'
 import { Hash, OpaqueMetadata } from '@polkadot/types/interfaces'
 import { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
 import { hexToU8a } from '@polkadot/util'
@@ -10,6 +12,8 @@ import { AppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
 import { Address, Balance, Collection, Nft, NftsInfo, TransactionStatus } from 'state/types/ledger'
+
+import { ledgerService } from '@/lib/ledger/ledgerService'
 
 // Get API and Provider
 export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
@@ -855,4 +859,136 @@ export async function getEnrichedNftMetadata(metadataUrl: string): Promise<{
     console.error('Error getting enriched NFT metadata:', error)
     return null
   }
+}
+
+/**
+ * Formats a KSM amount to a human-readable string (Probably not needed, we have a format amount function)
+ * @param amount The amount in KSM
+ * @returns The formatted amount as a string
+ */
+function formatKSM(amount: string): string {
+  const value = BigInt(amount)
+  const ksm = Number(value) / 1e12
+  return `${ksm.toFixed(4)} KSM`
+}
+
+/**
+ * Converts an era number to a human-readable time string
+ * @param era The era number
+ * @param currentEra The current era number
+ * @returns The human-readable time string
+ */
+function eraToHumanTime(era: number, currentEra: number): string {
+  const erasRemaining = era - currentEra
+  const hoursRemaining = erasRemaining * 6 // Each era is ~6 hours
+  const daysRemaining = Math.floor(hoursRemaining / 24)
+  const remainingHours = hoursRemaining % 24
+
+  if (daysRemaining > 0) {
+    return `${daysRemaining} days and ${remainingHours} hours`
+  }
+  return `${remainingHours} hours`
+}
+
+/**
+ * Gets the staking information for an address
+ * @param address The address to check
+ * @param api The API instance
+ * @returns The staking information
+ */
+export async function getStakingInfo(address: string, api: ApiPromise) {
+  // Get Controller and check if we can unstake or not
+  const controller = (await api.query.staking.bonded(address)) as Option<Codec>
+  if (controller.isSome) {
+    if (controller.toHuman() == address) {
+      console.log('Controller is the stash address')
+    } else {
+      console.log('Controller is not the stash address. Cant unstake with this account')
+    }
+  } else {
+    console.log('Account has no active staking')
+  }
+
+  // Get staking info
+  const stakingLedgerRaw = (await api.query.staking.ledger(address)) as Option<StakingLedger>
+  if (stakingLedgerRaw && !stakingLedgerRaw.isEmpty) {
+    const stakingLedger = stakingLedgerRaw.unwrap()
+    console.log('Staking Ledger Details:')
+    console.log('Stash Account:', stakingLedger.stash.toString())
+    console.log('Total Balance:', formatKSM(stakingLedger.total.toString()))
+    console.log('Active Balance:', formatKSM(stakingLedger.active.toString()))
+
+    // Get current era
+    const currentEraOption = (await api.query.staking.currentEra()) as Option<Codec>
+    const currentEra = currentEraOption.isSome ? Number(currentEraOption.unwrap().toString()) : 0
+    console.log('Current Era:', currentEra)
+
+    // Check if there are any unlocking amounts
+    if (stakingLedger.unlocking.length > 0) {
+      console.log('\nUnlocking amounts:')
+      stakingLedger.unlocking.forEach((chunk, index) => {
+        const era = Number(chunk.era.toString())
+        const timeRemaining = eraToHumanTime(era, currentEra)
+        console.log(`\nUnlock #${index + 1}:`)
+        console.log(`Amount: ${formatKSM(chunk.value.toString())}`)
+        console.log(`Era: ${era}`)
+        console.log(`Estimated unlock time: ${timeRemaining} from now`)
+      })
+    } else {
+      console.log('\nNo amounts currently unlocking')
+    }
+
+    console.log('\nClaimed Rewards Eras:', stakingLedger.claimedRewards?.map(era => era.toString()) || [])
+  } else {
+    console.log('Account has no active staking ledger')
+  }
+}
+
+/**
+ * Unstakes a fixed amount of 0.1 KSM
+ * @param address The address to unstake from
+ * @param api The API instance
+ * @param appConfig The app configuration
+ * @param path The BIP44 path for the Ledger device
+ * @param updateStatus Function to update transaction status
+ */
+export async function unstakeAmount(
+  address: string,
+  api: ApiPromise,
+  appConfig: AppConfig,
+  path: string
+): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
+  // Convert 0.1 KSM to the smallest unit (1 KSM = 10^12)
+  const amount = 0.1 * 1e12
+  const unstakeTx = api.tx.staking.unbond(amount) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  // Prepare transaction payload
+  const preparedTx = await prepareTransactionPayload(api, address, appConfig, unstakeTx)
+  if (!preparedTx) {
+    throw new Error('Failed to prepare transaction')
+  }
+  const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
+  const typedTransfer = transfer as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  // Get chain ID from app config
+  const chainId = appConfig.token.symbol.toLowerCase()
+
+  // Sign transaction with Ledger
+  const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
+  if (!signature) {
+    throw new Error('Failed to sign transaction')
+  }
+
+  // Create signed extrinsic
+  const signedExtrinsic = createSignedExtrinsic(
+    api,
+    typedTransfer,
+    address,
+    signature,
+    payload,
+    nonce,
+    metadataHash
+  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  return signedExtrinsic
 }
