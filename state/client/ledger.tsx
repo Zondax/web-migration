@@ -4,7 +4,7 @@ import { maxAddressesToFetch } from 'config/config'
 import { InternalErrors } from 'config/errors'
 
 import { MINIMUM_AMOUNT } from '@/config/mockData'
-import { createSignedExtrinsic, getApiAndProvider, prepareTransaction, submitAndHandleTransaction } from '@/lib/account'
+import { createSignedExtrinsic, getApiAndProvider, getStakingInfo, prepareTransaction, submitAndHandleTransaction, unstakeAmount } from '@/lib/account'
 import { ledgerService } from '@/lib/ledger/ledgerService'
 import { hasBalance } from '@/lib/utils'
 import { getBip44Path } from '@/lib/utils/address'
@@ -51,16 +51,8 @@ export const ledgerClient = {
     updateStatus: UpdateMigratedStatusFn
   ): Promise<{ txPromise?: Promise<void> } | undefined> {
     const senderAddress = account.address
-    const receiverAddress = account.destinationAddress
-    const hasAvailableBalance = hasBalance(account)
     const appConfig = appsConfigs.get(appId)
 
-    if (!receiverAddress) {
-      throw InternalErrors.NO_RECEIVER_ADDRESS
-    }
-    if (!hasAvailableBalance) {
-      throw InternalErrors.NO_TRANSFER_AMOUNT
-    }
     if (!appConfig) {
       throw InternalErrors.APP_CONFIG_NOT_FOUND
     }
@@ -73,6 +65,30 @@ export const ledgerClient = {
         throw new Error(error ?? 'Failed to connect to the blockchain.')
       }
 
+      // Get staking info
+      const stakingInfo = await getStakingInfo(senderAddress, api)
+
+      // Unstake fixed amount of 0.1 KSM
+      const unstakeTx = await unstakeAmount(senderAddress, api, appConfig, account.path)
+
+      const updateMigratedStatus = (
+        status: TransactionStatus,
+        message?: string,
+        txDetails?: {
+          txHash?: string
+          blockHash?: string
+          blockNumber?: string
+        }
+      ) => {
+        updateStatus(appConfig.id, account.path, status, message, txDetails)
+      }
+
+      // Create transaction promise but don't await it
+      const txPromise = submitAndHandleTransaction(unstakeTx, updateMigratedStatus, api)
+
+      return { txPromise }
+
+      /* Commented out NFT and native token transfer code
       // Collect all NFTs to transfer (both uniques and regular NFTs)
       const nftsToTransfer = [...(account.balance?.uniques || []), ...(account.balance?.nfts || [])]
 
@@ -111,6 +127,7 @@ export const ledgerClient = {
         return { txPromise }
       }
       return
+      */
     }, InternalErrors.UNKNOWN_ERROR)
   },
 
