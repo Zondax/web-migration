@@ -67,7 +67,7 @@
     "drizzle-zod": "^0.7.1",
     "framer-motion": "^12.6.3",
     "html-react-parser": "^5.2.3",
-    "isomorphic-dompurify": "^2.24.0",
+    "isomorphic-dompurify": "^2.25.0",
     "lucide-react": "^0.487.0",
     "next": "15.2.4",
     "next-auth": "5.0.0-beta.19",
