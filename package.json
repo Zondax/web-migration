@@ -83,7 +83,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@eslint/js": "9.24.0",
+    "@eslint/js": "9.27.0",
     "@ianvs/prettier-plugin-sort-imports": "4.4.1",
     "@playwright/test": "1.51.1",
     "@testing-library/jest-dom": "^6.6.3",
