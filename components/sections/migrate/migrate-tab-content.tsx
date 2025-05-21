@@ -8,6 +8,7 @@ import { App } from 'state/ledger'
 import { Address, TransactionStatus } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
+import { hasBalance } from '@/lib/utils'
 import { muifyHtml } from '@/lib/utils/html'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -39,48 +40,44 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
     return null
   }
 
-  const renderStatusIcon = (account: Address) => {
-    const txStatus = account.transaction?.status
-    const txStatusMessage = account.transaction?.statusMessage
+  const renderStatusIcon = (account: Address, balanceIndex: number) => {
+    const txStatus = account.balances?.[balanceIndex].transaction?.status
+    const txStatusMessage = account.balances?.[balanceIndex].transaction?.statusMessage
     let statusIcon
     let tooltipContent = txStatusMessage
 
-    if (account.isLoading) {
-      statusIcon = <Spinner />
-      tooltipContent = 'Loading...'
-    } else if (account.error) {
-      statusIcon = <AlertCircle className="h-4 w-4 text-red-500" />
-      tooltipContent = account.error.description
-    } else {
-      switch (txStatus) {
-        case TransactionStatus.PENDING:
-          statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-          tooltipContent = 'Transaction pending...'
-          break
-        case TransactionStatus.IN_BLOCK:
-          statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-          break
-        case TransactionStatus.FINALIZED:
-          statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-          break
-        case TransactionStatus.SUCCESS:
-          statusIcon = <CheckCircle className="h-4 w-4 text-green-500" />
-          break
-        case TransactionStatus.FAILED:
-          statusIcon = <XCircle className="h-4 w-4 text-red-500" />
-          break
-        case TransactionStatus.ERROR:
-          statusIcon = <AlertCircle className="h-4 w-4 text-red-500" />
-          break
-        case TransactionStatus.WARNING:
-          statusIcon = <AlertCircle className="h-4 w-4 text-yellow-500" />
-          break
-        case TransactionStatus.COMPLETED:
-          statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-          break
-        default:
-          statusIcon = <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Ready to migrate</span>
-      }
+    switch (txStatus) {
+      case TransactionStatus.IS_LOADING:
+        statusIcon = <Spinner />
+        tooltipContent = 'Loading...'
+        break
+      case TransactionStatus.PENDING:
+        statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
+        tooltipContent = 'Transaction pending...'
+        break
+      case TransactionStatus.IN_BLOCK:
+        statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
+        break
+      case TransactionStatus.FINALIZED:
+        statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
+        break
+      case TransactionStatus.SUCCESS:
+        statusIcon = <CheckCircle className="h-4 w-4 text-green-500" />
+        break
+      case TransactionStatus.FAILED:
+        statusIcon = <XCircle className="h-4 w-4 text-red-500" />
+        break
+      case TransactionStatus.ERROR:
+        statusIcon = <AlertCircle className="h-4 w-4 text-red-500" />
+        break
+      case TransactionStatus.WARNING:
+        statusIcon = <AlertCircle className="h-4 w-4 text-yellow-500" />
+        break
+      case TransactionStatus.COMPLETED:
+        statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
+        break
+      default:
+        statusIcon = <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Ready to migrate</span>
     }
 
     return tooltipContent ? <SimpleTooltip tooltipText={tooltipContent}>{statusIcon}</SimpleTooltip> : statusIcon
@@ -89,42 +86,37 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
   // Render a row for each account in the app
   return (
     <>
-      {app.accounts
-        .filter(
-          account =>
-            account.balance &&
-            (account.balance.native !== 0 ||
-              (account.balance.nfts && account.balance.nfts?.length !== 0) ||
-              (account.balance.uniques && account.balance.uniques?.length !== 0)) &&
-            account.destinationAddress
-        )
-        .map((account, index) => (
-          <TableRow key={`${app.id}-${account.address}-${index}`}>
-            <TableCell className="px-2 hidden sm:table-cell">
-              <div className="max-h-8 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8 flex justify-center items-center">
-                {icon && muifyHtml(icon)}
-              </div>
-            </TableCell>
-            <TableCell>
-              <AddressLink value={account.address} className="font-mono" tooltipText={`${account.address} - ${account.path}`} />
-            </TableCell>
-            <TableCell>
-              <AddressLink value={account.pubKey} className="font-mono" />
-            </TableCell>
-            <TableCell>
-              <AddressLink value={account.destinationAddress!} className="font-mono" />
-            </TableCell>
-            <TableCell>
-              <BalanceHoverCard balance={account.balance!} collections={collections} token={app.token} />
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center space-x-2">
-                {renderStatusIcon(account)}
-                {account.transaction && <TransactionDropdown transaction={account.transaction} />}
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
+      {app.accounts.map((account, accountIndex) => {
+        return account.balances
+          ?.filter(balance => hasBalance([balance]) && balance.transaction?.destinationAddress)
+          .map((balance, balanceIndex) => (
+            <TableRow key={`${app.id}-${account.address}-${accountIndex}-${balanceIndex}`}>
+              <TableCell className="px-2 hidden sm:table-cell">
+                <div className="max-h-8 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8 flex justify-center items-center">
+                  {icon && muifyHtml(icon)}
+                </div>
+              </TableCell>
+              <TableCell>
+                <AddressLink value={account.address} className="font-mono" tooltipText={`${account.address} - ${account.path}`} />
+              </TableCell>
+              <TableCell>
+                <AddressLink value={account.pubKey} className="font-mono" />
+              </TableCell>
+              <TableCell>
+                <AddressLink value={balance.transaction?.destinationAddress || ''} className="font-mono" />
+              </TableCell>
+              <TableCell>
+                <BalanceHoverCard balance={balance} collections={collections} token={app.token} />
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center space-x-2">
+                  {renderStatusIcon(account, balanceIndex)}
+                  {balance.transaction && <TransactionDropdown transaction={balance.transaction} />}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))
+      })}
     </>
   )
 })

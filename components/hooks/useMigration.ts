@@ -65,11 +65,19 @@ export const useMigration = (): UseMigrationReturn => {
 
         // Process each account and only keep unique destination addresses
         app.accounts.forEach(account => {
-          if (account.destinationAddress && !addressMap.has(account.destinationAddress)) {
-            addressMap.set(account.destinationAddress, {
-              address: account.destinationAddress,
-              path: account.path,
-              status: 'pending',
+          if (account.balances && account.balances.length > 0) {
+            account.balances.forEach(balance => {
+              if (
+                balance.transaction &&
+                balance.transaction.destinationAddress &&
+                !addressMap.has(balance.transaction.destinationAddress)
+              ) {
+                addressMap.set(balance.transaction.destinationAddress, {
+                  address: balance.transaction.destinationAddress,
+                  path: account.path,
+                  status: 'pending',
+                })
+              }
             })
           }
         })
@@ -117,8 +125,8 @@ export const useMigration = (): UseMigrationReturn => {
 
     const response = await ledgerState$.verifyDestinationAddresses(appId, address.address, address.path)
 
-    // The property is spelled 'isVerfied' in the API response
-    destinationAddressesStatus$[appId][addressIndex].status.set(response.isVerfied ? 'verified' : 'failed')
+    // The property is spelled 'isVerified' in the API response
+    destinationAddressesStatus$[appId][addressIndex].status.set(response.isVerified ? 'verified' : 'failed')
   }
 
   /**
