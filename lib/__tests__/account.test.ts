@@ -6,6 +6,9 @@ import {
   fetchFromIpfs,
   getApiAndProvider,
   getEnrichedNftMetadata,
+  getNativeBalance,
+  getUniquesBalance,
+  ipfsToHttpUrl,
   processCollectionMetadata,
   processNftItem,
 } from '../account'
@@ -444,5 +447,119 @@ describe('getEnrichedNftMetadata', () => {
 
     // Verify
     expect(result).toBeNull()
+  })
+})
+
+describe('getNativeBalance', () => {
+  // 1. Unit Tests for Transformation
+  it('should extract free balance correctly', async () => {
+    const mockAccountInfo = {
+      data: { free: '1000000000000' },
+    }
+
+    const mockApi = {
+      query: { system: { account: vi.fn().mockResolvedValue(mockAccountInfo) } },
+    } as unknown as ApiPromise
+
+    const result = await getNativeBalance('address', mockApi)
+    expect(result).toBe(1000000000000)
+  })
+
+  it('should handle current and future API formats', async () => {
+    // Current format
+    const currentFormat = {
+      data: { free: '1000' },
+    }
+
+    // Future format (hypothetical change)
+    const futureFormat = {
+      balances: { available: '2000' },
+    }
+
+    // We'll use a mock function that we can reassign the resolved value for each call
+    const mockAccount = vi.fn()
+    const mockApi = {
+      query: { system: { account: mockAccount } },
+    } as unknown as ApiPromise
+
+    // Test with current format
+    mockAccount.mockResolvedValueOnce(currentFormat)
+    let result = await getNativeBalance('address', mockApi)
+    expect(result).toBe(1000)
+
+    // Test with future format - should degrade gracefully
+    mockAccount.mockResolvedValueOnce(futureFormat)
+    result = await getNativeBalance('address', mockApi)
+    expect(result).toBeUndefined()
+  })
+})
+
+describe('getUniquesBalance', () => {
+  it('should extract the free balance from uniques balanceOf', async () => {
+    const mockBalanceData = {
+      data: {
+        free: '123456789',
+      },
+    }
+    const mockApi = {
+      query: {
+        uniques: {
+          balanceOf: vi.fn().mockResolvedValue(mockBalanceData),
+        },
+      },
+    } as unknown as ApiPromise
+
+    const result = await getUniquesBalance('address', mockApi)
+    expect(result).toBe(123456789)
+    expect(mockApi.query.uniques.balanceOf).toHaveBeenCalledWith('address')
+  })
+
+  it('should return undefined if data or free is missing', async () => {
+    const mockApi = {
+      query: {
+        uniques: {
+          balanceOf: vi.fn().mockResolvedValue({}),
+        },
+      },
+    } as unknown as ApiPromise
+
+    const result = await getUniquesBalance('address', mockApi)
+    expect(result).toBeUndefined()
+  })
+
+  it('should return undefined if an error is thrown', async () => {
+    const mockApi = {
+      query: {
+        uniques: {
+          balanceOf: vi.fn().mockRejectedValue(new Error('fail')),
+        },
+      },
+    } as unknown as ApiPromise
+
+    const result = await getUniquesBalance('address', mockApi)
+    expect(result).toBeUndefined()
+  })
+})
+
+describe('ipfsToHttpUrl', () => {
+  it('should convert ipfs:// to the default gateway', () => {
+    expect(ipfsToHttpUrl('ipfs://QmHash')).toBe('https://ipfs.io/ipfs/QmHash')
+  })
+
+  it('should convert ipfs://ipfs/ to the default gateway', () => {
+    expect(ipfsToHttpUrl('ipfs://ipfs/QmHash')).toBe('https://ipfs.io/ipfs/QmHash')
+  })
+
+  it('should return http URLs unchanged', () => {
+    expect(ipfsToHttpUrl('https://example.com/file.json')).toBe('https://example.com/file.json')
+  })
+
+  it('should return non-string input unchanged', () => {
+    expect(ipfsToHttpUrl(undefined as any)).toBe(undefined)
+    expect(ipfsToHttpUrl(123 as any)).toBe(123)
+  })
+
+  it('should return empty string unchanged', () => {
+    expect(ipfsToHttpUrl('')).toBe('')
   })
 })

@@ -751,7 +751,7 @@ export async function getUniquesOwnedByAccount(address: string, apiOrEndpoint: s
  * @param ipfsUrl The IPFS URL (starting with ipfs://)
  * @returns The HTTP URL to access the same content
  */
-function ipfsToHttpUrl(ipfsUrl: string): string {
+export function ipfsToHttpUrl(ipfsUrl: string): string {
   // List of public gateways to try
   const gateways = [
     'https://ipfs.io/ipfs/',
