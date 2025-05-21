@@ -27,8 +27,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       '@polkadot-api/merkleize-metadata':
-        specifier: ^1.1.14
-        version: 1.1.14
+        specifier: ^1.1.17
+        version: 1.1.17
       '@polkadot/api':
         specifier: ^15.9.1
         version: 15.9.1
@@ -1136,6 +1136,10 @@ packages:
     resolution: {integrity: sha512-B8XBPsn4vT/KJAGqDzbwztd+6Yte3P4V7iafm24bxgDe/mlRuK6xmWPuCNrKt2vDafZ8MfJLlchDG/vYafQEjQ==}
     engines: {node: ^14.21.3 || >=16}
 
+  '@noble/hashes@1.8.0':
+    resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
+    engines: {node: ^14.21.3 || >=16}
+
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -1177,11 +1181,11 @@ packages:
   '@polkadot-api/json-rpc-provider@0.0.1':
     resolution: {integrity: sha512-/SMC/l7foRjpykLTUTacIH05H3mr9ip8b5xxfwXlVezXrNVLp3Cv0GX6uItkKd+ZjzVPf3PFrDF2B2/HLSNESA==}
 
-  '@polkadot-api/merkleize-metadata@1.1.14':
-    resolution: {integrity: sha512-5XUJCW3LMlQGxrDndIaTiJv9vkBdSBk3kOB87teWQHrtkD/2Oytajc8Qlh8L9IWMhU+LIAQVJLYf5OEkzG9CFQ==}
+  '@polkadot-api/merkleize-metadata@1.1.17':
+    resolution: {integrity: sha512-3wlLrYjpBluN5l8M1H9zgXlFHfJhqIXYvSVXTvkBYcEVKxZt0PO0f43Zgskeabg29Lx83OiPINcEHFWF8ndAzg==}
 
-  '@polkadot-api/metadata-builders@0.10.2':
-    resolution: {integrity: sha512-rtdihBFd25oT9/71Q+EOR9q6E6mCl1pPe/2He/LtlY0TyHiYqO2KpMZNXkoGcw1RHvrV+CAtDFMvK1j3n8aW8w==}
+  '@polkadot-api/metadata-builders@0.12.1':
+    resolution: {integrity: sha512-heGt+WgcxrS1CqMm9XwD2DC+fI6azMKJf2ToMP+H12yw6FAy++nijASDZ3MlV/0ZpA/QGZpuZmgQmxKh6jbxVg==}
 
   '@polkadot-api/metadata-builders@0.3.2':
     resolution: {integrity: sha512-TKpfoT6vTb+513KDzMBTfCb/ORdgRnsS3TDFpOhAhZ08ikvK+hjHMt5plPiAX/OWkm1Wc9I3+K6W0hX5Ab7MVg==}
@@ -1192,8 +1196,8 @@ packages:
       '@polkadot-api/substrate-client': 0.1.4
       rxjs: '>=7.8.0'
 
-  '@polkadot-api/substrate-bindings@0.11.1':
-    resolution: {integrity: sha512-+oqAZB7y18KrP/DqKmU2P3nNmRzjCY7edtW7tyA1g1jPouF7HhRr/Q13lJseDX9sdE2FZGrKZtivzsw8XeXBng==}
+  '@polkadot-api/substrate-bindings@0.13.0':
+    resolution: {integrity: sha512-M/60lXtHr4flwx4K7L4xv2jLk44EhD8UB4jvah+jbZM195I89nZGXKo2JOkgyR5DHoLj//TAoBkLedZmaaAiaQ==}
 
   '@polkadot-api/substrate-bindings@0.6.0':
     resolution: {integrity: sha512-lGuhE74NA1/PqdN7fKFdE5C1gNYX357j1tWzdlPXI0kQ7h3kN0zfxNOpPUN7dIrPcOFZ6C0tRRVrBylXkI6xPw==}
@@ -1836,6 +1840,9 @@ packages:
 
   '@scure/base@1.2.4':
     resolution: {integrity: sha512-5Yy9czTO47mqz+/J8GM6GIId4umdCk1wc1q8rKERQulIoc8VP9pzDcghv10Tl2E7R96ZUx/PhND3ESYUQX8NuQ==}
+
+  '@scure/base@1.2.5':
+    resolution: {integrity: sha512-9rE6EOVeIQzt5TSu4v+K523F8u6DhBsoZWPGKlnCshhlDhy0kJzUX4V+tr2dWmzF1GdekvThABoEQBGBQI7xZw==}
 
   '@substrate/connect-extension-protocol@2.2.2':
     resolution: {integrity: sha512-t66jwrXA0s5Goq82ZtjagLNd7DPGCNjHeehRlE/gcJmJ+G56C0W+2plqOMRicJ8XGR1/YFnUSEqUFiSNbjGrAA==}
@@ -5176,6 +5183,8 @@ snapshots:
 
   '@noble/hashes@1.7.1': {}
 
+  '@noble/hashes@1.8.0': {}
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -5209,15 +5218,15 @@ snapshots:
   '@polkadot-api/json-rpc-provider@0.0.1':
     optional: true
 
-  '@polkadot-api/merkleize-metadata@1.1.14':
+  '@polkadot-api/merkleize-metadata@1.1.17':
     dependencies:
-      '@polkadot-api/metadata-builders': 0.10.2
-      '@polkadot-api/substrate-bindings': 0.11.1
+      '@polkadot-api/metadata-builders': 0.12.1
+      '@polkadot-api/substrate-bindings': 0.13.0
       '@polkadot-api/utils': 0.1.2
 
-  '@polkadot-api/metadata-builders@0.10.2':
+  '@polkadot-api/metadata-builders@0.12.1':
     dependencies:
-      '@polkadot-api/substrate-bindings': 0.11.1
+      '@polkadot-api/substrate-bindings': 0.13.0
       '@polkadot-api/utils': 0.1.2
 
   '@polkadot-api/metadata-builders@0.3.2':
@@ -5235,18 +5244,18 @@ snapshots:
       rxjs: 7.8.2
     optional: true
 
-  '@polkadot-api/substrate-bindings@0.11.1':
+  '@polkadot-api/substrate-bindings@0.13.0':
     dependencies:
-      '@noble/hashes': 1.7.1
+      '@noble/hashes': 1.8.0
       '@polkadot-api/utils': 0.1.2
-      '@scure/base': 1.2.4
+      '@scure/base': 1.2.5
       scale-ts: 1.6.1
 
   '@polkadot-api/substrate-bindings@0.6.0':
     dependencies:
-      '@noble/hashes': 1.7.1
+      '@noble/hashes': 1.8.0
       '@polkadot-api/utils': 0.1.0
-      '@scure/base': 1.2.4
+      '@scure/base': 1.2.5
       scale-ts: 1.6.1
     optional: true
 
@@ -5990,6 +5999,8 @@ snapshots:
   '@rushstack/eslint-patch@1.11.0': {}
 
   '@scure/base@1.2.4': {}
+
+  '@scure/base@1.2.5': {}
 
   '@substrate/connect-extension-protocol@2.2.2':
     optional: true
