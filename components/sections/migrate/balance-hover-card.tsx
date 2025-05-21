@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Balance } from '@/state/types/ledger'
+import { AddressBalance, BalanceType, Nft } from '@/state/types/ledger'
 import { Collections } from 'state/ledger'
 
 import { Token } from '@/config/apps'
@@ -7,11 +7,12 @@ import { formatBalance } from '@/lib/utils'
 import { createNftBalances } from '@/lib/utils/nft'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 
+import { BalanceTypeFlag } from './balance-detail-card'
 import BalanceGallery from './balance-gallery'
 import NftCircles from './nft-circles'
 
 interface BalanceHoverCardProps {
-  balance: Balance
+  balance: AddressBalance
   collections?: Collections
   token: Token
 }
@@ -21,9 +22,14 @@ interface BalanceHoverCardProps {
  */
 const BalanceHoverCard = ({ balance, collections, token }: BalanceHoverCardProps) => {
   const { nfts, uniques, nativeTokens } = useMemo(() => {
-    const nfts = balance.nfts
-    const uniques = balance.uniques
-    const native = balance.native
+    // Extract balance based on type
+    let nfts: Nft[] | undefined
+    let uniques: Nft[] | undefined
+    let native: number | undefined
+
+    if (balance.type === BalanceType.NFT) nfts = balance.balance as Nft[]
+    else if (balance.type === BalanceType.UNIQUE) uniques = balance.balance as Nft[]
+    else if (balance.type === BalanceType.NATIVE) native = balance.balance as number
 
     // Convert collections map to array for easier lookup
     const uniquesCollectionsArray = Array.from(collections?.uniques.values() || [])
@@ -43,8 +49,8 @@ const BalanceHoverCard = ({ balance, collections, token }: BalanceHoverCardProps
   }, [balance, collections, token])
 
   const formattedNativeBalance = useMemo(() => {
-    return balance.native ? formatBalance(balance.native, token) : null
-  }, [balance.native, token])
+    return nativeTokens?.balance ? formatBalance(nativeTokens.balance, token) : null
+  }, [nativeTokens, token])
 
   return (
     <HoverCard openDelay={200} closeDelay={100}>
@@ -54,6 +60,7 @@ const BalanceHoverCard = ({ balance, collections, token }: BalanceHoverCardProps
           {(nfts || uniques) && (
             <NftCircles collections={[...(nfts?.map(nft => nft.collection) || []), ...(uniques?.map(unique => unique.collection) || [])]} />
           )}
+          <BalanceTypeFlag type={balance.type} />
         </div>
       </HoverCardTrigger>
       <HoverCardContent className="w-[calc(100vw-32px)] sm:w-auto p-0 max-w-full sm:max-w-md ml-4 mr-0 sm:mx-0" align="end">

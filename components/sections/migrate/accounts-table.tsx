@@ -1,9 +1,10 @@
+import { useCallback } from 'react'
 import { Observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { motion } from 'framer-motion'
 import { AlertCircle, ChevronDown } from 'lucide-react'
 import { Collections } from 'state/ledger'
-import { Address } from 'state/types/ledger'
+import { Address, AddressBalance } from 'state/types/ledger'
 
 import { Token } from '@/config/apps'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -26,15 +27,11 @@ function AccountsTable({
   polkadotAddresses: string[]
   collections?: Collections
 }) {
-  const handleDestinationChange = (value: string, accountIndex: number) => {
-    accounts[accountIndex].destinationAddress.set(value)
-  }
-
-  const renderStatusIcon = (account: Observable<Address>) => {
+  const renderStatusIcon = (account: Address) => {
     let statusIcon
     let tooltipContent = 'Checking status...'
 
-    if (account.isLoading.get()) {
+    if (account.isLoading) {
       statusIcon = <Spinner />
       tooltipContent = 'Loading...'
     }
@@ -42,11 +39,18 @@ function AccountsTable({
     return statusIcon ? <SimpleTooltip tooltipText={tooltipContent}>{statusIcon}</SimpleTooltip> : null
   }
 
-  const renderBalance = (account: Observable<Address>) => {
-    const balance = account.balance.get()
-
+  const renderBalance = (balance: AddressBalance) => {
     return balance ? <BalanceHoverCard balance={balance} collections={collections} token={token} /> : null
   }
+
+  const accountsList = accounts.get() ?? []
+
+  const handleDestinationChange = useCallback(
+    (value: string, accountIndex: number, balanceIndex: number) => {
+      accounts[accountIndex].balances[balanceIndex].transaction.destinationAddress.set(value)
+    },
+    [accounts]
+  )
 
   return (
     <TableRow>
@@ -69,83 +73,94 @@ function AccountsTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {accounts.length > 0 ? (
-                accounts.map((account, index) => (
-                  <TableRow key={account.address.get() || index}>
-                    <TableCell className="py-2 text-sm w-1/4">
-                      <AddressLink
-                        value={account.address.get()}
-                        tooltipText={`${account.address.get()} - ${account.path.get()}`}
-                        className="break-all"
-                      />
-                    </TableCell>
-                    <TableCell className="py-2 text-sm w-1/4">
-                      <AddressLink value={account.pubKey.get()} tooltipText={account.pubKey.get()} className="break-all" />
-                    </TableCell>
-                    <TableCell className="py-2 text-sm w-1/4">
-                      <DestinationAddressSelect
-                        account={account}
-                        index={index}
-                        polkadotAddresses={polkadotAddresses}
-                        onDestinationChange={handleDestinationChange}
-                      />
-                    </TableCell>
-                    <TableCell className="py-2 text-sm text-right w-1/4">
-                      <div className="flex items-center justify-end gap-2">{renderBalance(account)}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2 justify-end items-center">
-                        {account.error.get() && (
-                          <SimpleTooltip tooltipText={account.error.get()?.description}>
-                            <AlertCircle className="h-4 w-4 text-destructive cursor-help" />
-                          </SimpleTooltip>
-                        )}
-                        {renderStatusIcon(account)}
+              {accountsList.length > 0 ? (
+                accountsList.map((account, accountIndex) => {
+                  const balances = account.balances ?? []
+                  return balances.map((balance: AddressBalance, balanceIndex: number) => {
+                    const isFirst = balanceIndex === 0
+                    const rowSpan = balances.length
 
-                        {account.transaction.get()?.hash && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <ChevronDown className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="min-w-[300px]">
-                              {/* Transaction Details */}
-                              {account.transaction.get()?.hash && (
-                                <DropdownMenuItem className="gap-2">
-                                  Transaction Hash:
-                                  <AddressLink
-                                    value={account.transaction.get()?.hash ?? ''}
-                                    tooltipText={account.transaction.get()?.hash}
-                                    className="break-all"
-                                  />
-                                </DropdownMenuItem>
-                              )}
-                              {account.transaction.get()?.blockHash && (
-                                <DropdownMenuItem className="gap-2">
-                                  Block Hash:
-                                  <AddressLink
-                                    value={account.transaction.get()?.blockHash ?? ''}
-                                    tooltipText={account.transaction.get()?.blockHash}
-                                    className="break-all"
-                                  />
-                                </DropdownMenuItem>
-                              )}
-                              {account.transaction.get()?.blockNumber && (
-                                <DropdownMenuItem className="gap-2">
-                                  Block Number:
-                                  <AddressLink
-                                    value={account.transaction.get()?.blockNumber ?? ''}
-                                    tooltipText={account.transaction.get()?.blockNumber}
-                                    className="break-all"
-                                  />
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                    return (
+                      <TableRow key={`${account.address ?? accountIndex}-${balance.type}`}>
+                        {/* Source Address */}
+                        {isFirst && (
+                          <TableCell className="py-2 text-sm w-1/4" rowSpan={rowSpan}>
+                            <AddressLink
+                              value={account.address ?? ''}
+                              tooltipText={`${account.address ?? ''} - ${account.path ?? ''}`}
+                              className="break-all"
+                            />
+                          </TableCell>
                         )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                        {/* Public Key */}
+                        {isFirst && (
+                          <TableCell className="py-2 text-sm w-1/4" rowSpan={rowSpan}>
+                            <AddressLink value={account.pubKey ?? ''} tooltipText={account.pubKey ?? ''} className="break-all" />
+                          </TableCell>
+                        )}
+                        {/* Destination Address */}
+                        <TableCell className="py-2 text-sm w-1/4">
+                          <DestinationAddressSelect
+                            balance={balance}
+                            index={balanceIndex}
+                            polkadotAddresses={polkadotAddresses}
+                            onDestinationChange={value => handleDestinationChange(value, accountIndex, balanceIndex)}
+                          />
+                        </TableCell>
+                        {/* Balance */}
+                        <TableCell className="py-2 text-sm text-right w-1/4">{renderBalance(balance)}</TableCell>
+                        {/* Actions */}
+                        <TableCell>
+                          <div className="flex gap-2 justify-end items-center">
+                            {account.error?.description && (
+                              <SimpleTooltip tooltipText={account.error?.description ?? ''}>
+                                <AlertCircle className="h-4 w-4 text-destructive cursor-help" />
+                              </SimpleTooltip>
+                            )}
+                            {renderStatusIcon(account)}
+                            {balance.transaction?.hash && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="min-w-[300px]">
+                                  <DropdownMenuItem className="gap-2">
+                                    Transaction Hash:
+                                    <AddressLink
+                                      value={balance.transaction.hash ?? ''}
+                                      tooltipText={balance.transaction.hash ?? ''}
+                                      className="break-all"
+                                    />
+                                  </DropdownMenuItem>
+                                  {balance.transaction.blockHash && (
+                                    <DropdownMenuItem className="gap-2">
+                                      Block Hash:
+                                      <AddressLink
+                                        value={balance.transaction.blockHash ?? ''}
+                                        tooltipText={balance.transaction.blockHash ?? ''}
+                                        className="break-all"
+                                      />
+                                    </DropdownMenuItem>
+                                  )}
+                                  {balance.transaction.blockNumber && (
+                                    <DropdownMenuItem className="gap-2">
+                                      Block Number:
+                                      <AddressLink
+                                        value={balance.transaction.blockNumber ?? ''}
+                                        tooltipText={balance.transaction.blockNumber ?? ''}
+                                        className="break-all"
+                                      />
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                })
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground">

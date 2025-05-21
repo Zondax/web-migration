@@ -9,7 +9,7 @@ import { hexToU8a } from '@polkadot/util'
 import { AppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
-import { Address, Balance, Collection, Nft, NftsInfo, TransactionStatus } from 'state/types/ledger'
+import { Address, AddressBalance, BalanceType, Collection, Nft, NftsInfo, TransactionStatus } from 'state/types/ledger'
 
 // Get API and Provider
 export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
@@ -68,7 +68,7 @@ export async function getBalance(
   address: Address,
   api: ApiPromise
 ): Promise<{
-  balance: Balance
+  balances: AddressBalance[]
   collections: { uniques: Collection[]; nfts: Collection[] }
   error?: string
 }> {
@@ -78,10 +78,7 @@ export async function getBalance(
     if (process.env.NEXT_PUBLIC_NODE_ENV === 'development') {
       if (mockBalances.some(balance => balance.address === addressString)) {
         return {
-          balance: {
-            native: mockBalances.find(balance => balance.address === addressString)?.balance,
-            nfts: [],
-          },
+          balances: [{ type: BalanceType.NATIVE, balance: mockBalances.find(balance => balance.address === addressString)?.balance ?? 0 }],
           collections: {
             uniques: [],
             nfts: [],
@@ -102,12 +99,14 @@ export async function getBalance(
     // Get NFTs if available
     const { nfts, collections } = await getNFTsOwnedByAccount(addressString, api)
 
+    const balances: AddressBalance[] = [
+      { type: BalanceType.NATIVE, balance: nativeBalance ?? 0 },
+      { type: BalanceType.UNIQUE, balance: uniquesNfts },
+      { type: BalanceType.NFT, balance: nfts },
+    ]
+
     return {
-      balance: {
-        native: nativeBalance,
-        uniques: uniquesNfts,
-        nfts: nfts,
-      },
+      balances,
       collections: {
         uniques: uniquesCollections,
         nfts: collections,
@@ -115,7 +114,7 @@ export async function getBalance(
     }
   } catch (e) {
     return {
-      balance: { native: undefined, nfts: [] },
+      balances: [],
       collections: {
         uniques: [],
         nfts: [],
@@ -140,17 +139,6 @@ export async function getNativeBalance(addressString: string, api: ApiPromise): 
     return undefined
   } catch (e) {
     console.error('Error fetching native balance:', e)
-    return undefined
-  }
-}
-
-export async function getUniquesBalance(addressString: string, api: ApiPromise): Promise<number | undefined> {
-  try {
-    const balance = await api?.query.uniques.balanceOf(addressString)
-
-    return balance && 'data' in balance && 'free' in (balance as any).data ? parseFloat((balance.data as any).free.toString()) : undefined
-  } catch (e) {
-    console.error('Error fetching uniques balance:', e)
     return undefined
   }
 }
@@ -635,7 +623,11 @@ export function processNftItem(item: NftItem, isUnique: boolean = false) {
  * @param palletType The pallet type to query ('nfts' or 'uniques')
  * @returns An object with NFT information or error details
  */
-async function getNFTsCommon(address: string, apiOrEndpoint: string | ApiPromise, palletType: 'nfts' | 'uniques'): Promise<NftsInfo> {
+async function getNFTsCommon(
+  address: string,
+  apiOrEndpoint: string | ApiPromise,
+  palletType: BalanceType.NFT | BalanceType.UNIQUE
+): Promise<NftsInfo> {
   let apiToUse: ApiPromise
   let providerToDisconnect: WsProvider | undefined
 
@@ -666,14 +658,14 @@ async function getNFTsCommon(address: string, apiOrEndpoint: string | ApiPromise
 
   // Define pallet-specific configurations
   const config = {
-    nfts: {
+    [BalanceType.NFT]: {
       accountQuery: apiToUse.query.nfts?.account,
       itemQuery: apiToUse.query.nfts?.item,
       metadataQuery: apiToUse.query.nfts?.collectionMetadataOf,
       logPrefix: 'NFT',
       errorSource: 'nft_info_fetch',
     },
-    uniques: {
+    [BalanceType.UNIQUE]: {
       accountQuery: apiToUse.query.uniques?.account,
       itemQuery: apiToUse.query.uniques?.asset,
       metadataQuery: apiToUse.query.uniques?.classMetadataOf,
@@ -739,7 +731,7 @@ async function getNFTsCommon(address: string, apiOrEndpoint: string | ApiPromise
     })
 
     const result: NftsInfo = {
-      nfts: myItems.map(item => processNftItem(item, palletType === 'uniques')),
+      nfts: myItems.map(item => processNftItem(item, palletType === BalanceType.UNIQUE)),
       collections: await Promise.all(collectionInfo),
     }
 
@@ -775,7 +767,7 @@ async function getNFTsCommon(address: string, apiOrEndpoint: string | ApiPromise
  * @returns An array of NFTDisplayInfo objects, or an empty array on error.
  */
 export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: string | ApiPromise): Promise<NftsInfo> {
-  return getNFTsCommon(address, apiOrEndpoint, 'nfts')
+  return getNFTsCommon(address, apiOrEndpoint, BalanceType.NFT)
 }
 
 /**
@@ -785,7 +777,7 @@ export async function getNFTsOwnedByAccount(address: string, apiOrEndpoint: stri
  * @returns An array of NFTDisplayInfo objects, or an empty array on error.
  */
 export async function getUniquesOwnedByAccount(address: string, apiOrEndpoint: string | ApiPromise): Promise<NftsInfo> {
-  return getNFTsCommon(address, apiOrEndpoint, 'uniques')
+  return getNFTsCommon(address, apiOrEndpoint, BalanceType.UNIQUE)
 }
 
 /**

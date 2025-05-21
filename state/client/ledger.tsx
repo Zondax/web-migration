@@ -6,10 +6,10 @@ import { InternalErrors } from 'config/errors'
 import { MINIMUM_AMOUNT } from '@/config/mockData'
 import { createSignedExtrinsic, getApiAndProvider, prepareTransaction, submitAndHandleTransaction } from '@/lib/account'
 import { ledgerService } from '@/lib/ledger/ledgerService'
-import { hasBalance } from '@/lib/utils'
 import { getBip44Path } from '@/lib/utils/address'
+import { hasBalance } from '@/lib/utils/ledger'
 
-import { Address, ConnectionResponse, TransactionStatus, UpdateMigratedStatusFn } from '../types/ledger'
+import { Address, AddressBalance, BalanceType, ConnectionResponse, Nft, TransactionStatus, UpdateMigratedStatusFn } from '../types/ledger'
 import { withErrorHandling } from './base'
 
 export const ledgerClient = {
@@ -47,12 +47,14 @@ export const ledgerClient = {
 
   async migrateAccount(
     appId: AppId,
-    account: Address,
+    address: string,
+    path: string,
+    balance: AddressBalance,
     updateStatus: UpdateMigratedStatusFn
   ): Promise<{ txPromise?: Promise<void> } | undefined> {
-    const senderAddress = account.address
-    const receiverAddress = account.destinationAddress
-    const hasAvailableBalance = hasBalance(account)
+    const senderAddress = address
+    const receiverAddress = balance.transaction?.destinationAddress
+    const hasAvailableBalance = hasBalance([balance])
     const appConfig = appsConfigs.get(appId)
 
     if (!receiverAddress) {
@@ -73,12 +75,22 @@ export const ledgerClient = {
         throw new Error(error ?? 'Failed to connect to the blockchain.')
       }
 
-      // Collect all NFTs to transfer (both uniques and regular NFTs)
-      const nftsToTransfer = [...(account.balance?.uniques || []), ...(account.balance?.nfts || [])]
+      // Determine which type of balance we're dealing with
+      let nftsToTransfer: Nft[] = []
+      let nativeAmount = undefined
 
-      // Get native amount if available
-      const nativeAmount = process.env.NEXT_PUBLIC_NODE_ENV === 'development' && MINIMUM_AMOUNT ? MINIMUM_AMOUNT : account.balance?.native
+      if (balance.type === BalanceType.NATIVE) {
+        // For native balance, use the balance amount
+        nativeAmount = balance.balance
+      } else if (balance.type === BalanceType.UNIQUE || balance.type === BalanceType.NFT) {
+        // For NFT balances, add them to the transfer list
+        nftsToTransfer = balance.balance
+      }
 
+      // Use minimum amount for development if needed
+      if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && MINIMUM_AMOUNT && balance.type === BalanceType.NATIVE) {
+        nativeAmount = MINIMUM_AMOUNT
+      }
       // Prepare transaction with all assets
       const preparedTx = await prepareTransaction(
         api,
@@ -96,7 +108,7 @@ export const ledgerClient = {
 
       const chainId = appConfig.token.symbol.toLowerCase()
 
-      const { signature } = await ledgerService.signTransaction(account.path, payloadBytes, chainId, proof1)
+      const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
 
       if (signature) {
         createSignedExtrinsic(api, transfer, senderAddress, signature, payload, nonce, metadataHash)
@@ -110,7 +122,7 @@ export const ledgerClient = {
             blockNumber?: string
           }
         ) => {
-          updateStatus(appConfig.id, account.path, status, message, txDetails)
+          updateStatus(appConfig.id, path, balance.type, status, message, txDetails)
         }
 
         // Create transaction promise but don't await it
