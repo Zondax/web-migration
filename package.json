@@ -43,7 +43,7 @@
     "@polkadot/api": "^15.9.1",
     "@polkadot/keyring": "^13.4.3",
     "@polkadot/types": "^15.9.1",
-    "@polkadot/types-codec": "^15.9.1",
+    "@polkadot/types-codec": "^16.0.1",
     "@polkadot/util": "^13.4.3",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
