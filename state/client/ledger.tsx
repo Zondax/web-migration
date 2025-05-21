@@ -9,8 +9,9 @@ import { ledgerService } from '@/lib/ledger/ledgerService'
 import type { ConnectionResponse } from '@/lib/ledger/types'
 import { hasBalance } from '@/lib/utils'
 import { getBip44Path } from '@/lib/utils/address'
+import { hasBalance } from '@/lib/utils/ledger'
 
-import { BalanceType, type Address, type Nft, type TransactionStatus, type UpdateMigratedStatusFn } from '../types/ledger'
+import { BalanceType, type Address, type Nft, type TransactionStatus, type UpdateMigratedStatusFn, AddressBalance, ConnectionResponse } from '../types/ledger'
 import { withErrorHandling } from './base'
 
 export const ledgerClient = {

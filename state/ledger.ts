@@ -14,7 +14,15 @@ import { hasAddressBalance, hasBalance } from '@/lib/utils/ledger'
 import { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
 import { notifications$ } from './notifications'
-import { Address, AddressStatus, Collection, TransactionStatus, UpdateMigratedStatusFn } from './types/ledger'
+import {
+  Address,
+  AddressBalance,
+  AddressStatus,
+  Collection,
+  DeviceConnectionProps,
+  TransactionStatus,
+  UpdateMigratedStatusFn,
+} from './types/ledger'
 import { Notification } from './types/notifications'
 
 export enum AppStatus {
