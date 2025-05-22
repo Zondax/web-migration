@@ -1,7 +1,7 @@
 import { MockTransport } from '@ledgerhq/hw-transport-mocker'
 import TransportWebUSB from '@ledgerhq/hw-transport-webhid'
 import { PolkadotGenericApp } from '@zondax/ledger-substrate'
-import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
+import type { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
 import { describe, expect, it, vi } from 'vitest'
 
 import { LedgerService } from '@/lib/ledger/ledgerService'
@@ -27,7 +27,13 @@ describe('LedgerService', () => {
       const ledgerService = new LedgerService()
 
       const result = await ledgerService.openApp(transport, 'Polkadot Migration')
-      expect(result).toEqual({ connection: { transport } })
+      expect(result).toEqual({
+        connection: {
+          transport,
+          genericApp: expect.any(PolkadotGenericApp),
+          isAppOpen: false,
+        },
+      })
     })
 
     it('should throw TransportStatusError when transport is undefined', async () => {
@@ -110,6 +116,32 @@ describe('LedgerService', () => {
       const result = await ledgerService.isAppOpen(genericApp)
       expect(result).toBe(false)
       expect(genericApp.getVersion).toHaveBeenCalled()
+    })
+  })
+
+  describe('establishDeviceConnection', () => {
+    it('should reuse existing transport and genericApp if available', async () => {
+      const ledgerService = new LedgerService()
+      const mockTransport = new MockTransport(createMockResponse(0x9000))
+      const mockGenericApp = createMockGenericApp({
+        getVersion: vi.fn().mockResolvedValue('1.0.0'),
+      })
+
+      // Set up existing device connection
+      ledgerService['deviceConnection'] = {
+        transport: mockTransport,
+        genericApp: mockGenericApp,
+        isAppOpen: true,
+      }
+
+      const result = await ledgerService.establishDeviceConnection()
+
+      expect(result).toEqual({
+        transport: mockTransport,
+        genericApp: mockGenericApp,
+        isAppOpen: true,
+      })
+      expect(mockGenericApp.getVersion).toHaveBeenCalled()
     })
   })
 
@@ -326,6 +358,93 @@ describe('LedgerService', () => {
 
       expect(result).toEqual({ signature: mockSignature })
       expect(mockGenericApp.signWithMetadataEd25519).toHaveBeenCalledWith(bip44Path, Buffer.from(payloadBytes), Buffer.from(proof1))
+    })
+  })
+
+  describe('clearConnection', () => {
+    it('should clear the connection', () => {
+      const ledgerService = new LedgerService()
+      const mockTransport = new MockTransport(createMockResponse(0x9000))
+      const mockGenericApp = createMockGenericApp()
+
+      // Set up initial connection state
+      ledgerService['deviceConnection'] = {
+        transport: mockTransport,
+        genericApp: mockGenericApp,
+        isAppOpen: true,
+      }
+
+      // Verify connection exists before clearing
+      expect(ledgerService['deviceConnection'].transport).toBe(mockTransport)
+      expect(ledgerService['deviceConnection'].genericApp).toBe(mockGenericApp)
+
+      ledgerService.clearConnection()
+
+      // Verify connection is cleared
+      expect(ledgerService['deviceConnection'].transport).toBeUndefined()
+      expect(ledgerService['deviceConnection'].genericApp).toBeUndefined()
+      expect(ledgerService['deviceConnection'].isAppOpen).toBe(false)
+    })
+  })
+
+  describe('disconnect', () => {
+    it('should close transport and emit disconnect event', () => {
+      const ledgerService = new LedgerService()
+      const mockTransport = new MockTransport(createMockResponse(0x9000))
+
+      // Set up spies
+      const closeSpy = vi.spyOn(mockTransport, 'close').mockImplementation(() => Promise.resolve())
+      const emitSpy = vi.spyOn(mockTransport, 'emit')
+
+      // Set up initial connection state
+      ledgerService['deviceConnection'] = {
+        transport: mockTransport,
+        genericApp: createMockGenericApp(),
+        isAppOpen: false,
+      }
+
+      ledgerService.disconnect()
+
+      // Verify transport is closed and disconnect event is emitted
+      expect(closeSpy).toHaveBeenCalled()
+      expect(emitSpy).toHaveBeenCalledWith('disconnect')
+    })
+
+    it('should not throw error when transport is undefined', () => {
+      const ledgerService = new LedgerService()
+
+      // Set empty connection state
+      ledgerService['deviceConnection'] = {
+        transport: undefined,
+        genericApp: undefined,
+        isAppOpen: false,
+      }
+
+      // Should not throw an error
+      expect(() => ledgerService.disconnect()).not.toThrow()
+    })
+  })
+
+  describe('handleDisconnect', () => {
+    it('should clear device connection', () => {
+      const ledgerService = new LedgerService()
+      const mockTransport = new MockTransport(createMockResponse(0x9000))
+      const mockGenericApp = createMockGenericApp()
+
+      // Set up initial connection state
+      ledgerService['deviceConnection'] = {
+        transport: mockTransport,
+        genericApp: mockGenericApp,
+        isAppOpen: true,
+      }
+
+      // Call private method using bracket notation
+      ledgerService['handleDisconnect']()
+
+      // Verify connection is cleared
+      expect(ledgerService['deviceConnection'].transport).toBeUndefined()
+      expect(ledgerService['deviceConnection'].genericApp).toBeUndefined()
+      expect(ledgerService['deviceConnection'].isAppOpen).toBe(false)
     })
   })
 })
