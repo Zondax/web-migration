@@ -1,24 +1,5 @@
-import Transport from '@ledgerhq/hw-transport'
-import { PolkadotGenericApp } from '@zondax/ledger-substrate'
 import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
 import { AppId } from 'config/apps'
-
-/**
- * Represents a response object from a connection request.
- */
-export interface ConnectionResponse {
-  error?: string
-  connection?: DeviceConnectionProps
-}
-
-/**
- * Represents the properties of a device connection.
- */
-export interface DeviceConnectionProps {
-  transport?: Transport
-  genericApp?: PolkadotGenericApp
-  isAppOpen?: boolean
-}
 
 /**
  * Status of an address in the migration process
