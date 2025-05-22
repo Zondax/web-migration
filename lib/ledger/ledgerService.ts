@@ -1,8 +1,9 @@
-import Transport from '@ledgerhq/hw-transport'
+import type Transport from '@ledgerhq/hw-transport'
 import TransportWebUSB from '@ledgerhq/hw-transport-webhid'
 import { PolkadotGenericApp } from '@zondax/ledger-substrate'
-import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
-import { ConnectionResponse, DeviceConnectionProps } from 'state/types/ledger'
+import type { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
+
+import type { ConnectionResponse, DeviceConnectionProps } from '@/lib/ledger/types'
 
 import { openApp } from './openApp'
 
@@ -34,6 +35,7 @@ export class LedgerService implements ILedgerService {
   private deviceConnection: DeviceConnectionProps = {
     transport: undefined,
     genericApp: undefined,
+    isAppOpen: false,
   }
 
   // Handles transport disconnection
@@ -41,6 +43,7 @@ export class LedgerService implements ILedgerService {
     this.deviceConnection = {
       transport: undefined,
       genericApp: undefined,
+      isAppOpen: false,
     }
     console.debug('[ledgerService] disconnecting')
   }
@@ -55,7 +58,9 @@ export class LedgerService implements ILedgerService {
     }
     console.debug(`[ledgerService] Opening ${appName} app`)
     await openApp(transport, appName)
-    return { connection: { transport } }
+    const genericApp = new PolkadotGenericApp(transport)
+    const isAppOpen = await this.isAppOpen(genericApp)
+    return { connection: { transport, genericApp, isAppOpen } }
   }
 
   /**
@@ -169,6 +174,7 @@ export class LedgerService implements ILedgerService {
     this.deviceConnection = {
       transport: undefined,
       genericApp: undefined,
+      isAppOpen: false,
     }
   }
 

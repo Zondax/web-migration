@@ -1,15 +1,23 @@
-import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
-import { AppConfig, AppId, appsConfigs } from 'config/apps'
+import type { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
+import { appsConfigs, type AppConfig, type AppId } from 'config/apps'
 import { maxAddressesToFetch } from 'config/config'
 import { InternalErrors } from 'config/errors'
 
 import { MINIMUM_AMOUNT } from '@/config/mockData'
 import { createSignedExtrinsic, getApiAndProvider, prepareTransaction, submitAndHandleTransaction } from '@/lib/account'
 import { ledgerService } from '@/lib/ledger/ledgerService'
+import type { ConnectionResponse } from '@/lib/ledger/types'
+import { hasBalance } from '@/lib/utils'
 import { getBip44Path } from '@/lib/utils/address'
-import { hasBalance } from '@/lib/utils/ledger'
 
-import { Address, AddressBalance, BalanceType, ConnectionResponse, Nft, TransactionStatus, UpdateMigratedStatusFn } from '../types/ledger'
+import {
+  BalanceType,
+  type Address,
+  type AddressBalance,
+  type Nft,
+  type TransactionStatus,
+  type UpdateMigratedStatusFn,
+} from '../types/ledger'
 import { withErrorHandling } from './base'
 
 export const ledgerClient = {
@@ -39,7 +47,10 @@ export const ledgerClient = {
       // get address
       const derivedPath = getBip44Path(bip44Path, index)
       const genericAddress = await ledgerService.getAccountAddress(derivedPath, ss58Prefix, true)
-      const address: Address = { ...genericAddress, path: derivedPath } as Address
+      const address: Address = {
+        ...genericAddress,
+        path: derivedPath,
+      } as Address
 
       return { result: address }
     }, InternalErrors.SYNC_ERROR)

@@ -6,6 +6,7 @@ import { errorApps, syncApps } from 'config/mockData'
 import { Token } from '@/config/apps'
 import { maxAddressesToFetch } from '@/config/config'
 import { getApiAndProvider, getBalance } from '@/lib/account'
+import { DeviceConnectionProps } from '@/lib/ledger/types'
 import { convertSS58Format } from '@/lib/utils/address'
 import { mapLedgerError } from '@/lib/utils/error'
 import { hasAddressBalance, hasBalance } from '@/lib/utils/ledger'
@@ -13,15 +14,7 @@ import { hasAddressBalance, hasBalance } from '@/lib/utils/ledger'
 import { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
 import { notifications$ } from './notifications'
-import {
-  Address,
-  AddressBalance,
-  AddressStatus,
-  Collection,
-  DeviceConnectionProps,
-  TransactionStatus,
-  UpdateMigratedStatusFn,
-} from './types/ledger'
+import { Address, AddressBalance, AddressStatus, Collection, TransactionStatus, UpdateMigratedStatusFn } from './types/ledger'
 import { Notification } from './types/notifications'
 
 export enum AppStatus {
@@ -131,8 +124,12 @@ function updateAccount(appId: AppId, address: string, update: Partial<Address>) 
 }
 
 // Update Migration Result Counter
-function updateMigrationResultCounter(type: MigrationResultKey, increment: number = 1) {
-  const currentMigrationResult = ledgerState$.apps.migrationResult.get() || { success: 0, fails: 0, total: 0 }
+function updateMigrationResultCounter(type: MigrationResultKey, increment = 1) {
+  const currentMigrationResult = ledgerState$.apps.migrationResult.get() || {
+    success: 0,
+    fails: 0,
+    total: 0,
+  }
   ledgerState$.apps.migrationResult.set({
     ...currentMigrationResult,
     [type]: (currentMigrationResult[type] || 0) + increment,
@@ -271,7 +268,7 @@ export const ledgerState$ = observable({
   },
 
   // Fetch and Process Accounts for a Single App
-  async fetchAndProcessAccountsForApp(app: AppConfig, filterByBalance: boolean = true): Promise<App | undefined> {
+  async fetchAndProcessAccountsForApp(app: AppConfig, filterByBalance = true): Promise<App | undefined> {
     try {
       if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && errorApps && errorApps?.includes(app.id)) {
         throw new Error('Mock synchronization error')
@@ -517,7 +514,11 @@ export const ledgerState$ = observable({
 
   // Synchronize Accounts
   async synchronizeAccounts() {
-    ledgerState$.apps.assign({ status: AppStatus.LOADING, apps: [], syncProgress: 0 })
+    ledgerState$.apps.assign({
+      status: AppStatus.LOADING,
+      apps: [],
+      syncProgress: 0,
+    })
 
     try {
       const connection = ledgerState$.device.connection.get()
