@@ -1,0 +1,101 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "maxSize": 100485760,
+    "ignore": [
+      "**/.cache",
+      "**/.next",
+      "**/.turbo",
+      "**/.vscode",
+      "**/.qodo",
+      "**/package.json",
+      "**/public",
+      "**/dist",
+      "**/playwright-report",
+      "**/pnpm-lock.yaml",
+      "**/*.tsx",
+      ".next/",
+      "components/ui/**",
+      "node_modules/**",
+      "public/**",
+      "coverage/**",
+      "playwright-report/**"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 140,
+    "attributePosition": "auto",
+    "bracketSpacing": true
+  },
+  "organizeImports": { "enabled": true },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "useExhaustiveDependencies": "warn",
+        "noChildrenProp": "warn"
+      },
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noArrayIndexKey": "warn",
+        "noShadowRestrictedNames": "error"
+      },
+      "complexity": {
+        "noForEach": "warn"
+      },
+      "a11y": {
+        "useKeyWithClickEvents": "warn",
+        "useButtonType": "warn",
+        "useSemanticElements": "warn",
+        "useFocusableInteractive": "warn",
+        "useValidAnchor": "warn"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "warn"
+      },
+      "style": {
+        "noNonNullAssertion": "warn"
+      },
+      "nursery": {
+        "noRestrictedImports": {
+          "level": "warn",
+          "options": {
+            "paths": {
+              "lodash": "Using lodash is not encouraged (unmaintained). Move to es-toolkit"
+            }
+          }
+        }
+      }
+    }
+  },
+  "javascript": {
+    "jsxRuntime": "transparent",
+    "formatter": {
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "es5",
+      "semicolons": "asNeeded",
+      "arrowParentheses": "asNeeded",
+      "bracketSameLine": false,
+      "quoteStyle": "single",
+      "attributePosition": "auto",
+      "bracketSpacing": true
+    }
+  },
+  "json": {
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  }
+}

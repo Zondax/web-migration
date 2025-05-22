@@ -24,7 +24,7 @@ jest.mock('next/router', () => ({
 jest.mock('next/image', () => ({
   __esModule: true,
   default: props => {
-    // eslint-disable-next-line jsx-a11y/alt-text
+    // biome-ignore lint/a11y/useAltText: <explanation>
     return <img {...props} />
   },
 }))

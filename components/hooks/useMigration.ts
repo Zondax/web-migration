@@ -1,9 +1,9 @@
-import { useCallback, useEffect } from 'react'
 import { observable } from '@legendapp/state'
 import { use$ } from '@legendapp/state/react'
-import { App, ledgerState$ } from 'state/ledger'
+import { useCallback, useEffect } from 'react'
+import { type App, ledgerState$ } from 'state/ledger'
 
-import { AppId } from '@/config/apps'
+import type { AppId } from '@/config/apps'
 import { filterAppsWithoutErrors } from '@/lib/utils'
 
 export type VerificationStatus = 'pending' | 'verifying' | 'verified' | 'failed'
@@ -64,23 +64,19 @@ export const useMigration = (): UseMigrationReturn => {
         const addressMap = new Map<string, AddressWithVerificationStatus>()
 
         // Process each account and only keep unique destination addresses
-        app.accounts.forEach(account => {
+        for (const account of app.accounts) {
           if (account.balances && account.balances.length > 0) {
-            account.balances.forEach(balance => {
-              if (
-                balance.transaction &&
-                balance.transaction.destinationAddress &&
-                !addressMap.has(balance.transaction.destinationAddress)
-              ) {
+            for (const balance of account.balances) {
+              if (balance.transaction?.destinationAddress && !addressMap.has(balance.transaction.destinationAddress)) {
                 addressMap.set(balance.transaction.destinationAddress, {
                   address: balance.transaction.destinationAddress,
                   path: account.path,
                   status: 'pending',
                 })
               }
-            })
+            }
           }
-        })
+        }
 
         // Convert the map values to an array
         const uniqueDestinationAddresses = Array.from(addressMap.values())
@@ -101,7 +97,7 @@ export const useMigration = (): UseMigrationReturn => {
   // Initialize or update the observable with the latest data from destinationAddressesByApp
   useEffect(() => {
     // Update the observable with the latest data
-    Object.entries(destinationAddressesByApp).forEach(([appId, addresses]) => {
+    for (const [appId, addresses] of Object.entries(destinationAddressesByApp)) {
       // If we don't have this app in our status observable yet, or the addresses count changed
       if (
         !destinationAddressesStatus$[appId as AppId].peek() ||
@@ -109,7 +105,7 @@ export const useMigration = (): UseMigrationReturn => {
       ) {
         destinationAddressesStatus$[appId as AppId].set(addresses)
       }
-    })
+    }
   }, [destinationAddressesByApp])
 
   // ---- Verification related functions ----
@@ -132,6 +128,8 @@ export const useMigration = (): UseMigrationReturn => {
   /**
    * Verify all destination addresses
    */
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const verifyDestinationAddresses = useCallback(async () => {
     isVerifying$.set(true)
 
@@ -152,6 +150,8 @@ export const useMigration = (): UseMigrationReturn => {
   /**
    * Verify only the addresses that have failed verification
    */
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const verifyFailedAddresses = useCallback(async () => {
     isVerifying$.set(true)
 

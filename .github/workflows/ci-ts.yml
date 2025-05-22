@@ -29,3 +29,14 @@ jobs:
     needs: [ts-checks, logo-size-check]
     uses: ./.github/workflows/playwright.yml
     secrets: inherit
+
+  lint-and-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm format:check

@@ -41,8 +41,7 @@ Built by Zondax to simplify the complex process of adopting the consolidated Uni
   - Substrate Protocol Support
 
 - **Development Tools**
-  - ESLint for code linting
-  - Prettier for code formatting
+  - Biome for code formatting and linting
   - Vitest for testing
   - Playwright for E2E testing
 
@@ -129,9 +128,9 @@ The application will be available at `http://localhost:3000`.
 - `pnpm test:e2e:install` - Install Playwright browsers
 - `pnpm test:e2e:report` - Show Playwright test report
 - `pnpm test:e2e:sharding` - Run E2E tests with sharding configuration
-- `pnpm lint` - Run ESLint
-- `pnpm lint:fix` - Fix ESLint issues
-- `pnpm format` - Format code with Prettier and sort package.json
+- `pnpm lint` - Run Biome linter
+- `pnpm lint:fix` - Fix issues with Biome
+- `pnpm format` - Format code with Biome and sort package.json
 - `pnpm format:check` - Check code formatting
 - `pnpm deps:update` - Update dependencies
 - `pnpm env:init` - Initialize environment variables
@@ -168,6 +167,7 @@ This project provides a flexible configuration system for adding custom blockcha
 
 1. Add your chain logo to the `public/logos/chains` directory (the image filename must match the chain `id` you'll use in the configuration)
 2. Add chain configuration in the `config/appsConfig.json` file with the following structure:
+
    ```json
    {
      "id": "your-chain-id",
@@ -227,4 +227,4 @@ By default, this will map port 3000 from the container to port 3000 on your loca
 PORT=4000 pnpm start:docker
 ```
 
-This will map port 4000 on your machine to port 3000 in the container. Then access the app at http://localhost:4000
+This will map port 4000 on your machine to port 3000 in the container. Then access the app at <http://localhost:4000>

@@ -60,7 +60,7 @@ describe('LedgerService', () => {
       expect(transport).toBe(mockTransport)
 
       // Verify transport is stored in deviceConnection
-      expect(ledgerService['deviceConnection'].transport).toBe(mockTransport)
+      expect(ledgerService.deviceConnection.transport).toBe(mockTransport)
 
       // Simulate disconnect
       transport.emit('disconnect')
@@ -80,7 +80,7 @@ describe('LedgerService', () => {
       await expect(ledgerService.initializeTransport()).rejects.toThrow('Failed to create transport')
 
       // Verify deviceConnection is not modified
-      expect(ledgerService['deviceConnection'].transport).toBeUndefined()
+      expect(ledgerService.deviceConnection.transport).toBeUndefined()
     })
   })
 
@@ -215,7 +215,7 @@ describe('LedgerService', () => {
       })
 
       // Set up device connection
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: new MockTransport(createMockResponse(0x9000)),
         genericApp: mockGenericApp,
         isAppOpen: true,
@@ -232,7 +232,7 @@ describe('LedgerService', () => {
       const ledgerService = new LedgerService()
 
       // Set up device connection with no genericApp
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: new MockTransport(createMockResponse(0x9000)),
         genericApp: undefined,
         isAppOpen: false,
@@ -251,7 +251,7 @@ describe('LedgerService', () => {
       })
 
       // Set up device connection
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: new MockTransport(createMockResponse(0x9000)),
         genericApp: mockGenericApp,
         isAppOpen: true,
@@ -272,7 +272,7 @@ describe('LedgerService', () => {
       })
 
       // Set up device connection
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: new MockTransport(createMockResponse(0x9000)),
         genericApp: mockGenericApp,
         isAppOpen: true,
@@ -297,7 +297,7 @@ describe('LedgerService', () => {
       })
 
       // Set up device connection with closed app
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: new MockTransport(createMockResponse(0x9000)),
         genericApp: mockGenericApp,
         isAppOpen: false,
@@ -320,7 +320,7 @@ describe('LedgerService', () => {
       })
 
       // Set up device connection
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: new MockTransport(createMockResponse(0x9000)),
         genericApp: mockGenericApp,
         isAppOpen: true,
@@ -343,7 +343,7 @@ describe('LedgerService', () => {
       })
 
       // Set up device connection
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: new MockTransport(createMockResponse(0x9000)),
         genericApp: mockGenericApp,
         isAppOpen: true,

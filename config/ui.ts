@@ -1,7 +1,7 @@
 import { ConnectTabContent } from '@/components/sections/migrate/connect-tab-content'
 import { MigrateTabContent } from '@/components/sections/migrate/migrate-tab-content'
 import { SynchronizeTabContent } from '@/components/sections/migrate/synchronize-tab-content'
-import { TabItem } from '@/components/Tabs'
+import type { TabItem } from '@/components/Tabs'
 
 export type MigrationTabValue = 'connect-device' | 'synchronize-accounts' | 'migrate'
 
