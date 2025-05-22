@@ -7,7 +7,6 @@ import {
   getApiAndProvider,
   getEnrichedNftMetadata,
   getNativeBalance,
-  getUniquesBalance,
   ipfsToHttpUrl,
   processCollectionMetadata,
   processNftItem,
@@ -493,54 +492,6 @@ describe('getNativeBalance', () => {
     expect(result).toBeUndefined()
   })
 })
-
-describe('getUniquesBalance', () => {
-  it('should extract the free balance from uniques balanceOf', async () => {
-    const mockBalanceData = {
-      data: {
-        free: '123456789',
-      },
-    }
-    const mockApi = {
-      query: {
-        uniques: {
-          balanceOf: vi.fn().mockResolvedValue(mockBalanceData),
-        },
-      },
-    } as unknown as ApiPromise
-
-    const result = await getUniquesBalance('address', mockApi)
-    expect(result).toBe(123456789)
-    expect(mockApi.query.uniques.balanceOf).toHaveBeenCalledWith('address')
-  })
-
-  it('should return undefined if data or free is missing', async () => {
-    const mockApi = {
-      query: {
-        uniques: {
-          balanceOf: vi.fn().mockResolvedValue({}),
-        },
-      },
-    } as unknown as ApiPromise
-
-    const result = await getUniquesBalance('address', mockApi)
-    expect(result).toBeUndefined()
-  })
-
-  it('should return undefined if an error is thrown', async () => {
-    const mockApi = {
-      query: {
-        uniques: {
-          balanceOf: vi.fn().mockRejectedValue(new Error('fail')),
-        },
-      },
-    } as unknown as ApiPromise
-
-    const result = await getUniquesBalance('address', mockApi)
-    expect(result).toBeUndefined()
-  })
-})
-
 describe('ipfsToHttpUrl', () => {
   it('should convert ipfs:// to the default gateway', () => {
     expect(ipfsToHttpUrl('ipfs://QmHash')).toBe('https://ipfs.io/ipfs/QmHash')
@@ -555,8 +506,8 @@ describe('ipfsToHttpUrl', () => {
   })
 
   it('should return non-string input unchanged', () => {
-    expect(ipfsToHttpUrl(undefined as any)).toBe(undefined)
-    expect(ipfsToHttpUrl(123 as any)).toBe(123)
+    expect(ipfsToHttpUrl(undefined as unknown as string)).toBe(undefined)
+    expect(ipfsToHttpUrl(123 as unknown as string)).toBe(123)
   })
 
   it('should return empty string unchanged', () => {

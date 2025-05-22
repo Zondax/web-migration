@@ -1,15 +1,23 @@
 import { merkleizeMetadata } from '@polkadot-api/merkleize-metadata'
 import { ApiPromise, WsProvider } from '@polkadot/api'
-import { SubmittableExtrinsic } from '@polkadot/api/types'
-import { GenericExtrinsicPayload } from '@polkadot/types'
-import { Option } from '@polkadot/types-codec'
-import { Hash, OpaqueMetadata } from '@polkadot/types/interfaces'
-import { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
+import type { SubmittableExtrinsic } from '@polkadot/api/types'
+import type { GenericExtrinsicPayload } from '@polkadot/types'
+import type { Option } from '@polkadot/types-codec'
+import type { Hash, OpaqueMetadata } from '@polkadot/types/interfaces'
+import type { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
 import { hexToU8a } from '@polkadot/util'
-import { AppConfig } from 'config/apps'
+import type { AppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
-import { Address, AddressBalance, BalanceType, Collection, Nft, NftsInfo, TransactionStatus } from 'state/types/ledger'
+import {
+  BalanceType,
+  TransactionStatus,
+  type Address,
+  type AddressBalance,
+  type Collection,
+  type Nft,
+  type NftsInfo,
+} from 'state/types/ledger'
 
 // Get API and Provider
 export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
@@ -78,7 +86,12 @@ export async function getBalance(
     if (process.env.NEXT_PUBLIC_NODE_ENV === 'development') {
       if (mockBalances.some(balance => balance.address === addressString)) {
         return {
-          balances: [{ type: BalanceType.NATIVE, balance: mockBalances.find(balance => balance.address === addressString)?.balance ?? 0 }],
+          balances: [
+            {
+              type: BalanceType.NATIVE,
+              balance: mockBalances.find(balance => balance.address === addressString)?.balance ?? 0,
+            },
+          ],
           collections: {
             uniques: [],
             nfts: [],
@@ -127,7 +140,9 @@ export async function getBalance(
 export async function getNativeBalance(addressString: string, api: ApiPromise): Promise<number | undefined> {
   try {
     const balance = await api?.query.system.account(addressString)
-    return balance && 'data' in balance && 'free' in (balance as any).data ? parseFloat((balance.data as any).free.toString()) : undefined
+    return balance && 'data' in balance && 'free' in (balance as any).data
+      ? Number.parseFloat((balance.data as any).free.toString())
+      : undefined
   } catch (e) {
     console.error('Error fetching native balance:', e)
     return undefined
@@ -137,9 +152,11 @@ export async function getNativeBalance(addressString: string, api: ApiPromise): 
 /**
  * Updates the transaction status with optional details.
  */
-export interface UpdateTransactionStatus {
-  (status: TransactionStatus, message?: string, txDetails?: { txHash?: string; blockHash?: string; blockNumber?: string }): void
-}
+export type UpdateTransactionStatus = (
+  status: TransactionStatus,
+  message?: string,
+  txDetails?: { txHash?: string; blockHash?: string; blockNumber?: string }
+) => void
 
 /**
  * Prepares a transaction payload for signing
@@ -535,7 +552,7 @@ export interface NftItem {
  * @param item The NFT item with its basic information
  * @returns An object with the processed NFT information
  */
-export function processNftItem(item: NftItem, isUnique: boolean = false) {
+export function processNftItem(item: NftItem, isUnique = false) {
   // Initialize properties
   let creator = ''
   let owner = ''
