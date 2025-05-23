@@ -1,4 +1,4 @@
-import { Collection } from 'state/types/ledger'
+import type { Collection } from 'state/types/ledger'
 
 interface NftCirclesProps {
   collections: Collection[]

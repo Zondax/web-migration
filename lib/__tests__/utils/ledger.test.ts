@@ -1,5 +1,5 @@
-import { App } from 'state/ledger'
-import { Address, BalanceType } from 'state/types/ledger'
+import type { App } from 'state/ledger'
+import { type Address, BalanceType } from 'state/types/ledger'
 import { describe, expect, it } from 'vitest'
 
 import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors, hasAddressBalance } from '../../utils/ledger'

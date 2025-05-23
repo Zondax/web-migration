@@ -1,8 +1,8 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
 
@@ -35,10 +35,10 @@ export function HomePage({
         >
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold mb-6 tracking-tighter">
             {words.map((word, wordIndex) => (
-              <span key={wordIndex} className="inline-block mr-4 last:mr-0">
+              <span key={`word-${word}`} className="inline-block mr-4 last:mr-0">
                 {word.split('').map((letter, letterIndex) => (
                   <motion.span
-                    key={`${wordIndex}-${letterIndex}`}
+                    key={`letter-${word}-${letter}`}
                     initial={{ y: 100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{

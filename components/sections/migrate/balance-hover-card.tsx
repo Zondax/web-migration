@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
-import { AddressBalance, BalanceType, Nft } from '@/state/types/ledger'
-import { Collections } from 'state/ledger'
+import { type AddressBalance, BalanceType, type Nft } from '@/state/types/ledger'
+import type { Collections } from 'state/ledger'
 
-import { Token } from '@/config/apps'
+import type { Token } from '@/config/apps'
 import { formatBalance } from '@/lib/utils'
 import { createNftBalances } from '@/lib/utils/nft'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'

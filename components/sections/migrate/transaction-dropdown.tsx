@@ -1,5 +1,5 @@
 import { ChevronDown } from 'lucide-react'
-import { Transaction } from 'state/types/ledger'
+import type { Transaction } from 'state/types/ledger'
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { AddressLink } from '@/components/AddressLink'

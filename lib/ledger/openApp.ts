@@ -1,4 +1,5 @@
-import Transport, { StatusCodes } from '@ledgerhq/hw-transport'
+import type Transport from '@ledgerhq/hw-transport'
+import { StatusCodes } from '@ledgerhq/hw-transport'
 
 /**
  * Opens an app on the Ledger device.

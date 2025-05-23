@@ -1,5 +1,5 @@
-import { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
-import { AppId } from 'config/apps'
+import type { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
+import type { AppId } from 'config/apps'
 
 /**
  * Status of an address in the migration process

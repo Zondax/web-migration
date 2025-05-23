@@ -1,21 +1,28 @@
 import { observable } from '@legendapp/state'
-import { AppConfig, AppId, appsConfigs, polkadotAppConfig } from 'config/apps'
-import { ErrorDetails, errorDetails, InternalErrors, LedgerErrors } from 'config/errors'
+import { type AppConfig, type AppId, appsConfigs, polkadotAppConfig } from 'config/apps'
+import { type ErrorDetails, InternalErrors, type LedgerErrors, errorDetails } from 'config/errors'
 import { errorApps, syncApps } from 'config/mockData'
 
-import { Token } from '@/config/apps'
+import type { Token } from '@/config/apps'
 import { maxAddressesToFetch } from '@/config/config'
 import { getApiAndProvider, getBalance } from '@/lib/account'
-import { DeviceConnectionProps } from '@/lib/ledger/types'
+import type { DeviceConnectionProps } from '@/lib/ledger/types'
 import { convertSS58Format } from '@/lib/utils/address'
 import { mapLedgerError } from '@/lib/utils/error'
 import { hasAddressBalance, hasBalance } from '@/lib/utils/ledger'
 
-import { LedgerClientError } from './client/base'
+import type { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
 import { notifications$ } from './notifications'
-import { Address, AddressBalance, AddressStatus, Collection, TransactionStatus, UpdateMigratedStatusFn } from './types/ledger'
-import { Notification } from './types/notifications'
+import {
+  type Address,
+  type AddressBalance,
+  AddressStatus,
+  type Collection,
+  TransactionStatus,
+  type UpdateMigratedStatusFn,
+} from './types/ledger'
+import type { Notification } from './types/notifications'
 
 export enum AppStatus {
   MIGRATED = 'migrated',
@@ -331,20 +338,20 @@ export const ledgerState$ = observable({
           if (collections) {
             // Process uniques collections
             if (collections.uniques && collections.uniques.length > 0) {
-              collections.uniques.forEach(collection => {
+              for (const collection of collections.uniques) {
                 if (collection.collectionId) {
                   collectionsMap.uniques.set(collection.collectionId, collection)
                 }
-              })
+              }
             }
 
             // Process nfts collections
             if (collections.nfts && collections.nfts.length > 0) {
-              collections.nfts.forEach(collection => {
+              for (const collection of collections.nfts) {
                 if (collection.collectionId) {
                   collectionsMap.nfts.set(collection.collectionId, collection)
                 }
-              })
+              }
             }
           }
 
@@ -389,15 +396,14 @@ export const ledgerState$ = observable({
           })),
           collections: collectionsMap,
         }
-      } else {
-        notifications$.push({
-          title: `No funds found`,
-          description: `No accounts with balance to migrate for ${app.id.charAt(0).toUpperCase() + app.id.slice(1)}`,
-          appId: app.id,
-          type: 'info',
-          autoHideDuration: 5000,
-        })
       }
+      notifications$.push({
+        title: 'No funds found',
+        description: `No accounts with balance to migrate for ${app.id.charAt(0).toUpperCase() + app.id.slice(1)}`,
+        appId: app.id,
+        type: 'info',
+        autoHideDuration: 5000,
+      })
 
       return undefined // No accounts after filtering
     } catch (error) {
@@ -448,8 +454,8 @@ export const ledgerState$ = observable({
       const response = await ledgerClient.synchronizeAccounts(app)
 
       const noAccountsNotification: Omit<Notification, 'id' | 'createdAt'> = {
-        title: `No migration source`,
-        description: `No Polkadot accounts available to migrate from`,
+        title: 'No migration source',
+        description: 'No Polkadot accounts available to migrate from',
         appId: app.id,
         type: 'info',
         autoHideDuration: 5000,
@@ -532,7 +538,7 @@ export const ledgerState$ = observable({
       }
 
       notifications$.push({
-        title: `Synchronizing accounts`,
+        title: 'Synchronizing accounts',
         description: `The first ${maxAddressesToFetch} accounts will be synchronized for each blockchain.`,
         type: 'info',
         autoHideDuration: 5000,
@@ -559,7 +565,7 @@ export const ledgerState$ = observable({
         }
       }
 
-      appsToSync = appsToSync.filter(appConfig => appConfig && appConfig.rpcEndpoint) as AppConfig[]
+      appsToSync = appsToSync.filter(appConfig => appConfig?.rpcEndpoint) as AppConfig[]
       const totalApps = appsToSync.length
       let syncedApps = 0
 
@@ -641,16 +647,16 @@ export const ledgerState$ = observable({
             uniques: new Map(existingCollections.uniques),
             nfts: new Map(existingCollections.nfts),
           }
-          collections.uniques.forEach(collection => {
+          for (const collection of collections.uniques) {
             if (collection.collectionId) {
               updatedCollections.uniques.set(collection.collectionId, collection)
             }
-          })
-          collections.nfts.forEach(collection => {
+          }
+          for (const collection of collections.nfts) {
             if (collection.collectionId) {
               updatedCollections.nfts.set(collection.collectionId, collection)
             }
-          })
+          }
           updateApp(appId, {
             collections: updatedCollections,
           })
@@ -740,7 +746,8 @@ export const ledgerState$ = observable({
         return {
           txPromises: migrationPromises,
         }
-      } else if (hasFailures) {
+      }
+      if (hasFailures) {
         // All balance migrations failed
         console.debug(`Account at index ${accountIndex} in app ${appId} had all balance migrations fail`)
         return undefined

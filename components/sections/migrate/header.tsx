@@ -15,7 +15,7 @@ export function Header() {
       >
         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF2670] to-[#7916F3] flex items-center justify-center shadow-lg">
           <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-[#FF2670] to-[#7916F3]"></div>
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-[#FF2670] to-[#7916F3]" />
           </div>
         </div>
         <div className="flex flex-row gap-2">

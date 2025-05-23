@@ -1,17 +1,17 @@
-import { useCallback } from 'react'
-import { Observable } from '@legendapp/state'
+import type { Observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { motion } from 'framer-motion'
 import { AlertCircle, ChevronDown } from 'lucide-react'
-import { Collections } from 'state/ledger'
-import { Address, AddressBalance } from 'state/types/ledger'
+import { useCallback } from 'react'
+import type { Collections } from 'state/ledger'
+import type { Address, AddressBalance } from 'state/types/ledger'
 
-import { Token } from '@/config/apps'
+import { AddressLink } from '@/components/AddressLink'
+import { Spinner } from '@/components/icons'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip } from '@/components/ui/tooltip'
-import { AddressLink } from '@/components/AddressLink'
-import { Spinner } from '@/components/icons'
+import type { Token } from '@/config/apps'
 
 import BalanceHoverCard from './balance-hover-card'
 import DestinationAddressSelect from './destination-address-select'
@@ -28,7 +28,7 @@ function AccountsTable({
   collections?: Collections
 }) {
   const renderStatusIcon = (account: Address) => {
-    let statusIcon
+    let statusIcon: React.ReactNode
     let tooltipContent = 'Checking status...'
 
     if (account.isLoading) {
@@ -69,7 +69,7 @@ function AccountsTable({
                 <TableHead className="text-left">Public Key</TableHead>
                 <TableHead className="text-left">Destination Address</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
-                <TableHead className="w-[100px]"></TableHead>
+                <TableHead className="w-[100px]" />
               </TableRow>
             </TableHeader>
             <TableBody>

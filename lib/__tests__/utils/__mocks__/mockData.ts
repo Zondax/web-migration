@@ -1,5 +1,5 @@
-import { App, AppStatus } from 'state/ledger'
-import { Address, BalanceType, Collection, Nft } from 'state/types/ledger'
+import { type App, AppStatus } from 'state/ledger'
+import { type Address, BalanceType, type Collection, type Nft } from 'state/types/ledger'
 
 // =========== Common Test Addresses ===========
 export const TEST_ADDRESSES = {

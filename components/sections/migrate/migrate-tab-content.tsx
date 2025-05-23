@@ -1,21 +1,21 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { observer, use$ } from '@legendapp/state/react'
 import { AlertCircle, CheckCircle, Clock, ShieldCheck, XCircle } from 'lucide-react'
-import { App } from 'state/ledger'
-import { Address, TransactionStatus } from 'state/types/ledger'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import type { App } from 'state/ledger'
+import { type Address, TransactionStatus } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
-import { hasBalance } from '@/lib/utils'
-import { muifyHtml } from '@/lib/utils/html'
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { SimpleTooltip } from '@/components/ui/tooltip'
 import { AddressLink } from '@/components/AddressLink'
 import { useMigration } from '@/components/hooks/useMigration'
 import { Spinner } from '@/components/icons'
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { SimpleTooltip } from '@/components/ui/tooltip'
+import { hasBalance } from '@/lib/utils'
+import { muifyHtml } from '@/lib/utils/html'
 
 import { AddressVerificationDialog } from './address-verification-dialog'
 import BalanceHoverCard from './balance-hover-card'
@@ -43,7 +43,7 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
   const renderStatusIcon = (account: Address, balanceIndex: number) => {
     const txStatus = account.balances?.[balanceIndex].transaction?.status
     const txStatusMessage = account.balances?.[balanceIndex].transaction?.statusMessage
-    let statusIcon
+    let statusIcon: React.ReactNode
     let tooltipContent = txStatusMessage
 
     switch (txStatus) {

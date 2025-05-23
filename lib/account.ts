@@ -63,11 +63,11 @@ export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: Ap
 
     if (errorMessage.includes('timeout')) {
       return { error: 'Connection timeout: The node is not responding.' }
-    } else if (errorMessage.includes('refused') || errorMessage.includes('WebSocket')) {
-      return { error: 'Connection refused: The node endpoint is unreachable.' }
-    } else {
-      return { error: `Failed to connect to the blockchain: ${errorMessage}` }
     }
+    if (errorMessage.includes('refused') || errorMessage.includes('WebSocket')) {
+      return { error: 'Connection refused: The node endpoint is unreachable.' }
+    }
+    return { error: `Failed to connect to the blockchain: ${errorMessage}` }
   }
 }
 
@@ -200,7 +200,7 @@ export async function prepareTransactionPayload(
     runtimeVersion: api.runtimeVersion,
     version: api.extrinsicVersion,
     mode: 1,
-    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex')),
+    metadataHash: hexToU8a(`01${Buffer.from(metadataHash).toString('hex')}`),
   })
 
   const payloadBytes = payload.toU8a(true)
@@ -284,7 +284,7 @@ export function createSignedExtrinsic(
     tip: 0,
     transactionVersion: api.runtimeVersion.transactionVersion,
     mode: 1,
-    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex')),
+    metadataHash: hexToU8a(`01${Buffer.from(metadataHash).toString('hex')}`),
   }
 
   return transfer.addSignature(senderAddress, signature, payloadValue)
@@ -426,7 +426,7 @@ export async function getTransactionDetails(
   let success = false
   let errorInfo: string | undefined
 
-  relatedEvents.forEach(({ event }: { event: any }) => {
+  for (const event of relatedEvents) {
     if (apiAt.events.system.ExtrinsicSuccess.is(event)) {
       success = true
     } else if (apiAt.events.system.ExtrinsicFailed.is(event)) {
@@ -442,12 +442,13 @@ export async function getTransactionDetails(
         errorInfo = dispatchError.toString()
       }
     }
-  })
+  }
 
   if (success) {
     console.debug('Transaction successful!')
     return { success: true }
-  } else if (errorInfo) {
+  }
+  if (errorInfo) {
     return {
       success: false,
       error: `Transaction failed on-chain: ${errorInfo}`,
@@ -788,7 +789,8 @@ export function ipfsToHttpUrl(ipfsUrl: string): string {
   // Replace the ipfs:// prefix with the gateway
   if (ipfsUrl.startsWith('ipfs://ipfs/')) {
     return ipfsUrl.replace('ipfs://ipfs/', gateway)
-  } else if (ipfsUrl.startsWith('ipfs://')) {
+  }
+  if (ipfsUrl.startsWith('ipfs://')) {
     return ipfsUrl.replace('ipfs://', gateway)
   }
 
@@ -836,8 +838,8 @@ export async function getEnrichedNftMetadata(metadataUrl: string): Promise<{
 } | null> {
   try {
     // If it's a direct CID (starts with 'Q' or similar), convert it to ipfs:// format
-    const isDirectCid = /^Q[a-zA-Z0-9]{44,}$/.test(metadataUrl) || /^bafy[a-zA-Z0-9]{44,}$/.test(metadataUrl)
-    let ipfsUrl
+    const isDirectCid: boolean = /^Q[a-zA-Z0-9]{44,}$/.test(metadataUrl) || /^bafy[a-zA-Z0-9]{44,}$/.test(metadataUrl)
+    let ipfsUrl: string
 
     if (isDirectCid) {
       // It's a direct CID, convert it to HTTP URL format

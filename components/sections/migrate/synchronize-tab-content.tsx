@@ -4,13 +4,13 @@ import { observable } from '@legendapp/state'
 import { Info, RefreshCw } from 'lucide-react'
 import { AppStatus } from 'state/ledger'
 
-import { cn } from '@/lib/utils'
+import { AddressLink } from '@/components/AddressLink'
+import { useSynchronization } from '@/components/hooks/useSynchronization'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { AddressLink } from '@/components/AddressLink'
-import { useSynchronization } from '@/components/hooks/useSynchronization'
+import { cn } from '@/lib/utils'
 
 import AppRow from './app-row'
 
@@ -62,7 +62,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
                 <div className="max-w-xs">
                   <ul className="space-y-1">
                     {polkadotAddresses.slice(0, 5).map((address, index) => (
-                      <li key={index} className="flex items-center gap-2">
+                      <li key={address} className="flex items-center gap-2">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">Polkadot {index + 1}:</span>
                           <AddressLink value={address} disableTooltip className="break-all" hasCopyButton />
@@ -121,12 +121,12 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
       <Table className="shadow-sm border border-gray-200">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[50px]"></TableHead>
-            <TableHead className="hidden w-[50px] sm:table-cell"></TableHead>
+            <TableHead className="w-[50px]" />
+            <TableHead className="hidden w-[50px] sm:table-cell" />
             <TableHead className="w-[25%]">Chain</TableHead>
             <TableHead className="w-[25%]">Addresses</TableHead>
             <TableHead className="w-[25%]">Total Balance</TableHead>
-            <TableHead className="w-[100px]"></TableHead>
+            <TableHead className="w-[100px]" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -164,8 +164,8 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
                 </TableHead>
                 <TableHead className="w-[25%]">Name</TableHead>
                 <TableHead className="w-[25%]">Addresses</TableHead>
-                <TableHead className="w-[25%]"></TableHead>
-                <TableHead className="w-[100px]"></TableHead>
+                <TableHead className="w-[25%]" />
+                <TableHead className="w-[100px]" />
               </TableRow>
             </TableHeader>
             <TableBody>

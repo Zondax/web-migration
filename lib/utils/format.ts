@@ -1,6 +1,6 @@
-import { ResponseVersion } from '@zondax/ledger-js'
+import type { ResponseVersion } from '@zondax/ledger-js'
 
-import { Token } from '@/config/apps'
+import type { Token } from '@/config/apps'
 
 /**
  * Truncates the middle of a string to a specified maximum length.
@@ -35,7 +35,7 @@ export const formatBalance = (balance: number, token?: Token, maxDecimals?: numb
   }
 
   const decimals = token?.decimals
-  const adjustedBalance = decimals ? balance / Math.pow(10, decimals) : balance
+  const adjustedBalance = decimals ? balance / 10 ** decimals : balance
 
   const formattedBalance = adjustedBalance.toLocaleString(undefined, {
     minimumFractionDigits: 0,

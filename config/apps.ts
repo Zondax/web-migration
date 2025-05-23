@@ -42,7 +42,7 @@ export function loadAppConfigs(): Map<AppId, AppConfig> {
   const appsConfigs = new Map<AppId, AppConfig>()
 
   // Convert JSON data to AppConfig objects and add to the map
-  appsConfigData.forEach(config => {
+  for (const config of appsConfigData) {
     appsConfigs.set(config.id as AppId, {
       ...config,
       id: config.id as AppId,
@@ -53,7 +53,7 @@ export function loadAppConfigs(): Map<AppId, AppConfig> {
         logoId: config.token.logoId || config.id,
       },
     })
-  })
+  }
 
   return appsConfigs
 }

@@ -1,5 +1,5 @@
-import { ErrorDetails, errorDetails, InternalErrors, LedgerErrors } from 'config/errors'
-import { LedgerClientError } from 'state/client/base'
+import { type ErrorDetails, errorDetails, type InternalErrors, type LedgerErrors } from 'config/errors'
+import type { LedgerClientError } from 'state/client/base'
 
 /**
  * Handles a Ledger error by resolving it to a detailed error object.

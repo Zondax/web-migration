@@ -16,10 +16,10 @@
     "dev": "NEXT_PUBLIC_NODE_ENV=development NEXT_PUBLIC_NATIVE_TRANSFER_AMOUNT=100 next dev --turbo",
     "dev:full-amount": "NEXT_PUBLIC_NODE_ENV=development next dev",
     "env:init": "cp .env.backup .env",
-    "format": "prettier --write . && sort-package-json",
-    "format:check": "FORCE_COLOR=1 prettier --check . && sort-package-json -c",
-    "lint": "eslint .",
-    "lint:fix": "eslint --fix .",
+    "format": "biome format --write . && sort-package-json",
+    "format:check": "biome format . && sort-package-json -c",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write --unsafe .",
     "start": "next start",
     "start:docker": "PORT=${PORT:-3000} && docker run --rm -p $PORT:3000 polkadot-migration",
     "test": "vitest run --coverage",
@@ -83,8 +83,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@eslint/js": "9.27.0",
-    "@ianvs/prettier-plugin-sort-imports": "4.4.1",
+    "@biomejs/biome": "1.9.4",
     "@playwright/test": "1.51.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "16.3.0",
@@ -93,17 +92,9 @@
     "@types/react-dom": "npm:types-react-dom@19.0.0-alpha.3",
     "@vitejs/plugin-react": "4.3.4",
     "@vitest/coverage-v8": "3.1.1",
-    "eslint": "9.24.0",
-    "eslint-config-next": "15.2.4",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-prettier": "^5.2.6",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.0.0",
-    "prettier": "^3.5.3",
     "sort-package-json": "^3.0.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "8.29.1",
     "vitest": "3.1.1"
   }
 }
