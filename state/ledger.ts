@@ -315,15 +315,6 @@ export const ledgerState$ = observable({
       const accounts: Address[] = await Promise.all(
         response.result.map(async address => {
           const { balances: balancesResponse, collections, error } = await getBalance(address, api)
-          const nativeBalanceItem = balancesResponse?.find(b => b.type === BalanceType.NATIVE)
-          if (nativeBalanceItem && typeof nativeBalanceItem.balance === 'number' && nativeBalanceItem.balance > 0) {
-            console.log(
-              'balancesResponse',
-              JSON.stringify(app, null, 2),
-              JSON.stringify(address, null, 2),
-              JSON.stringify(balancesResponse, null, 2)
-            )
-          }
           const balances = balancesResponse.filter(balance => hasBalance([balance]))
 
           if (error) {
