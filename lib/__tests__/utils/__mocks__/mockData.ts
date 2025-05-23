@@ -12,6 +12,10 @@ export const TEST_ADDRESSES = {
   ADDRESS7: '5DAUh2JEqgjoq7xKmvUdaNkDRRtwqYGtxKzovLHdkkNcsuFJ',
 }
 
+// test rpc endpoints
+export const KUSAMA_RPC = 'wss://kusama-rpc.polkadot.io'
+export const KUSAMA_ASSET_HUB_RPC = 'wss://asset-hub-kusama-rpc.dwellir.com'
+
 // =========== Mock NFTs ===========
 export const mockNft1: Nft = {
   collectionId: '1',
