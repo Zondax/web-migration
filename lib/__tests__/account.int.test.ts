@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import type { AccountInfo } from '@polkadot/types/interfaces'
 import { describe, expect, it } from 'vitest'
 
