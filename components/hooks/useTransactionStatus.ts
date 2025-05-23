@@ -42,7 +42,7 @@ export const useTransactionStatus = <T extends (...args: any[]) => Promise<any>>
       await transactionFn(updateTxStatus, ...args)
       setIsTxFinished(true)
     },
-    [transactionFn]
+    [transactionFn, updateTxStatus]
   )
 
   // Optionally, provide a synchronization function if needed

@@ -49,7 +49,7 @@ const BalanceHoverCard = ({ balances, collections, token, isMigration }: Balance
     const uniquesBalance = uniques?.length ? createNftBalances(uniques, uniquesCollectionsArray) : undefined
 
     return { nfts: nftBalance, uniques: uniquesBalance, native }
-  }, [balances, collections, token])
+  }, [balances, collections])
 
   const formattedNativeBalance = useMemo(() => {
     return native ? formatBalance(isMigration ? native.transferable : native.total, token) : null

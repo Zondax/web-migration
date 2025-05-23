@@ -17,6 +17,8 @@ import {
   mockApps,
   mockAppWithAppError,
   mockAppWithMigrationError,
+  mockEmptyNativeBalance,
+  mockNativeBalance,
   mockNft1,
   mockUnique,
 } from './__mocks__/mockData'
@@ -215,7 +217,7 @@ describe('hasBalance', () => {
       balances: [
         {
           type: BalanceType.NATIVE,
-          balance: 100,
+          balance: mockNativeBalance,
         },
       ],
     }
@@ -228,7 +230,7 @@ describe('hasBalance', () => {
       balances: [
         {
           type: BalanceType.NATIVE,
-          balance: 0,
+          balance: mockEmptyNativeBalance,
         },
         {
           type: BalanceType.NFT,

@@ -78,7 +78,10 @@ const StakingDetails = ({ stakingData, token }: { stakingData: Staking; token: T
 
           <div className="space-y-3 px-1">
             {stakingData.unlocking.map(unlock => (
-              <div className="bg-polkadot-cyan/20 flex justify-between text-xxs gap-1.5 px-1 rounded-xl">
+              <div
+                key={`${unlock.era}-${unlock.value}`}
+                className="bg-polkadot-cyan/20 flex justify-between text-xxs gap-1.5 px-1 rounded-xl"
+              >
                 <span className="flex items-center gap-1.5">
                   <ClockIcon className="w-3.5 h-3.5 text-gray-600" /> {unlock.timeRemaining}
                 </span>

@@ -453,7 +453,7 @@ describe('getNativeBalance', () => {
   // 1. Unit Tests for Transformation
   it('should extract free balance correctly', async () => {
     const mockAccountInfo = {
-      data: { free: '1000000000000', frozen: '0' },
+      data: { free: '1000000000000', reserved: '0', frozen: '0' },
     }
 
     const mockApi = {
@@ -461,13 +461,19 @@ describe('getNativeBalance', () => {
     } as unknown as ApiPromise
 
     const result = await getNativeBalance('address', mockApi)
-    expect(result).toBe(1000000000000)
+    expect(result).toEqual({
+      free: 1000000000000,
+      reserved: 0,
+      frozen: 0,
+      total: 1000000000000,
+      transferable: 1000000000000,
+    })
   })
 
   it('should handle current and future API formats', async () => {
     // Current format
     const currentFormat = {
-      data: { free: '1000', frozen: '0' },
+      data: { free: '1000' },
     }
 
     // Future format (hypothetical change)

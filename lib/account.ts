@@ -142,6 +142,7 @@ export async function getBalance(
 export async function getNativeBalance(addressString: string, api: ApiPromise): Promise<Native | undefined> {
   try {
     const balance = await api?.query.system.account(addressString)
+
     // Extract all balance components
     if (balance && 'data' in balance) {
       const { free, reserved, frozen } = balance.data as any // AccountData is not updated in @polkadot/types

@@ -25,10 +25,12 @@ export const mockStaking: Staking = {
     {
       value: 100000000000,
       era: 2400,
+      timeRemaining: '7 days and 2 hours',
     },
     {
       value: 100000000000,
       era: 2500,
+      timeRemaining: '7 days and 0 hours',
     },
   ],
   claimedRewards: [2300, 2350],
@@ -119,12 +121,22 @@ export const mockCollection4: Collection = {
 }
 
 // =========== Mock Addresses ===========
-const emptyNativeBalance: Native = {
+// mock empty native balance
+export const mockEmptyNativeBalance: Native = {
   total: 0,
   free: 0,
   reserved: 0,
   frozen: 0,
   transferable: 0,
+}
+
+// mock free native balance
+export const mockNativeBalance: Native = {
+  total: 1000,
+  free: 1000,
+  reserved: 0,
+  frozen: 0,
+  transferable: 1000,
 }
 
 export const mockAddress1: Address = {
@@ -134,13 +146,7 @@ export const mockAddress1: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: {
-        total: 1000,
-        free: 1000,
-        reserved: 0,
-        frozen: 0,
-        transferable: 1000,
-      },
+      balance: mockNativeBalance,
     },
     {
       type: BalanceType.NFT,
@@ -160,7 +166,7 @@ export const mockAddress2: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: emptyNativeBalance,
+      balance: mockEmptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
@@ -180,7 +186,7 @@ export const mockAddress3: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: emptyNativeBalance,
+      balance: mockEmptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
@@ -222,7 +228,7 @@ export const mockAddressNoBalance: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: emptyNativeBalance,
+      balance: mockEmptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
@@ -242,7 +248,7 @@ export const mockAddressPartialBalance: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: emptyNativeBalance,
+      balance: mockEmptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
