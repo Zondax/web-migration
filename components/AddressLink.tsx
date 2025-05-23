@@ -13,11 +13,20 @@ interface AddressLinkProps {
   hasCopyButton?: boolean
   url?: string
   className?: string
+  truncate?: boolean
 }
 
-export function AddressLink({ value, tooltipText, disableTooltip = false, hasCopyButton = true, url, className }: AddressLinkProps) {
+export function AddressLink({
+  value,
+  tooltipText,
+  disableTooltip = false,
+  hasCopyButton = true,
+  url,
+  className,
+  truncate = true,
+}: AddressLinkProps) {
   const [copied, setCopied] = useState(false)
-  const shortAddress = truncateMiddleOfString(value, truncateMaxCharacters)
+  const shortAddress = truncate ? truncateMiddleOfString(value, truncateMaxCharacters) : value
 
   const handleCopy = useCallback(() => {
     copyContent(value)

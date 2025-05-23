@@ -4,14 +4,23 @@ import { maxAddressesToFetch } from 'config/config'
 import { InternalErrors } from 'config/errors'
 
 import { MINIMUM_AMOUNT } from '@/config/mockData'
-import { createSignedExtrinsic, getApiAndProvider, prepareTransaction, submitAndHandleTransaction } from '@/lib/account'
+import {
+  createSignedExtrinsic,
+  getApiAndProvider,
+  prepareTransaction,
+  prepareTransactionPayload,
+  prepareUnstakeTransaction,
+  submitAndHandleTransaction,
+  UpdateTransactionStatus,
+} from '@/lib/account'
 import { ledgerService } from '@/lib/ledger/ledgerService'
 import type { ConnectionResponse } from '@/lib/ledger/types'
 import { hasBalance } from '@/lib/utils'
 import { getBip44Path } from '@/lib/utils/address'
 import { hasBalance } from '@/lib/utils/ledger'
+import { isNativeBalance, isNftBalance } from '@/lib/utils/balance'
 
-import { BalanceType, type Address, type Nft, type TransactionStatus, type UpdateMigratedStatusFn, AddressBalance, ConnectionResponse } from '../types/ledger'
+import { BalanceType, type Address, type Nft, type TransactionStatus, type UpdateMigratedStatusFn, type AddressBalance, ConnectionResponse } from '../types/ledger'
 import { withErrorHandling } from './base'
 
 export const ledgerClient = {
@@ -91,18 +100,18 @@ export const ledgerClient = {
       let nativeAmount = undefined
       let transferebleAmount = 0
 
-      if (balance.type === BalanceType.NATIVE) {
+      if (isNativeBalance(balance)) {
         // For native balance, use the balance amount
-        nativeAmount = balance.balance
+        nativeAmount = balance.balance.transferable
         transferebleAmount = balance.balance
-      } else if (balance.type === BalanceType.UNIQUE || balance.type === BalanceType.NFT) {
+      } else if (isNftBalance(balance)) {
         // For NFT balances, add them to the transfer list
         nftsToTransfer = balance.balance
         transferebleAmount = account.balances?.find(b => b.type === BalanceType.NATIVE)?.balance ?? 0
       }
 
       // Use minimum amount for development if needed
-      if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && MINIMUM_AMOUNT && balance.type === BalanceType.NATIVE) {
+      if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && MINIMUM_AMOUNT && isNativeBalance(balance)) {
         nativeAmount = MINIMUM_AMOUNT
       }
 
@@ -146,6 +155,44 @@ export const ledgerClient = {
         return { txPromise }
       }
       return
+    }, InternalErrors.UNKNOWN_ERROR)
+  },
+
+  async unstakeBalance(appId: AppId, address: string, path: string, amount: number, updateTxStatus: UpdateTransactionStatus) {
+    const appConfig = appsConfigs.get(appId)
+    if (!appConfig) {
+      throw InternalErrors.APP_CONFIG_NOT_FOUND
+    }
+
+    return withErrorHandling(async () => {
+      const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint!)
+      if (error || !api) {
+        throw new Error(error ?? 'Failed to connect to the blockchain.')
+      }
+
+      const unstakeTx = await prepareUnstakeTransaction(api, amount)
+
+      // Prepare transaction payload
+      const preparedTx = await prepareTransactionPayload(api, address, appConfig, unstakeTx)
+      if (!preparedTx) {
+        throw new Error('Failed to prepare transaction')
+      }
+      const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
+
+      // Get chain ID from app config
+      const chainId = appConfig.token.symbol.toLowerCase()
+
+      // Sign transaction with Ledger
+      const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
+      if (!signature) {
+        throw new Error('Failed to sign transaction')
+      }
+
+      // Create signed extrinsic
+      createSignedExtrinsic(api, transfer, address, signature, payload, nonce, metadataHash)
+
+      // Create and wait for transaction to be submitted
+      await submitAndHandleTransaction(transfer, updateTxStatus, api)
     }, InternalErrors.UNKNOWN_ERROR)
   },
 

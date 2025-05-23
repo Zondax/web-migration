@@ -3,21 +3,14 @@ import { ApiPromise, WsProvider } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { GenericExtrinsicPayload } from '@polkadot/types'
 import type { Option } from '@polkadot/types-codec'
-import type { Hash, OpaqueMetadata } from '@polkadot/types/interfaces'
+import type { Hash, OpaqueMetadata, StakingLedger } from '@polkadot/types/interfaces'
+import type { Codec } from '@polkadot/types/types'
 import type { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
 import { hexToU8a } from '@polkadot/util'
 import type { AppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
-import {
-  BalanceType,
-  TransactionStatus,
-  type Address,
-  type AddressBalance,
-  type Collection,
-  type Nft,
-  type NftsInfo,
-} from 'state/types/ledger'
+import { Address, AddressBalance, BalanceType, Collection, Native, Nft, NftsInfo, Staking, TransactionStatus } from 'state/types/ledger'
 
 // Get API and Provider
 export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
@@ -85,13 +78,16 @@ export async function getBalance(
   try {
     if (process.env.NEXT_PUBLIC_NODE_ENV === 'development') {
       if (mockBalances.some(balance => balance.address === addressString)) {
+        const totalBalance = mockBalances.find(balance => balance.address === addressString)?.balance ?? 0
+        const balance = {
+          free: totalBalance,
+          reserved: 0,
+          frozen: 0,
+          total: totalBalance,
+          transferable: totalBalance,
+        }
         return {
-          balances: [
-            {
-              type: BalanceType.NATIVE,
-              balance: mockBalances.find(balance => balance.address === addressString)?.balance ?? 0,
-            },
-          ],
+          balances: [{ type: BalanceType.NATIVE, balance }],
           collections: {
             uniques: [],
             nfts: [],
@@ -112,11 +108,17 @@ export async function getBalance(
     // Get NFTs if available
     const { nfts, collections } = await getNFTsOwnedByAccount(addressString, api)
 
-    const balances: AddressBalance[] = [
-      { type: BalanceType.NATIVE, balance: nativeBalance ?? 0 },
-      { type: BalanceType.UNIQUE, balance: uniquesNfts },
-      { type: BalanceType.NFT, balance: nfts },
-    ]
+    const balances: AddressBalance[] = []
+
+    if (nativeBalance !== undefined) {
+      balances.push({ type: BalanceType.NATIVE, balance: nativeBalance })
+    }
+    if (uniquesNfts !== undefined) {
+      balances.push({ type: BalanceType.UNIQUE, balance: uniquesNfts })
+    }
+    if (nfts !== undefined) {
+      balances.push({ type: BalanceType.NFT, balance: nfts })
+    }
 
     return {
       balances,
@@ -137,17 +139,27 @@ export async function getBalance(
   }
 }
 
-export async function getNativeBalance(addressString: string, api: ApiPromise): Promise<number | undefined> {
+export async function getNativeBalance(addressString: string, api: ApiPromise): Promise<Native | undefined> {
   try {
     const balance = await api?.query.system.account(addressString)
-
+    // Extract all balance components
     if (balance && 'data' in balance) {
-      const { free, frozen } = balance.data as any // AccountData is not updated in @polkadot/types
+      const { free, reserved, frozen } = balance.data as any // AccountData is not updated in @polkadot/types
 
-      // reserved balance is not included in the transferable balance, because it is not available for transfer
-      const transferable = Number.parseFloat(free.toString()) - parseFloat(frozen.toString())
+      const nativeBalance: Native = {
+        free: Number.parseFloat(free.toString()),
+        reserved: Number.parseFloat(reserved.toString()),
+        frozen: Number.parseFloat(frozen.toString()),
+        total: Number.parseFloat(free.toString()) + parseFloat(reserved.toString()),
+        transferable: Number.parseFloat(free.toString()) - parseFloat(frozen.toString()),
+      }
 
-      return transferable
+      if (nativeBalance.frozen > 0) {
+        const stakingInfo = await getStakingInfo(addressString, api)
+        nativeBalance.staking = stakingInfo
+      }
+
+      return nativeBalance
     }
     return undefined
   } catch (e) {
@@ -296,6 +308,12 @@ export async function prepareTransaction(
   return prepareTransactionPayload(api, senderAddress, appConfig, transfer)
 }
 
+export async function prepareUnstakeTransaction(api: ApiPromise, amount: number) {
+  const unstakeTx = api.tx.staking.unbond(amount) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  return unstakeTx
+}
+
 // Create Signed Extrinsic
 export function createSignedExtrinsic(
   api: ApiPromise,
@@ -358,7 +376,7 @@ export async function submitAndHandleTransaction(
           blockNumber = 'blockNumber' in status ? (status.blockNumber as Hash)?.toHex() : undefined
 
           console.debug(`Transaction finalized in block: ${blockHash}`)
-          updateStatus(TransactionStatus.FINALIZED, `Finalized in block: ${blockHash}`, {
+          updateStatus(TransactionStatus.FINALIZED, 'Transaction is finalized. Waiting the result...', {
             txHash,
             blockHash,
             blockNumber,
@@ -430,6 +448,70 @@ export async function submitAndHandleTransaction(
         reject(error)
       })
   })
+}
+
+/**
+ * Simulates the transaction submission and status updates without actually sending the transaction.
+ * Useful for testing UI flows or dry runs.
+ * @param updateStatus - Callback to update transaction status
+ * @param options - Optional simulation options (success/failure, delays)
+ */
+export async function simulateAndHandleTransaction(
+  updateStatus: UpdateTransactionStatus,
+  options?: {
+    simulateSuccess?: boolean
+    simulateDelayMs?: number
+    txHash?: string
+    blockHash?: string
+    blockNumber?: string
+  }
+): Promise<void> {
+  const {
+    simulateSuccess = true,
+    simulateDelayMs = 4000,
+    txHash = '0xSIMULATED_TX_HASH',
+    blockHash = '0xSIMULATED_BLOCK_HASH',
+    blockNumber = '0xSIMULATED_BLOCK_NUMBER',
+  } = options || {}
+
+  // Helper to wait
+  const wait = (ms: number) => new Promise(res => setTimeout(res, ms))
+
+  // Simulate the status updates
+  updateStatus(TransactionStatus.IN_BLOCK, 'Transaction is in block', {
+    txHash,
+    blockHash,
+    blockNumber,
+  })
+  await wait(simulateDelayMs)
+
+  updateStatus(TransactionStatus.COMPLETED, `Transaction is completed. Waiting confirmation...`, {
+    txHash,
+    blockHash,
+    blockNumber,
+  })
+  await wait(simulateDelayMs)
+
+  updateStatus(TransactionStatus.FINALIZED, 'Transaction is finalized. Waiting the result...', {
+    txHash,
+    blockHash,
+    blockNumber,
+  })
+  await wait(simulateDelayMs)
+
+  if (simulateSuccess) {
+    updateStatus(TransactionStatus.SUCCESS, 'Successful Transaction', {
+      txHash,
+      blockHash,
+      blockNumber,
+    })
+  } else {
+    updateStatus(TransactionStatus.FAILED, 'Simulated transaction failure', {
+      txHash,
+      blockHash,
+      blockNumber,
+    })
+  }
 }
 
 // Get Transaction Details
@@ -896,4 +978,66 @@ export async function getEnrichedNftMetadata(metadataUrl: string): Promise<{
     console.error('Error getting enriched NFT metadata:', error)
     return null
   }
+}
+
+/**
+ * Converts an era number to a human-readable time string
+ * @param era The era number
+ * @param currentEra The current era number
+ * @returns The human-readable time string
+ */
+function eraToHumanTime(era: number, currentEra: number): string {
+  const erasRemaining = era - currentEra
+  const hoursRemaining = erasRemaining * 6 // Each era is ~6 hours
+  const daysRemaining = Math.floor(hoursRemaining / 24)
+  const remainingHours = hoursRemaining % 24
+
+  if (daysRemaining > 0) {
+    return `${daysRemaining} days and ${remainingHours} hours`
+  }
+  return `${remainingHours} hours`
+}
+
+/**
+ * Gets the staking information for an address
+ * @param address The address to check
+ * @param api The API instance
+ * @returns The staking information
+ */
+export async function getStakingInfo(address: string, api: ApiPromise): Promise<Staking | undefined> {
+  let stakingInfo: Staking | undefined
+  // Get Controller and check if we can unstake or not
+  const controller = (await api.query.staking.bonded(address)) as Option<Codec>
+  if (controller.isSome) {
+    stakingInfo = {
+      controller: controller.toHuman() as string,
+      canUnstake: controller.toHuman() == address, // if controller is the same as the address, we can unstake
+    }
+  } else {
+    // Account has no active staking
+    return undefined
+  }
+
+  // Get staking info
+  const stakingLedgerRaw = (await api.query.staking.ledger(stakingInfo.controller)) as Option<StakingLedger>
+  if (stakingLedgerRaw && !stakingLedgerRaw.isEmpty) {
+    const stakingLedger = stakingLedgerRaw.unwrap()
+
+    stakingInfo.active = stakingLedger.active.toNumber()
+    stakingInfo.total = stakingLedger.total.toNumber()
+
+    // Get current era
+    const currentEraOption = (await api.query.staking.currentEra()) as Option<Codec>
+    const currentEra = currentEraOption.isSome ? Number(currentEraOption.unwrap().toString()) : 0
+
+    stakingInfo.unlocking = stakingLedger.unlocking.map(chunk => ({
+      value: chunk.value.toNumber(),
+      era: Number(chunk.era.toString()),
+      timeRemaining: eraToHumanTime(Number(chunk.era.toString()), currentEra),
+    }))
+  } else {
+    // Account has no active staking ledger
+  }
+
+  return stakingInfo
 }

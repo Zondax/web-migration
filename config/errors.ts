@@ -23,6 +23,7 @@ export enum InternalErrors {
   'BLOCKCHAIN_CONNECTION_ERROR' = 'blockchain_connection_error',
   'INSUFFICIENT_BALANCE' = 'insufficient_balance',
   'INSUFFICIENT_BALANCE_TO_COVER_FEE' = 'insufficient_balance_to_cover_fee',
+  'UNSTAKE_ERROR' = 'unstake_error',
 }
 
 export enum LedgerErrors {
@@ -150,5 +151,10 @@ export const errorDetails: ErrorDetailsMap = {
     title: 'Transport Interface Not Available',
     description: 'The transport interface is not available.',
     content: 'Please disconnect the device and try again.',
+  },
+  unstake_error: {
+    title: 'Unstake Error',
+    description: 'Failed to unstake balance.',
+    content: 'Please try again later or contact support if the issue persists.',
   },
 }

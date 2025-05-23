@@ -11,13 +11,16 @@ module.exports = {
       },
     },
     extend: {
+      fontSize: {
+        xxs: '0.625rem', // 10px when base is 16px
+      },
       colors: {
         // Polkadot color palette
         'polkadot-pink': '#FF2670',
         'polkadot-violet': '#7916F3',
         'polkadot-lime': '#E4FF07',
         'polkadot-cyan': '#07FFFF',
-        'polkadot-blue': '#4285F4', // Added the blue from the progress bar
+        'polkadot-green': '#2CDAA0',
         'storm-200': '#DCE2E9',
         'storm-400': '#AEB7CB',
         'storm-700': '#6E7391',

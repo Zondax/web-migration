@@ -1,6 +1,8 @@
 import axios from 'axios'
 import { App, AppStatus } from 'state/ledger'
-import { Address, AddressBalance, BalanceType } from 'state/types/ledger'
+import { Address, AddressBalance } from 'state/types/ledger'
+
+import { isNativeBalance } from './balance'
 
 /**
  * Retrieves a light icon for a given app from the Hub backend.
@@ -95,11 +97,11 @@ export const hasAccountsWithErrors = (apps: App[]): boolean => {
  * @param balances Array of address balances to check
  * @returns True if any balance exists (native currency > 0 or collections with items)
  */
-export const hasBalance = (balances: AddressBalance[]): boolean => {
+export const hasBalance = (balances: AddressBalance[], checkTransferable = false): boolean => {
   if (!balances) return false
   return balances.some(balance => {
-    if (balance.type === BalanceType.NATIVE) {
-      return balance.balance > 0
+    if (isNativeBalance(balance)) {
+      return checkTransferable ? balance.balance.transferable > 0 : balance.balance.total > 0
     } else {
       return Array.isArray(balance.balance) && balance.balance.length > 0
     }
