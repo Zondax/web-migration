@@ -4,7 +4,7 @@ import type { AccountInfo } from '@polkadot/types/interfaces'
 import { describe, expect, it } from 'vitest'
 
 import { disconnectSafely, getApiAndProvider } from '../account'
-import { TEST_ADDRESSES } from './utils/__mocks__/mockData'
+import { KUSAMA_ASSET_HUB_RPC, KUSAMA_RPC, TEST_ADDRESSES } from './utils/__mocks__/mockData'
 
 describe('Account Integration', () => {
   // Used in: getNativeBalance, getBalance, prepareTransactionPayload
@@ -13,7 +13,7 @@ describe('Account Integration', () => {
       let api, provider, error
       try {
         // Get the API and provider
-        const result = await getApiAndProvider('wss://kusama-rpc.polkadot.io')
+        const result = await getApiAndProvider(KUSAMA_RPC)
         api = result.api
         provider = result.provider
         error = result.error
@@ -52,7 +52,7 @@ describe('Account Integration', () => {
       let api, provider, error
       try {
         // This test ensures the API call returns an array of [StorageKey, value] tuples as expected by our code.
-        const result = await getApiAndProvider('wss://asset-hub-kusama-rpc.dwellir.com')
+        const result = await getApiAndProvider(KUSAMA_ASSET_HUB_RPC)
         api = result.api
         provider = result.provider
         error = result.error
@@ -64,8 +64,6 @@ describe('Account Integration', () => {
         const entries = await api.query.uniques.account.entries(address)
         expect(Array.isArray(entries)).toBe(true)
         if (entries.length > 0) {
-          // Log for review/debugging
-          console.info(`Found ${entries.length} uniques entries for address.`)
           // Check that the first entry is a tuple [StorageKey, value]
           expect(Array.isArray(entries[0])).toBe(true)
           expect(entries[0].length).toBe(2)
@@ -83,7 +81,7 @@ describe('Account Integration', () => {
     it('Polkadot API api.query.nfts.account.entries returns an array of [StorageKey, value] tuples and keys are extractable', async () => {
       let api, provider, error
       try {
-        const result = await getApiAndProvider('wss://asset-hub-kusama-rpc.dwellir.com')
+        const result = await getApiAndProvider(KUSAMA_ASSET_HUB_RPC)
         api = result.api
         provider = result.provider
         error = result.error
@@ -95,8 +93,6 @@ describe('Account Integration', () => {
         expect(Array.isArray(entries)).toBe(true)
 
         if (entries.length > 0) {
-          // Log for review/debugging
-          console.info(`Found ${entries.length} NFT entries for address.`)
           // Check that the first entry is a tuple [StorageKey, value]
           expect(Array.isArray(entries[0])).toBe(true)
           expect(entries[0].length).toBe(2)
