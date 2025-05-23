@@ -1,6 +1,9 @@
 import { useCallback } from 'react'
+import { ledgerState$ } from '@/state/ledger'
+import { notifications$ } from '@/state/notifications'
 import { use$, useObservable } from '@legendapp/state/react'
-import { ledgerState$ } from 'state/ledger'
+
+import { isSafari } from '@/lib/utils'
 
 interface UseConnectionReturn {
   connectDevice: () => Promise<boolean>
@@ -22,6 +25,15 @@ export const useConnection = (): UseConnectionReturn => {
 
   // Handle device connection
   const connectDevice = useCallback(async () => {
+    if (isSafari()) {
+      notifications$.push({
+        title: 'Safari Not Supported',
+        description: 'Connectivity to Ledger device is not possible on Safari. Please use Chrome or Firefox.',
+        type: 'warning',
+        autoHideDuration: 6000,
+      })
+      return false
+    }
     const result = await ledgerState$.connectLedger()
 
     if (result.connected && result.isAppOpen) {
