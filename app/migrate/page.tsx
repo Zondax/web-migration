@@ -59,11 +59,13 @@ export default function MigratePage() {
   useEffect(() => {
     // If we're not on the first tab (Connect tab) and either the device is not connected
     // or the app is not open, go back to the first tab
+    // This will also trigger when the device disconnects, as the disconnect handler clears connection state
     if (activeTab !== 0 && (!isLedgerConnected || !isAppOpen)) {
       // Reset to the first tab
       handleTabChange(0)
     }
   }, [isLedgerConnected, isAppOpen, activeTab, handleTabChange])
+
   // Prepare props for each tab component
   const connectProps = {
     onContinue: () => goToNextTab(),
