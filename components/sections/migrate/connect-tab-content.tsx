@@ -20,7 +20,7 @@ export function ConnectTabContent({ onContinue }: ConnectTabContentProps) {
   }, [connectDevice, onContinue])
 
   return (
-    <div className="flex flex-col items-center justify-center h-full py-12">
+    <div className="flex flex-col items-center justify-center h-full py-12 w-full">
       <h2 className="text-2xl font-bold mb-8">Connect Your Ledger Device</h2>
       <div className="max-w-md text-center">
         <p className="mb-6">To begin the migration process, please follow these steps:</p>
