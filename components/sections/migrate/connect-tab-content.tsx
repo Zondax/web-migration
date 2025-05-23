@@ -1,9 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { notifications$ } from 'state/notifications'
 
-import { isSafari } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useConnection } from '@/components/hooks/useConnection'
 
@@ -15,15 +13,6 @@ export function ConnectTabContent({ onContinue }: ConnectTabContentProps) {
   const { isLedgerConnected, isAppOpen, connectDevice } = useConnection()
 
   const handleConnect = useCallback(async () => {
-    if (isSafari()) {
-      notifications$.push({
-        title: 'Safari Not Supported',
-        description: 'Connectivity to Ledger device is not possible on Safari. Please use Chrome or Firefox.',
-        type: 'warning',
-        autoHideDuration: 6000,
-      })
-      return
-    }
     const connected = await connectDevice()
     if (connected) {
       onContinue()
