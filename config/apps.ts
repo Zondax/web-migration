@@ -75,3 +75,9 @@ export const getChainPrefix = (appId: AppId): number | undefined => {
   const appConfig = appsConfigs.get(appId)
   return appConfig ? appConfig.ss58Prefix : undefined
 }
+
+// Helper function to get SS58 prefix for a chain
+export const getChainName = (appId: AppId): string | undefined => {
+  const appConfig = appsConfigs.get(appId)
+  return appConfig ? appConfig.name : undefined
+}

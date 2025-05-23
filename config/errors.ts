@@ -21,6 +21,7 @@ export enum InternalErrors {
   'APP_CONFIG_NOT_FOUND' = 'app_config_not_found',
   'MIGRATION_ERROR' = 'migration_error',
   'BLOCKCHAIN_CONNECTION_ERROR' = 'blockchain_connection_error',
+  'UNSTAKE_ERROR' = 'unstake_error',
 }
 
 export enum LedgerErrors {
@@ -138,5 +139,10 @@ export const errorDetails: ErrorDetailsMap = {
     title: 'Transport Interface Not Available',
     description: 'The transport interface is not available.',
     content: 'Please disconnect the device and try again.',
+  },
+  unstake_error: {
+    title: 'Unstake Error',
+    description: 'Failed to unstake balance.',
+    content: 'Please try again later or contact support if the issue persists.',
   },
 }

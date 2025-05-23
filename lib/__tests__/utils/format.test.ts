@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { Token } from '@/config/apps'
 
-import { formatBalance, formatVersion, truncateMiddleOfString } from '../../utils/format'
+import { convertToRawUnits, formatBalance, formatVersion, truncateMiddleOfString } from '../../utils/format'
 
 describe('truncateMiddleOfString', () => {
   it('should return null for empty string', () => {
@@ -74,6 +74,30 @@ describe('formatBalance', () => {
 
   it('should round to specified decimal places', () => {
     expect(formatBalance(123456789, token, 2)).toBe('1.23 DOT')
+  })
+})
+
+describe('convertToRawUnits', () => {
+  const token = { symbol: 'DOT', decimals: 8 } as Token
+
+  it('should convert amount to raw units based on token decimals', () => {
+    expect(convertToRawUnits(1.23456789, token)).toBe(123456789)
+  })
+
+  it('should handle zero amount', () => {
+    expect(convertToRawUnits(0, token)).toBe(0)
+  })
+
+  it('should handle token with zero decimals', () => {
+    expect(convertToRawUnits(1000, { ...token, decimals: 0 })).toBe(1000)
+  })
+
+  it('should handle token with undefined decimals', () => {
+    expect(convertToRawUnits(1000, { symbol: 'DOT' } as Token)).toBe(1000)
+  })
+
+  it('should handle very small amounts', () => {
+    expect(convertToRawUnits(0.00000001, token)).toBe(1)
   })
 })
 

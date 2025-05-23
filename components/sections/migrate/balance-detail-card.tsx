@@ -1,10 +1,13 @@
-import { BalanceType, Collection } from 'state/types/ledger'
+import { BalanceType, Collection, Native } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
 import { Token } from '@/config/apps'
 import { formatBalance } from '@/lib/utils/format'
-import { muifyHtml } from '@/lib/utils/html'
+import { Badge, BadgeVariant } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import TokenIcon from '@/components/TokenIcon'
+
+import { NativeBalanceVisualization } from './balance-visualizations'
 
 interface NftDetailCardProps {
   balance: number
@@ -35,11 +38,9 @@ const NftDetailCard = ({ balance, collection, isUnique }: NftDetailCardProps) =>
       <div className="flex-1">
         <CardHeader className="p-0 pb-2">
           <CardTitle className="text-base flex items-center gap-2 w-full">
-            <div className="flex-grow min-w-0 flex items-center">
+            <div className="flex-grow min-w-0 flex items-center gap-2">
               <span className="truncate block max-w-[250px]">{collection?.name || `Collection #${collection.collectionId}`}</span>
-              <span className="bg-gray-500 text-white text-[10px] px-2 py-0.5 rounded-full ml-2 flex-shrink-0">
-                {isUnique ? 'UNIQUE' : 'NFT'}
-              </span>
+              <BalanceTypeFlag type={isUnique ? BalanceType.UNIQUE : BalanceType.NFT} />
             </div>
             <span className="flex-shrink-0 font-medium font-mono ml-auto">{balance}</span>
           </CardTitle>
@@ -55,44 +56,46 @@ const NftDetailCard = ({ balance, collection, isUnique }: NftDetailCardProps) =>
 }
 
 interface NativeTokensDetailCardProps {
-  balance: number
+  balance: Native
   token: Token
+  isMigration?: boolean // if true, don't show the balance visualization
 }
 
-const NativeTokensDetailCard = ({ balance, token }: NativeTokensDetailCardProps) => {
+const NativeTokensDetailCard = ({ balance, token, isMigration }: NativeTokensDetailCardProps) => {
   const icon = uiState$.icons.get()[token.logoId || '']
-  const formattedBalance = formatBalance(balance, token, undefined, true)
+  const total = Number(formatBalance(balance.total || 0, token, undefined, true))
 
   return (
-    <Card className="flex flex-row items-center p-3">
-      <div className="h-12 w-12 rounded-full overflow-hidden mr-3 flex-shrink-0">
-        {icon ? (
-          <div className="flex h-full w-full items-center justify-center [&_svg]:h-12 [&_svg]:w-12">{muifyHtml(icon)}</div>
-        ) : (
-          <div className="flex h-full items-center justify-center bg-muted">
-            <span className="text-xs text-muted-foreground">{token.symbol}</span>
-          </div>
-        )}
-      </div>
-      <div className="flex-1">
-        <CardHeader className="p-0 pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            {token.symbol}
-            <span className="bg-font-semibold text-white text-[10px] px-2 py-0 rounded-full">NATIVE</span>
-            <span className="ml-auto font-medium font-mono">{formattedBalance}</span>
-          </CardTitle>
-        </CardHeader>
-      </div>
-    </Card>
+    <div className="flex flex-col gap-2">
+      <Card className="flex flex-row items-center p-3 gap-3">
+        <TokenIcon icon={icon} symbol={token.symbol} size="lg" />
+        <div className="flex-1">
+          <CardHeader className="p-0">
+            <CardTitle className="text-base flex items-center gap-2">
+              {token.symbol}
+              <span className="bg-font-semibold text-white text-[10px] px-2 py-0 rounded-full">NATIVE</span>
+              <span className="ml-auto font-medium font-mono">{total}</span>
+            </CardTitle>
+          </CardHeader>
+        </div>
+      </Card>
+
+      {!isMigration && <NativeBalanceVisualization data={balance} token={token} />}
+    </div>
   )
 }
 
 interface BalanceTypeFlagProps {
-  type: BalanceType
+  type: string
+  variant?: BadgeVariant
 }
 
-const BalanceTypeFlag = ({ type }: BalanceTypeFlagProps) => {
-  return <span className="bg-gray-500 text-white text-[10px] uppercase px-2 py-0.5 rounded-full ml-2 flex-shrink-0">{type}</span>
+const BalanceTypeFlag = ({ type, variant = 'gray' }: BalanceTypeFlagProps) => {
+  return (
+    <Badge variant={variant} className="text-[10px] uppercase flex-shrink-0">
+      {type}
+    </Badge>
+  )
 }
 
 export { BalanceTypeFlag, NativeTokensDetailCard, NftDetailCard }
