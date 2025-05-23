@@ -57,7 +57,7 @@ export const convertToRawUnits = (amount: number, token: Token): number => {
     return amount
   }
 
-  return amount * Math.pow(10, token.decimals)
+  return Math.round(amount * Math.pow(10, token.decimals))
 }
 
 /**

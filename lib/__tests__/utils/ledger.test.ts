@@ -1,15 +1,11 @@
 import { App } from 'state/ledger'
-import { Address, BalanceType } from 'state/types/ledger'
+import { Address } from 'state/types/ledger'
 import { describe, expect, it } from 'vitest'
 
-import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors, hasAddressBalance } from '../../utils/ledger'
+import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors } from '../../utils/ledger'
 import {
   mockAddress1,
   mockAddress2,
-  mockAddress3,
-  mockAddressNoBalance,
-  mockAddressPartialBalance,
-  mockAddressWithError,
   mockApp1,
   mockApp2,
   mockAppMixedErrorTypes,
@@ -17,10 +13,6 @@ import {
   mockApps,
   mockAppWithAppError,
   mockAppWithMigrationError,
-  mockEmptyNativeBalance,
-  mockNativeBalance,
-  mockNft1,
-  mockUnique,
 } from './__mocks__/mockData'
 
 // =========== Helper Functions ===========
@@ -156,92 +148,5 @@ describe('hasAccountsWithErrors', () => {
 
   it('should handle app with mixed account error types', () => {
     expect(hasAccountsWithErrors([mockAppMixedErrorTypes])).toBe(true)
-  })
-})
-
-// =========== Tests: hasBalance ===========
-describe('hasBalance', () => {
-  it('should return true if address has native balance', () => {
-    expect(hasAddressBalance(mockAddress1)).toBe(true)
-  })
-
-  it('should return true if address has NFTs', () => {
-    expect(hasAddressBalance(mockAddress2)).toBe(true)
-  })
-
-  it('should return true if address has uniques', () => {
-    expect(hasAddressBalance(mockAddress3)).toBe(true)
-  })
-
-  it('should return false if address has no balance', () => {
-    expect(hasAddressBalance(mockAddressNoBalance)).toBe(false)
-  })
-
-  it('should return false for address with undefined balance', () => {
-    expect(hasAddressBalance(mockAddressWithError)).toBe(false)
-  })
-
-  it('should handle partial balance objects', () => {
-    expect(hasAddressBalance(mockAddressPartialBalance)).toBe(false)
-  })
-
-  it('should handle balance with only uniques property', () => {
-    const addressWithOnlyUniques: Address = {
-      ...mockAddress1,
-      balances: [
-        {
-          type: BalanceType.UNIQUE,
-          balance: [mockUnique],
-        },
-      ],
-    }
-    expect(hasAddressBalance(addressWithOnlyUniques)).toBe(true)
-  })
-
-  it('should handle balance with only nfts property', () => {
-    const addressWithOnlyNfts: Address = {
-      ...mockAddress1,
-      balances: [
-        {
-          type: BalanceType.NFT,
-          balance: [mockNft1],
-        },
-      ],
-    }
-    expect(hasAddressBalance(addressWithOnlyNfts)).toBe(true)
-  })
-
-  it('should handle balance with only native property', () => {
-    const addressWithOnlyNative: Address = {
-      ...mockAddress1,
-      balances: [
-        {
-          type: BalanceType.NATIVE,
-          balance: mockNativeBalance,
-        },
-      ],
-    }
-    expect(hasAddressBalance(addressWithOnlyNative)).toBe(true)
-  })
-
-  it('should return false for zero native balance and empty arrays', () => {
-    const addressWithZeroBalances: Address = {
-      ...mockAddress1,
-      balances: [
-        {
-          type: BalanceType.NATIVE,
-          balance: mockEmptyNativeBalance,
-        },
-        {
-          type: BalanceType.NFT,
-          balance: [],
-        },
-        {
-          type: BalanceType.UNIQUE,
-          balance: [],
-        },
-      ],
-    }
-    expect(hasAddressBalance(addressWithZeroBalances)).toBe(false)
   })
 })

@@ -131,12 +131,40 @@ export const mockEmptyNativeBalance: Native = {
 }
 
 // mock free native balance
-export const mockNativeBalance: Native = {
+export const mockFreeNativeBalance: Native = {
   total: 1000,
   free: 1000,
   reserved: 0,
   frozen: 0,
   transferable: 1000,
+}
+
+// mock reserved native balance
+export const mockReservedNativeBalance: Native = {
+  total: 1000,
+  free: 0,
+  reserved: 1000,
+  frozen: 0,
+  transferable: 0,
+}
+
+// mock reserved native balance
+export const mockFrozenNativeBalance: Native = {
+  total: 1000,
+  free: 0,
+  reserved: 0,
+  frozen: 1000,
+  transferable: 0,
+}
+
+// mock staked native balance
+export const mockStakedNativeBalance: Native = {
+  total: 1000,
+  free: 0,
+  reserved: 0,
+  frozen: 0,
+  transferable: 0,
+  staking: mockStaking,
 }
 
 export const mockAddress1: Address = {
@@ -146,7 +174,7 @@ export const mockAddress1: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: mockNativeBalance,
+      balance: mockFreeNativeBalance,
     },
     {
       type: BalanceType.NFT,
