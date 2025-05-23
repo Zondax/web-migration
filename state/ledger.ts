@@ -196,13 +196,31 @@ function handleLedgerError(error: LedgerClientError, defaultError: InternalError
 
 export const ledgerState$ = observable({
   ...initialLedgerState,
+  /**
+   * Handler for device disconnect event. This will be passed to connectDevice and called by the LedgerService when the device disconnects.
+   * It shows a notification, clears connection and synchronization state, and can be extended to trigger UI navigation if needed.
+   */
+  handleDeviceDisconnect() {
+    // Show a toast notification for device disconnect
+    notifications$.push({
+      title: 'Ledger device disconnected',
+      description: 'Your Ledger device was disconnected. Please reconnect to continue.',
+      type: 'error',
+      autoHideDuration: 5000,
+    })
+    // Clear connection and synchronization state
+    ledgerState$.clearConnection()
+    // Optionally, trigger a callback for UI navigation (e.g., redirect to connect page)
+    // This can be handled in the UI by observing connection state
+  },
   async connectLedger(): Promise<{ connected: boolean; isAppOpen: boolean }> {
     // Set the loading state to true and clear any previous errors
     ledgerState$.device.isLoading.set(true)
     ledgerState$.device.error.set(undefined)
 
     try {
-      const response = await ledgerClient.connectDevice()
+      // Pass the disconnect handler to connectDevice
+      const response = await ledgerClient.connectDevice(ledgerState$.handleDeviceDisconnect)
 
       ledgerState$.device.connection.set(response?.connection)
       ledgerState$.device.error.set(response?.error) // Set error even if not connected
