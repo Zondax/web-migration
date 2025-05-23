@@ -66,7 +66,7 @@ export type UpdateMigratedStatusFn = (
  */
 export interface NativeBalance {
   type: BalanceType.NATIVE
-  balance: number
+  balance: Native
   transaction?: Transaction
 }
 
@@ -142,4 +142,33 @@ export interface NftsInfo {
     source: 'nft_info_fetch' | 'uniques_info_fetch'
     description: string
   }
+}
+
+/**
+ * Information about a staking balance
+ */
+export interface Staking {
+  total?: number
+  active?: number
+  unlocking?: {
+    value: number
+    era: number
+    timeRemaining: string
+  }[]
+  claimedRewards?: number[]
+  stash?: string
+  controller?: string
+  canUnstake?: boolean
+}
+
+/**
+ * Information about a native balance
+ */
+export interface Native {
+  free: number
+  reserved: number
+  frozen: number
+  total: number // free + reserved
+  transferable: number // free - frozen
+  staking?: Staking
 }

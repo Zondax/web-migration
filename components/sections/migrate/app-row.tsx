@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useState } from 'react'
-import { BalanceType } from '@/state/types/ledger'
 import { Observable } from '@legendapp/state'
 import { observer, use$ } from '@legendapp/state/react'
 import { AlertCircle, ChevronDown } from 'lucide-react'
 import { App, AppStatus, ledgerState$ } from 'state/ledger'
 import { uiState$ } from 'state/ui'
 
+import { isNativeBalance } from '@/lib/utils/balance'
 import { formatBalance } from '@/lib/utils/format'
 import { muifyHtml } from '@/lib/utils/html'
 import { Badge } from '@/components/ui/badge'
@@ -62,7 +62,7 @@ function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolea
     if (failedSync) return null
     const balance = accounts?.reduce((total, account) => {
       const balances = account.balances ?? []
-      const nativeBalance = balances.find(b => b.type === BalanceType.NATIVE)?.balance ?? 0
+      const nativeBalance = balances.find(b => isNativeBalance(b))?.balance.total ?? 0
       return total + nativeBalance
     }, 0)
 
@@ -110,6 +110,7 @@ function AppRow({ app, failedSync }: { app: Observable<App>; failedSync?: boolea
           token={app.token.get()}
           polkadotAddresses={polkadotAddresses ?? []}
           collections={collections}
+          appId={id}
         />
       ) : null}
     </>

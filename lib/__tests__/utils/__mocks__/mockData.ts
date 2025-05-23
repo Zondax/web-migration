@@ -1,5 +1,5 @@
 import { App, AppStatus } from 'state/ledger'
-import { Address, BalanceType, Collection, Nft } from 'state/types/ledger'
+import { Address, BalanceType, Collection, Native, Nft, Staking } from 'state/types/ledger'
 
 // =========== Common Test Addresses ===========
 export const TEST_ADDRESSES = {
@@ -10,6 +10,24 @@ export const TEST_ADDRESSES = {
   ADDRESS5: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL',
   ADDRESS6: '5H4MvAsobfZ6bBCDyj5dsrWYLrA8HrRzaqa9p61UXtxMhSCY',
   ADDRESS7: '5DAUh2JEqgjoq7xKmvUdaNkDRRtwqYGtxKzovLHdkkNcsuFJ',
+}
+
+// =========== Mock Staking ===========
+export const mockStaking: Staking = {
+  total: 1000000000000,
+  active: 800000000000,
+  unlocking: [
+    {
+      value: 100000000000,
+      era: 2400,
+    },
+    {
+      value: 100000000000,
+      era: 2500,
+    },
+  ],
+  claimedRewards: [2300, 2350],
+  controller: TEST_ADDRESSES.ADDRESS1,
 }
 
 // =========== Mock NFTs ===========
@@ -96,6 +114,14 @@ export const mockCollection4: Collection = {
 }
 
 // =========== Mock Addresses ===========
+const emptyNativeBalance: Native = {
+  total: 0,
+  free: 0,
+  reserved: 0,
+  frozen: 0,
+  transferable: 0,
+}
+
 export const mockAddress1: Address = {
   path: "m/44'/354'/0'/0'",
   pubKey: '0x123',
@@ -103,7 +129,13 @@ export const mockAddress1: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: 1000,
+      balance: {
+        total: 1000,
+        free: 1000,
+        reserved: 0,
+        frozen: 0,
+        transferable: 1000,
+      },
     },
     {
       type: BalanceType.NFT,
@@ -123,7 +155,7 @@ export const mockAddress2: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: 0,
+      balance: emptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
@@ -143,7 +175,7 @@ export const mockAddress3: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: 0,
+      balance: emptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
@@ -185,7 +217,7 @@ export const mockAddressNoBalance: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: 0,
+      balance: emptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
@@ -205,7 +237,7 @@ export const mockAddressPartialBalance: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: 0,
+      balance: emptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
