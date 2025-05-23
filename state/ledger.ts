@@ -6,7 +6,7 @@ import { errorApps, syncApps } from 'config/mockData'
 import type { Token } from '@/config/apps'
 import { maxAddressesToFetch } from '@/config/config'
 import { getApiAndProvider, getBalance } from '@/lib/account'
-import { DeviceConnectionProps } from '@/lib/ledger/types'
+import type { DeviceConnectionProps } from '@/lib/ledger/types'
 import { convertSS58Format } from '@/lib/utils/address'
 import { mapLedgerError } from '@/lib/utils/error'
 import { hasAddressBalance, hasBalance } from '@/lib/utils/ledger'
@@ -14,8 +14,15 @@ import { hasAddressBalance, hasBalance } from '@/lib/utils/ledger'
 import type { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
 import { notifications$ } from './notifications'
-import { Address, AddressBalance, AddressStatus, Collection, TransactionStatus, UpdateMigratedStatusFn } from './types/ledger'
-import { Notification } from './types/notifications'
+import {
+  type Address,
+  type AddressBalance,
+  AddressStatus,
+  type Collection,
+  TransactionStatus,
+  type UpdateMigratedStatusFn,
+} from './types/ledger'
+import type { Notification } from './types/notifications'
 
 export enum AppStatus {
   MIGRATED = 'migrated',

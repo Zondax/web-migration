@@ -18,13 +18,9 @@
       "**/dist",
       "**/playwright-report",
       "**/pnpm-lock.yaml",
-      "**/*.tsx",
-      ".next/",
       "components/ui/**",
       "node_modules/**",
-      "public/**",
-      "coverage/**",
-      "playwright-report/**"
+      "coverage/**"
     ]
   },
   "formatter": {

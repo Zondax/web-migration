@@ -1,5 +1,5 @@
-import Transport from '@ledgerhq/hw-transport'
-import { PolkadotGenericApp } from '@zondax/ledger-substrate'
+import type Transport from '@ledgerhq/hw-transport'
+import type { PolkadotGenericApp } from '@zondax/ledger-substrate'
 
 /**
  * Represents a response object from a connection request.

@@ -113,7 +113,7 @@ export const useMigration = (): UseMigrationReturn => {
   /**
    * Verify a single address with the Ledger device
    */
-  const verifyAddress = async (appId: AppId, addressIndex: number): Promise<void> => {
+  const verifyAddress = useCallback(async (appId: AppId, addressIndex: number): Promise<void> => {
     const address = destinationAddressesStatus$[appId][addressIndex].peek()
 
     // Update the verification status to 'verifying'
@@ -123,13 +123,12 @@ export const useMigration = (): UseMigrationReturn => {
 
     // The property is spelled 'isVerified' in the API response
     destinationAddressesStatus$[appId][addressIndex].status.set(response.isVerified ? 'verified' : 'failed')
-  }
+  }, [])
 
   /**
    * Verify all destination addresses
    */
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const verifyDestinationAddresses = useCallback(async () => {
     isVerifying$.set(true)
 
@@ -145,13 +144,12 @@ export const useMigration = (): UseMigrationReturn => {
     } finally {
       isVerifying$.set(false)
     }
-  }, [])
+  }, [verifyAddress])
 
   /**
    * Verify only the addresses that have failed verification
    */
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const verifyFailedAddresses = useCallback(async () => {
     isVerifying$.set(true)
 
@@ -172,7 +170,7 @@ export const useMigration = (): UseMigrationReturn => {
     } finally {
       isVerifying$.set(false)
     }
-  }, [])
+  }, [verifyAddress])
 
   // Compute verification status flags
   const allVerified = use$(() => {

@@ -1,17 +1,17 @@
 'use client'
 
-import { useEffect } from 'react'
 import { uiState$ } from '@/state/ui'
 import { use$ } from '@legendapp/state/react'
 import { AlertCircle, CheckCircle, Clock } from 'lucide-react'
+import { useEffect } from 'react'
 
-import { AppId, appsConfigs } from '@/config/apps'
-import { muifyHtml } from '@/lib/utils'
+import { AddressLink } from '@/components/AddressLink'
+import { useMigration, type VerificationStatus } from '@/components/hooks/useMigration'
+import { Spinner } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { AddressLink } from '@/components/AddressLink'
-import { useMigration, VerificationStatus } from '@/components/hooks/useMigration'
-import { Spinner } from '@/components/icons'
+import { type AppId, appsConfigs } from '@/config/apps'
+import { muifyHtml } from '@/lib/utils'
 
 interface AddressVerificationDialogProps {
   open: boolean
@@ -78,7 +78,7 @@ export function AddressVerificationDialog({ open, onClose }: AddressVerification
                 const icon = icons[appId as AppId]
 
                 return (
-                  <li key={index} className={`flex flex-col p-2 rounded border bg-white`}>
+                  <li key={appId} className={'flex flex-col p-2 rounded border bg-white'}>
                     <div className="font-medium text-sm mb-2 flex items-center gap-2">
                       {icon && (
                         <div className="max-h-5 overflow-hidden [&_svg]:max-h-5 [&_svg]:w-5 flex items-center">{muifyHtml(icon)}</div>
@@ -87,7 +87,7 @@ export function AddressVerificationDialog({ open, onClose }: AddressVerification
                     </div>
                     <div className="flex flex-col">
                       {addresses.map((item, index) => (
-                        <div key={index} className="flex flex-row items-center justify-between">
+                        <div key={item.address} className="flex flex-row items-center justify-between">
                           <div className="text-xs font-mono text-gray-500">
                             <AddressLink value={item.address} disableTooltip />
                           </div>

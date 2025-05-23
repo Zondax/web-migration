@@ -128,7 +128,7 @@ describe('LedgerService', () => {
       })
 
       // Set up existing device connection
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: mockTransport,
         genericApp: mockGenericApp,
         isAppOpen: true,
@@ -368,22 +368,22 @@ describe('LedgerService', () => {
       const mockGenericApp = createMockGenericApp()
 
       // Set up initial connection state
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: mockTransport,
         genericApp: mockGenericApp,
         isAppOpen: true,
       }
 
       // Verify connection exists before clearing
-      expect(ledgerService['deviceConnection'].transport).toBe(mockTransport)
-      expect(ledgerService['deviceConnection'].genericApp).toBe(mockGenericApp)
+      expect(ledgerService.deviceConnection.transport).toBe(mockTransport)
+      expect(ledgerService.deviceConnection.genericApp).toBe(mockGenericApp)
 
       ledgerService.clearConnection()
 
       // Verify connection is cleared
-      expect(ledgerService['deviceConnection'].transport).toBeUndefined()
-      expect(ledgerService['deviceConnection'].genericApp).toBeUndefined()
-      expect(ledgerService['deviceConnection'].isAppOpen).toBe(false)
+      expect(ledgerService.deviceConnection.transport).toBeUndefined()
+      expect(ledgerService.deviceConnection.genericApp).toBeUndefined()
+      expect(ledgerService.deviceConnection.isAppOpen).toBe(false)
     })
   })
 
@@ -397,7 +397,7 @@ describe('LedgerService', () => {
       const emitSpy = vi.spyOn(mockTransport, 'emit')
 
       // Set up initial connection state
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: mockTransport,
         genericApp: createMockGenericApp(),
         isAppOpen: false,
@@ -414,7 +414,7 @@ describe('LedgerService', () => {
       const ledgerService = new LedgerService()
 
       // Set empty connection state
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: undefined,
         genericApp: undefined,
         isAppOpen: false,
@@ -432,19 +432,19 @@ describe('LedgerService', () => {
       const mockGenericApp = createMockGenericApp()
 
       // Set up initial connection state
-      ledgerService['deviceConnection'] = {
+      ledgerService.deviceConnection = {
         transport: mockTransport,
         genericApp: mockGenericApp,
         isAppOpen: true,
       }
 
       // Call private method using bracket notation
-      ledgerService['handleDisconnect']()
+      ledgerService.handleDisconnect()
 
       // Verify connection is cleared
-      expect(ledgerService['deviceConnection'].transport).toBeUndefined()
-      expect(ledgerService['deviceConnection'].genericApp).toBeUndefined()
-      expect(ledgerService['deviceConnection'].isAppOpen).toBe(false)
+      expect(ledgerService.deviceConnection.transport).toBeUndefined()
+      expect(ledgerService.deviceConnection.genericApp).toBeUndefined()
+      expect(ledgerService.deviceConnection.isAppOpen).toBe(false)
     })
   })
 })

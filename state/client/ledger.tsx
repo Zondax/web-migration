@@ -81,7 +81,10 @@ export const ledgerClient = {
       throw InternalErrors.APP_CONFIG_NOT_FOUND
     }
     return withErrorHandling(async () => {
-      const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint!)
+      if (!appConfig.rpcEndpoint) {
+        throw new Error('Missing RPC endpoint in app config.')
+      }
+      const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint)
       if (error || !api) {
         throw new Error(error ?? 'Failed to connect to the blockchain.')
       }

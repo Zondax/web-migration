@@ -24,8 +24,7 @@ jest.mock('next/router', () => ({
 jest.mock('next/image', () => ({
   __esModule: true,
   default: props => {
-    // biome-ignore lint/a11y/useAltText: <explanation>
-    return <img {...props} />
+    return <img {...props} alt="mock element" />
   },
 }))
 

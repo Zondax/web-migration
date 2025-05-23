@@ -47,7 +47,7 @@ function Snackbar() {
               minute: '2-digit',
             })}
           </Toast.Description>
-          <div className="border-t border-gray-300 my-2"></div>
+          <div className="border-t border-gray-300 my-2" />
           <div className="flex justify-between items-start">
             <Toast.Description className="text-sm text-muted-foreground mb-2">{lastNotification?.description}</Toast.Description>
           </div>

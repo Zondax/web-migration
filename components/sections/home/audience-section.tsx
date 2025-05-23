@@ -46,7 +46,7 @@ export default function AudienceSection() {
         <div className="grid md:grid-cols-3 gap-8">
           {audiences.map((audience, index) => (
             <motion.div
-              key={index}
+              key={`audience-${audience.title}-${index}`}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useState } from 'react'
 import { BalanceType } from '@/state/types/ledger'
-import { Observable } from '@legendapp/state'
+import type { Observable } from '@legendapp/state'
 import { observer, use$ } from '@legendapp/state/react'
 import { AlertCircle, ChevronDown } from 'lucide-react'
-import { App, AppStatus, ledgerState$ } from 'state/ledger'
+import { type App, AppStatus, ledgerState$ } from 'state/ledger'
 import { uiState$ } from 'state/ui'
 
 import { formatBalance } from '@/lib/utils/format'
