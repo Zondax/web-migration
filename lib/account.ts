@@ -3,13 +3,16 @@ import { ApiPromise, WsProvider } from '@polkadot/api'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { GenericExtrinsicPayload } from '@polkadot/types'
 import { Option } from '@polkadot/types-codec'
+import { Codec } from '@polkadot/types-codec/types'
 import { Hash, OpaqueMetadata } from '@polkadot/types/interfaces'
 import { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
-import { hexToU8a } from '@polkadot/util'
+import { hexToString, hexToU8a } from '@polkadot/util'
 import { AppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
 import { Address, Balance, Collection, Nft, NftsInfo, TransactionStatus } from 'state/types/ledger'
+
+import { ledgerService } from '@/lib/ledger/ledgerService'
 
 // Get API and Provider
 export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
@@ -855,4 +858,126 @@ export async function getEnrichedNftMetadata(metadataUrl: string): Promise<{
     console.error('Error getting enriched NFT metadata:', error)
     return null
   }
+}
+
+/**
+ * Logs the identity information for a specific address
+ * @param address The address to check
+ * @param api The API instance
+ */
+export async function getIdentityInfo(address: string, api: ApiPromise): Promise<void> {
+  try {
+    // Get the derived identity for display info
+    const derivedIdentity = await api.derive.accounts.identity(address)
+    console.log('Derived identity:', derivedIdentity)
+
+    // If identity has a parent it means it is a sub-account and we cannot remove it
+    if (derivedIdentity.displayParent) {
+      console.log(
+        'Sub-identity [',
+        derivedIdentity.display,
+        '], cannot be removed. Parent identity is [',
+        derivedIdentity.displayParent,
+        ']'
+      )
+      return
+    }
+
+    // Get the raw identity info
+    const identity = await api.query.identity.identityOf(address)
+
+    if (identity) {
+      // Parse the raw response
+      const rawResponse = JSON.parse(identity.toString())
+
+      if (rawResponse[0]) {
+        const formattedIdentity = {
+          judgements: rawResponse[0].judgements,
+          deposit: rawResponse[0].deposit,
+          info: {
+            additional: rawResponse[0].info.additional,
+            display: rawResponse[0].info.display.raw ? hexToString(rawResponse[0].info.display.raw) : null,
+            legal: rawResponse[0].info.legal,
+            web: rawResponse[0].info.web,
+            riot: rawResponse[0].info.riot,
+            email: rawResponse[0].info.email,
+            pgpFingerprint: rawResponse[0].info.pgpFingerprint,
+            image: rawResponse[0].info.image,
+            twitter: rawResponse[0].info.twitter,
+          },
+        }
+
+        console.log('Formatted identity:', formattedIdentity.info.display)
+        console.log('Legal name:', formattedIdentity.info.legal)
+        console.log('Web:', formattedIdentity.info.web)
+        console.log('Email:', formattedIdentity.info.email)
+        console.log('Twitter:', formattedIdentity.info.twitter)
+        console.log('Deposit amount:', formattedIdentity.deposit)
+
+        // Get the sub-identities
+        const subs = await api.query.identity.subsOf(address)
+
+        if (subs) {
+          const subsTuple = subs as unknown as [Codec, Codec]
+          const [deposit, subAccounts] = subsTuple
+
+          const formattedSubs = {
+            deposit: deposit.toHuman(),
+            subAccounts: subAccounts.toHuman(),
+          }
+
+          // Calculate total reserved
+          const identityDeposit = Number(formattedIdentity.deposit.toString().replace(/,/g, ''))
+          const subsDeposit = Number((formattedSubs.deposit ?? '0').toString().replace(/,/g, ''))
+          const totalReserved = identityDeposit + subsDeposit
+
+          console.log('Formatted Subs:', JSON.stringify(formattedSubs, null, 2))
+          console.log('Number of sub accounts:', (subAccounts.toHuman() as string[]).length)
+          console.log('Total reserved:', totalReserved)
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching identity information:', error)
+  }
+}
+
+export async function removeIdentity(
+  address: string,
+  api: ApiPromise,
+  appConfig: AppConfig,
+  path: string
+): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
+  // Get the derived identity for display info
+  const removeIdentityTx = await api.tx.identity.killIdentity(address)
+
+  // Prepare transaction payload
+  const preparedTx = await prepareTransactionPayload(api, address, appConfig, removeIdentityTx)
+  if (!preparedTx) {
+    throw new Error('Failed to prepare transaction')
+  }
+  const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
+  const typedTransfer = transfer as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  // Get chain ID from app config
+  const chainId = appConfig.token.symbol.toLowerCase()
+
+  // Sign transaction with Ledger
+  const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
+  if (!signature) {
+    throw new Error('Failed to sign transaction')
+  }
+
+  // Create signed extrinsic
+  const signedExtrinsic = createSignedExtrinsic(
+    api,
+    typedTransfer,
+    address,
+    signature,
+    payload,
+    nonce,
+    metadataHash
+  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  return signedExtrinsic
 }
