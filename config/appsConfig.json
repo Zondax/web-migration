@@ -466,5 +466,17 @@
       "symbol": "ZTG",
       "decimals": 10
     }
+  },
+  {
+    "id": "peoplechainkusama",
+    "name": "PeopleChainKusama",
+    "cla": 151,
+    "bip44Path": "m/44'/434'/0'/0'/0'",
+    "ss58Prefix": 2,
+    "rpcEndpoint": "wss://people-kusama.api.onfinality.io/public-ws",
+    "token": {
+      "symbol": "KSM",
+      "decimals": 12
+    }
   }
 ]
