@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { observer, use$ } from '@legendapp/state/react'
-import { AlertCircle, CheckCircle, Clock, ShieldCheck, XCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle, Clock, Info, ShieldCheck, XCircle } from 'lucide-react'
 import { App } from 'state/ledger'
 import { Address, TransactionStatus } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
@@ -182,7 +182,15 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
             <TableHead>Source Address</TableHead>
             <TableHead>Public Key</TableHead>
             <TableHead>Destination Address</TableHead>
-            <TableHead>Balance</TableHead>
+            <TableHead className="flex items-center">
+              Balance
+              <SimpleTooltip
+                tooltipText="Balance to be transferred. The transaction fee will be deducted from this amount."
+                className="!normal-case"
+              >
+                <Info className="h-4 w-4 inline-block ml-1 text-gray-400" />
+              </SimpleTooltip>
+            </TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>

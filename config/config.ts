@@ -12,3 +12,9 @@ export const maxAddressesToFetch =
   process.env.NEXT_PUBLIC_MAX_ADDRESSES_TO_FETCH && !Number.isNaN(parseInt(process.env.NEXT_PUBLIC_MAX_ADDRESSES_TO_FETCH, 10))
     ? parseInt(process.env.NEXT_PUBLIC_MAX_ADDRESSES_TO_FETCH, 10)
     : 10
+
+/**
+ * @constant defaultDecimals
+ * @description Default number of decimals to display for balances.
+ */
+export const defaultDecimals = 8

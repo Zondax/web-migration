@@ -1,6 +1,7 @@
 import { ResponseVersion } from '@zondax/ledger-js'
 
 import { Token } from '@/config/apps'
+import { defaultDecimals } from '@/config/config'
 
 /**
  * Truncates the middle of a string to a specified maximum length.
@@ -39,7 +40,7 @@ export const formatBalance = (balance: number, token?: Token, maxDecimals?: numb
 
   const formattedBalance = adjustedBalance.toLocaleString(undefined, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: maxDecimals !== undefined ? maxDecimals : 5,
+    maximumFractionDigits: maxDecimals !== undefined ? maxDecimals : defaultDecimals,
   })
   return hideTokenSymbol || !token ? formattedBalance : `${formattedBalance} ${token?.symbol}`
 }

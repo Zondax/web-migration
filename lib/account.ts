@@ -128,7 +128,16 @@ export async function getBalance(
 export async function getNativeBalance(addressString: string, api: ApiPromise): Promise<number | undefined> {
   try {
     const balance = await api?.query.system.account(addressString)
-    return balance && 'data' in balance && 'free' in (balance as any).data ? parseFloat((balance.data as any).free.toString()) : undefined
+
+    if (balance && 'data' in balance) {
+      const { free, frozen } = balance.data as any // AccountData is not updated in @polkadot/types
+
+      // reserved balance is not included in the transferable balance, because it is not available for transfer
+      const transferable = Number.parseFloat(free.toString()) - parseFloat(frozen.toString())
+
+      return transferable
+    }
+    return undefined
   } catch (e) {
     console.error('Error fetching native balance:', e)
     return undefined
@@ -215,6 +224,7 @@ export async function prepareTransactionPayload(
  * @param api - The API instance.
  * @param senderAddress - The sender's address.
  * @param receiverAddress - The receiver's address.
+ * @param transferableBalance - Current transferable balance of the sender.
  * @param nfts - Array of NFTs to transfer, each containing collectionId and itemId.
  * @param appConfig - The app configuration.
  * @param nativeAmount - Optional amount of native tokens to transfer.
@@ -223,6 +233,7 @@ export async function prepareTransaction(
   api: ApiPromise,
   senderAddress: string,
   receiverAddress: string,
+  transferableBalance: number,
   nfts: Array<Nft>,
   appConfig: AppConfig,
   nativeAmount?: number
@@ -234,9 +245,9 @@ export async function prepareTransaction(
     }
   }
 
-  // Create transfer calls for each item (NFT or native token)
-  const calls = nfts.map(item => {
-    // Handle NFT transfer
+  if (!transferableBalance) throw new Error(errorDetails.insufficient_balance.description)
+
+  let calls = nfts.map(item => {
     return !item.isUnique
       ? api.tx.nfts.transfer(item.collectionId, item.itemId, receiverAddress)
       : api.tx.uniques.transfer(item.collectionId, item.itemId, receiverAddress)
@@ -244,16 +255,39 @@ export async function prepareTransaction(
 
   // Add native amount transfer if provided
   if (nativeAmount !== undefined) {
-    calls.push(api.tx.balances.transferKeepAlive(receiverAddress, nativeAmount))
+    // Build the transaction with the provided nativeAmount
+    const tempCalls = [...calls, api.tx.balances.transferKeepAlive(receiverAddress, nativeAmount)]
+    const tempTransfer = tempCalls.length > 1 ? api.tx.utility.batchAll(tempCalls) : tempCalls[0]
+    // Calculate the fee
+    const { partialFee } = await tempTransfer.paymentInfo(senderAddress)
+
+    // Send the max amount of native tokens
+    if (nativeAmount === transferableBalance) {
+      const adjustedAmount = transferableBalance - parseFloat(partialFee.toString())
+
+      if (adjustedAmount <= 0) {
+        throw new Error(errorDetails.insufficient_balance.description)
+      }
+      // Rebuild the calls with the adjusted amount
+      calls = [...calls, api.tx.balances.transferKeepAlive(receiverAddress, adjustedAmount)]
+    } else {
+      const totalNeeded = parseFloat(partialFee.toString()) + nativeAmount
+      if (transferableBalance < totalNeeded) {
+        throw new Error(errorDetails.insufficient_balance_to_cover_fee.description)
+      }
+      calls.push(api.tx.balances.transferKeepAlive(receiverAddress, nativeAmount))
+    }
   }
 
-  let transfer: SubmittableExtrinsic<'promise', ISubmittableResult> | undefined
+  const transfer: SubmittableExtrinsic<'promise', ISubmittableResult> = calls.length > 1 ? api.tx.utility.batchAll(calls) : calls[0]
 
-  if (calls.length > 1) {
-    // Create a batch transaction
-    transfer = api.tx.utility.batchAll(calls)
-  } else {
-    transfer = calls[0]
+  if (!nativeAmount) {
+    // No nativeAmount sent, only NFTs or other assets
+    // Calculate the fee and check if the balance is enough
+    const { partialFee } = await transfer.paymentInfo(senderAddress)
+    if (transferableBalance < parseFloat(partialFee.toString())) {
+      throw new Error(errorDetails.insufficient_balance.description)
+    }
   }
 
   return prepareTransactionPayload(api, senderAddress, appConfig, transfer)
