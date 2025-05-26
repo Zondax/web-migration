@@ -992,3 +992,50 @@ export async function unstakeAmount(
 
   return signedExtrinsic
 }
+
+/**
+ * Withdraws unlocked funds from the staking account
+ * @param address The address to withdraw from
+ * @param api The API instance
+ * @param appConfig The app configuration
+ * @param path The BIP44 path for the Ledger device
+ * @param updateStatus Function to update transaction status
+ */
+export async function withdrawAmount(
+  address: string,
+  api: ApiPromise,
+  appConfig: AppConfig,
+  path: string
+): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
+  const unstakeTx = api.tx.staking.withdrawUnbonded(0) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  // Prepare transaction payload
+  const preparedTx = await prepareTransactionPayload(api, address, appConfig, unstakeTx)
+  if (!preparedTx) {
+    throw new Error('Failed to prepare transaction')
+  }
+  const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
+  const typedTransfer = transfer as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  // Get chain ID from app config
+  const chainId = appConfig.token.symbol.toLowerCase()
+
+  // Sign transaction with Ledger
+  const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
+  if (!signature) {
+    throw new Error('Failed to sign transaction')
+  }
+
+  // Create signed extrinsic
+  const signedExtrinsic = createSignedExtrinsic(
+    api,
+    typedTransfer,
+    address,
+    signature,
+    payload,
+    nonce,
+    metadataHash
+  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  return signedExtrinsic
+}

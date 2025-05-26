@@ -4,7 +4,7 @@ import { maxAddressesToFetch } from 'config/config'
 import { InternalErrors } from 'config/errors'
 
 import { MINIMUM_AMOUNT } from '@/config/mockData'
-import { createSignedExtrinsic, getApiAndProvider, getStakingInfo, prepareTransaction, submitAndHandleTransaction, unstakeAmount } from '@/lib/account'
+import { createSignedExtrinsic, getApiAndProvider, getStakingInfo, prepareTransaction, submitAndHandleTransaction, unstakeAmount, withdrawAmount } from '@/lib/account'
 import { ledgerService } from '@/lib/ledger/ledgerService'
 import { hasBalance } from '@/lib/utils'
 import { getBip44Path } from '@/lib/utils/address'
@@ -69,7 +69,10 @@ export const ledgerClient = {
       const stakingInfo = await getStakingInfo(senderAddress, api)
 
       // Unstake fixed amount of 0.1 KSM
-      const unstakeTx = await unstakeAmount(senderAddress, api, appConfig, account.path)
+      //const unstakeTx = await unstakeAmount(senderAddress, api, appConfig, account.path)
+
+      // Get native amount if available
+      const withdrawTx = await withdrawAmount(senderAddress, api, appConfig, account.path)
 
       const updateMigratedStatus = (
         status: TransactionStatus,
@@ -84,7 +87,7 @@ export const ledgerClient = {
       }
 
       // Create transaction promise but don't await it
-      const txPromise = submitAndHandleTransaction(unstakeTx, updateMigratedStatus, api)
+      const txPromise = submitAndHandleTransaction(withdrawTx, updateMigratedStatus, api)
 
       return { txPromise }
 
