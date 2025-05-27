@@ -8,7 +8,7 @@ import { UpdateTransactionStatus } from '@/lib/account'
  * @returns Functions for running a transaction and tracking its status
  */
 export const useTransactionStatus = <T extends (...args: any[]) => Promise<any>>(
-  transactionFn: (updateTxStatus: UpdateTransactionStatus, ...args: Parameters<T>) => Promise<any>
+  transactionFn: (updateTxStatus: UpdateTransactionStatus, ...args: Parameters<T>) => Promise<void>
 ) => {
   // Track the status of transactions
   const [txStatus, setTxStatus] = useState<Transaction | undefined>(undefined)

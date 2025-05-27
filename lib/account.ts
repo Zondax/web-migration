@@ -923,7 +923,7 @@ export async function getEnrichedNftMetadata(metadataUrl: string): Promise<{
  * @param currentEra The current era number
  * @returns The human-readable time string
  */
-function eraToHumanTime(era: number, currentEra: number): string {
+export function eraToHumanTime(era: number, currentEra: number): string {
   const erasRemaining = era - currentEra
   const hoursRemaining = erasRemaining * 6 // Each era is ~6 hours
   const daysRemaining = Math.floor(hoursRemaining / 24)
@@ -972,9 +972,9 @@ export async function getStakingInfo(address: string, api: ApiPromise): Promise<
       era: Number(chunk.era.toString()),
       timeRemaining: eraToHumanTime(Number(chunk.era.toString()), currentEra),
     }))
-  } else {
-    // Account has no active staking ledger
+    return stakingInfo
   }
 
-  return stakingInfo
+  // Account has no active staking ledger
+  return undefined
 }

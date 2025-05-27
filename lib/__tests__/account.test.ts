@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   disconnectSafely,
+  eraToHumanTime,
   fetchFromIpfs,
   getApiAndProvider,
   getEnrichedNftMetadata,
@@ -518,5 +519,21 @@ describe('ipfsToHttpUrl', () => {
 
   it('should return empty string unchanged', () => {
     expect(ipfsToHttpUrl('')).toBe('')
+  })
+})
+
+describe('eraToHumanTime', () => {
+  it('should return hours when less than 24 hours remaining', () => {
+    expect(eraToHumanTime(101, 100)).toBe('6 hours')
+  })
+
+  it('should return days and hours when more than 24 hours remaining', () => {
+    expect(eraToHumanTime(105, 100)).toBe('1 days and 6 hours')
+  })
+
+  it('should handle zero values', () => {
+    expect(eraToHumanTime(0, 0)).toBe('0 hours')
+    expect(eraToHumanTime(1, 0)).toBe('6 hours')
+    expect(eraToHumanTime(4, 0)).toBe('1 days and 0 hours')
   })
 })
