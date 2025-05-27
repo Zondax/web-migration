@@ -3,20 +3,32 @@ import { Transaction, TransactionStatus } from '@/state/types/ledger'
 
 import { UpdateTransactionStatus } from '@/lib/account'
 
+type GenericFunction = (...args: any[]) => Promise<void>
+
+interface TransactionStatusReturn<T extends GenericFunction> {
+  runTransaction: (...args: Parameters<T>) => Promise<void>
+  txStatus: Transaction | undefined
+  isTxFinished: boolean
+  isTxFailed: boolean
+  updateSynchronization: (syncFn?: GenericFunction, ...args: any[]) => Promise<void>
+  isSynchronizing: boolean
+  clearTx: () => void
+}
+
 /**
  * Generic hook for handling blockchain transactions with status tracking
  * @returns Functions for running a transaction and tracking its status
  */
-export const useTransactionStatus = <T extends (...args: any[]) => Promise<any>>(
+export const useTransactionStatus = <T extends GenericFunction>(
   transactionFn: (updateTxStatus: UpdateTransactionStatus, ...args: Parameters<T>) => Promise<void>
-) => {
+): TransactionStatusReturn<T> => {
   // Track the status of transactions
   const [txStatus, setTxStatus] = useState<Transaction | undefined>(undefined)
   const [isTxFinished, setIsTxFinished] = useState<boolean>(false)
   const [isSynchronizing, setIsSynchronizing] = useState<boolean>(false)
 
   const isTxFailed = useMemo(() => {
-    return txStatus?.status && [TransactionStatus.FAILED, TransactionStatus.ERROR].includes(txStatus.status)
+    return Boolean(txStatus?.status && [TransactionStatus.FAILED, TransactionStatus.ERROR].includes(txStatus.status))
   }, [txStatus])
 
   /**

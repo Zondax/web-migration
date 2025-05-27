@@ -2,9 +2,8 @@ import { merkleizeMetadata } from '@polkadot-api/merkleize-metadata'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { GenericExtrinsicPayload } from '@polkadot/types'
-import type { Option } from '@polkadot/types-codec'
-import type { Hash, OpaqueMetadata, StakingLedger } from '@polkadot/types/interfaces'
-import type { Codec } from '@polkadot/types/types'
+import type { Option, u32 } from '@polkadot/types-codec'
+import type { AccountId32, Hash, OpaqueMetadata, StakingLedger } from '@polkadot/types/interfaces'
 import type { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
 import { hexToU8a } from '@polkadot/util'
 import type { AppConfig } from 'config/apps'
@@ -944,7 +943,7 @@ export function eraToHumanTime(era: number, currentEra: number): string {
 export async function getStakingInfo(address: string, api: ApiPromise): Promise<Staking | undefined> {
   let stakingInfo: Staking | undefined
   // Get Controller and check if we can unstake or not
-  const controller = (await api.query.staking.bonded(address)) as Option<Codec>
+  const controller = (await api.query.staking.bonded(address)) as Option<AccountId32>
   if (controller.isSome) {
     stakingInfo = {
       controller: controller.toHuman() as string,
@@ -964,7 +963,7 @@ export async function getStakingInfo(address: string, api: ApiPromise): Promise<
     stakingInfo.total = stakingLedger.total.toNumber()
 
     // Get current era
-    const currentEraOption = (await api.query.staking.currentEra()) as Option<Codec>
+    const currentEraOption = (await api.query.staking.currentEra()) as Option<u32>
     const currentEra = currentEraOption.isSome ? Number(currentEraOption.unwrap().toString()) : 0
 
     stakingInfo.unlocking = stakingLedger.unlocking.map(chunk => ({
