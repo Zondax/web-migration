@@ -80,7 +80,15 @@ export const ledgerClient = {
       const nativeAmount = process.env.NEXT_PUBLIC_NODE_ENV === 'development' && MINIMUM_AMOUNT ? MINIMUM_AMOUNT : account.balance?.native
 
       // Prepare transaction with all assets
-      const preparedTx = await prepareTransaction(api, senderAddress, receiverAddress, nftsToTransfer, appConfig, nativeAmount)
+      const preparedTx = await prepareTransaction(
+        api,
+        senderAddress,
+        receiverAddress,
+        account.balance?.native ?? 0,
+        nftsToTransfer,
+        appConfig,
+        nativeAmount
+      )
       if (!preparedTx) {
         throw new Error('Prepare transaction failed')
       }

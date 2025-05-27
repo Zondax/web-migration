@@ -1,5 +1,10 @@
+import { SubmittableExtrinsic } from '@polkadot/api/types'
+import { ISubmittableResult } from '@polkadot/types/types'
 import { App, AppStatus } from 'state/ledger'
 import { Address, Collection, Nft } from 'state/types/ledger'
+import { vi } from 'vitest'
+
+import { AppConfig } from '@/config/apps'
 
 // =========== Common Test Addresses ===========
 export const TEST_ADDRESSES = {
@@ -255,3 +260,57 @@ export const mockMixedIdNfts = [mockNft1, mockNftNumericId1, mockNft3]
 export const mockCollections = [mockCollection1, mockCollection2, mockCollection3, mockCollection4]
 export const mockApps = [mockApp1, mockApp2, mockAppWithMigrationError, mockAppWithAppError]
 export const mockAppsExtended = [...mockApps, mockAppMixedErrorTypes, mockAppNoAccounts]
+
+export const mockAppConfig: AppConfig = {
+  id: 'test',
+  name: 'TestApp',
+  cla: 1234,
+  bip44Path: "m/44'/354'/0'/0/0",
+  ss58Prefix: 42,
+  token: { decimals: 12, symbol: 'UNIT' },
+}
+
+export const mockMethod = { toHex: () => '0xdeadbeef' }
+export const mockApi = {
+  tx: {
+    nfts: { transfer: vi.fn(() => ({ method: mockMethod, toString: () => 'nftTransfer', paymentInfo: vi.fn() })) },
+    uniques: { transfer: vi.fn(() => ({ method: mockMethod, toString: () => 'uniqueTransfer', paymentInfo: vi.fn() })) },
+    balances: {
+      transferKeepAlive: vi.fn((_: string, amount: number) => ({
+        method: mockMethod,
+        toString: () => `nativeTransfer:${amount}`,
+        paymentInfo: vi.fn().mockResolvedValue({ partialFee: { toString: () => '10' } }),
+      })),
+    },
+    utility: {
+      batchAll: vi.fn((calls: SubmittableExtrinsic<'promise', ISubmittableResult>[]) => ({
+        method: mockMethod,
+        toString: () => `batch:${calls.join(',')}`,
+        paymentInfo: vi.fn().mockResolvedValue({ partialFee: { toString: () => '10' } }),
+      })),
+    },
+  },
+  query: {
+    system: { account: vi.fn() },
+  },
+  call: {
+    metadata: {
+      metadataAtVersion: vi.fn().mockResolvedValue({
+        isNone: false,
+        unwrap: () => ({
+          digest: () => 'mockDigest',
+          getProofForExtrinsicPayload: () => new Uint8Array([1, 2, 3]),
+        }),
+      }),
+    },
+  },
+  runtimeVersion: {
+    transactionVersion: 1,
+    specVersion: 1,
+  },
+  genesisHash: '0x1234567890abcdef',
+  extrinsicVersion: 4,
+  createType: vi.fn(() => ({
+    toU8a: () => new Uint8Array([1, 2, 3]),
+  })),
+}

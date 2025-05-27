@@ -21,6 +21,8 @@ export enum InternalErrors {
   'APP_CONFIG_NOT_FOUND' = 'app_config_not_found',
   'MIGRATION_ERROR' = 'migration_error',
   'BLOCKCHAIN_CONNECTION_ERROR' = 'blockchain_connection_error',
+  'INSUFFICIENT_BALANCE' = 'insufficient_balance',
+  'INSUFFICIENT_BALANCE_TO_COVER_FEE' = 'insufficient_balance_to_cover_fee',
 }
 
 export enum LedgerErrors {
@@ -105,6 +107,16 @@ export const errorDetails: ErrorDetailsMap = {
     title: 'Blockchain Connection Error',
     description: 'Failed to connect to the blockchain network.',
     content: 'Please check your internet connection and try again later.',
+  },
+  insufficient_balance: {
+    title: 'Insufficient Balance',
+    description: 'Insufficient balance to cover the transaction fee.',
+    content: 'Please ensure you have enough funds to cover both the transfer amount and transaction fee.',
+  },
+  insufficient_balance_to_cover_fee: {
+    title: 'Insufficient Balance to Cover Fee',
+    description: 'Insufficient balance to cover the amount and the transaction fee.',
+    content: 'Please ensure you have enough funds to cover the amount and the transaction fee.',
   },
   default: {
     title: 'An unknown error happens, please try again.',
