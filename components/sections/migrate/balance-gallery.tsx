@@ -1,6 +1,6 @@
-import { Collection, Native, Nft } from 'state/types/ledger'
+import type { Collection, Native, Nft } from 'state/types/ledger'
 
-import { Token } from '@/config/apps'
+import type { Token } from '@/config/apps'
 
 import { NativeTokensDetailCard, NftDetailCard } from './balance-detail-card'
 

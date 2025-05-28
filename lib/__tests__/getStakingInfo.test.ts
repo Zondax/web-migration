@@ -1,8 +1,8 @@
-import { ApiPromise } from '@polkadot/api'
-import { GenericAccountId } from '@polkadot/types'
+import type { ApiPromise } from '@polkadot/api'
+import type { GenericAccountId } from '@polkadot/types'
 import type { u32 } from '@polkadot/types-codec'
 import type { AccountId32, StakingLedger } from '@polkadot/types/interfaces'
-import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
+import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getStakingInfo } from '../account'
 

@@ -1,4 +1,4 @@
-import { ApiPromise } from '@polkadot/api'
+import type { ApiPromise } from '@polkadot/api'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { errorDetails } from '@/config/errors'

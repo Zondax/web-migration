@@ -8,7 +8,7 @@ export const getTransactionStatus = (
   txStatusMessage?: string,
   size: 'sm' | 'md' | 'lg' = 'sm'
 ): { statusIcon: React.ReactNode; statusMessage?: string } => {
-  let statusIcon
+  let statusIcon: React.ReactNode | null = null
   let statusMessage = txStatusMessage
 
   const sizeClasses = {

@@ -1,11 +1,11 @@
-import { BalanceType, Collection, Native } from 'state/types/ledger'
+import { BalanceType, type Collection, type Native } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
-import { Token } from '@/config/apps'
-import { formatBalance } from '@/lib/utils/format'
-import { Badge, BadgeVariant } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import TokenIcon from '@/components/TokenIcon'
+import { Badge, type BadgeVariant } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import type { Token } from '@/config/apps'
+import { formatBalance } from '@/lib/utils/format'
 
 import { NativeBalanceVisualization } from './balance-visualizations'
 

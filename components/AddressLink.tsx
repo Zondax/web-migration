@@ -1,10 +1,10 @@
-import { useCallback, useState } from 'react'
 import { truncateMaxCharacters } from 'config/config'
 import { Check, Copy } from 'lucide-react'
+import { useCallback, useState } from 'react'
 
-import { copyContent, truncateMiddleOfString } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { SimpleTooltip } from '@/components/ui/tooltip'
+import { copyContent, truncateMiddleOfString } from '@/lib/utils'
 
 interface AddressLinkProps {
   value: string

@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { migrationTabs } from 'config/ui'
 import { motion, useAnimation } from 'framer-motion'
 import { Check } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
+import { Tabs } from '@/components/Tabs'
 // Import section components
 import { useLoadIcons } from '@/components/hooks/loadIcons'
 import { useConnection } from '@/components/hooks/useConnection'
@@ -12,7 +13,8 @@ import { useTabs } from '@/components/hooks/useTabs'
 import { GradientBackground } from '@/components/sections/migrate/background'
 import { Header } from '@/components/sections/migrate/header'
 import Snackbar from '@/components/sections/migrate/snackbar'
-import { Tabs } from '@/components/Tabs'
+
+type TabProps = { onContinue: () => void } | { onBack: () => void }
 
 export default function MigratePage() {
   const controls = useAnimation()
@@ -65,15 +67,15 @@ export default function MigratePage() {
     }
   }, [isLedgerConnected, isAppOpen, activeTab, handleTabChange])
   // Prepare props for each tab component
-  const connectProps = {
+  const connectProps: TabProps = {
     onContinue: () => goToNextTab(),
   }
 
-  const synchronizeProps = {
+  const synchronizeProps: TabProps = {
     onContinue: () => goToNextTab(),
   }
 
-  const migrateProps = {
+  const migrateProps: TabProps = {
     onBack: () => goToPreviousTab(),
   }
 
@@ -81,7 +83,7 @@ export default function MigratePage() {
   const getActiveComponent = () => {
     const TabComponent = tabsWithStatus[activeTab].component
 
-    let props
+    let props: TabProps
     switch (activeTab) {
       case 0:
         props = connectProps
@@ -93,7 +95,9 @@ export default function MigratePage() {
         props = migrateProps
         break
       default:
-        props = {}
+        // Fallback: use connectProps (or could throw an error)
+        props = connectProps
+        break
     }
 
     return <TabComponent {...props} />

@@ -3,5 +3,23 @@
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "cSpell.words": ["bunx", "ianvs", "ledgerhq", "legendapp", "merkleize", "muify", "neondatabase", "polkadot", "webhid", "zondax"],
   "vitest.configSearchPatternExclude": "{**/node_modules/**,**/.*/**,**/*.d.ts,e2e/**}",
-  "codium.codeCompletion.enable": false
+  "codium.codeCompletion.enable": false,
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  }
 }

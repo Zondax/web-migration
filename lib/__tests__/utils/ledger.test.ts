@@ -1,5 +1,5 @@
-import { App } from 'state/ledger'
-import { Address } from 'state/types/ledger'
+import type { App } from 'state/ledger'
+import type { Address } from 'state/types/ledger'
 import { describe, expect, it } from 'vitest'
 
 import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors } from '../../utils/ledger'
@@ -10,9 +10,9 @@ import {
   mockApp2,
   mockAppMixedErrorTypes,
   mockAppNoAccounts,
-  mockApps,
   mockAppWithAppError,
   mockAppWithMigrationError,
+  mockApps,
 } from './__mocks__/mockData'
 
 // =========== Helper Functions ===========

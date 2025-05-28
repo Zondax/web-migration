@@ -52,7 +52,7 @@ export default function SolutionSection() {
         <div className="grid md:grid-cols-2 gap-8">
           {features.map((feature, index) => (
             <motion.div
-              key={index}
+              key={`feature-${feature.title}-${index}`}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

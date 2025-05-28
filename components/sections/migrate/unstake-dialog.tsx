@@ -1,17 +1,17 @@
-import { useMemo, useState } from 'react'
 import { ledgerState$ } from '@/state/ledger'
 import { uiState$ } from '@/state/ui'
-import { Address, Transaction, TransactionStatus } from 'state/types/ledger'
+import { useMemo, useState } from 'react'
+import { type Address, type Transaction, TransactionStatus } from 'state/types/ledger'
 
-import { AppId, getChainName, Token } from '@/config/apps'
-import { convertToRawUnits, formatBalance } from '@/lib/utils/format'
-import { getTransactionStatus, isValidNumberInput } from '@/lib/utils/ui'
+import { AddressLink } from '@/components/AddressLink'
+import TokenIcon from '@/components/TokenIcon'
+import { useTransactionStatus } from '@/components/hooks/useTransactionStatus'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { AddressLink } from '@/components/AddressLink'
-import { useTransactionStatus } from '@/components/hooks/useTransactionStatus'
-import TokenIcon from '@/components/TokenIcon'
+import { type AppId, type Token, getChainName } from '@/config/apps'
+import { convertToRawUnits, formatBalance } from '@/lib/utils/format'
+import { getTransactionStatus, isValidNumberInput } from '@/lib/utils/ui'
 
 interface UnstakeDialogProps {
   appId: AppId
@@ -186,7 +186,7 @@ export default function UnstakeDialog({ open, setOpen, maxUnstake: maxUnstakeRaw
               disabled={
                 !unstakeAmount ||
                 !maxUnstake ||
-                isNaN(Number(unstakeAmount)) ||
+                Number.isNaN(Number(unstakeAmount)) ||
                 Number(unstakeAmount) <= 0 ||
                 Number(unstakeAmount) > maxUnstake ||
                 Boolean(txStatus)

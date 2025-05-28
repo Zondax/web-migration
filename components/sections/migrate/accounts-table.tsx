@@ -1,18 +1,18 @@
-import { useCallback, useState } from 'react'
-import { Observable } from '@legendapp/state'
+import type { Observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { motion } from 'framer-motion'
 import { AlertCircle, ChevronDown, Info, MoreVertical } from 'lucide-react'
-import { Collections } from 'state/ledger'
-import { Address, AddressBalance } from 'state/types/ledger'
+import { useCallback, useState } from 'react'
+import type { Collections } from 'state/ledger'
+import type { Address, AddressBalance } from 'state/types/ledger'
 
-import { AppId, Token } from '@/config/apps'
-import { canUnstake, hasNonTransferableBalance, hasStakedBalance, isNativeBalance } from '@/lib/utils/balance'
+import { AddressLink } from '@/components/AddressLink'
+import { Spinner } from '@/components/icons'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip } from '@/components/ui/tooltip'
-import { AddressLink } from '@/components/AddressLink'
-import { Spinner } from '@/components/icons'
+import type { AppId, Token } from '@/config/apps'
+import { canUnstake, hasNonTransferableBalance, hasStakedBalance, isNativeBalance } from '@/lib/utils/balance'
 
 import BalanceHoverCard from './balance-hover-card'
 import DestinationAddressSelect from './destination-address-select'
@@ -65,7 +65,7 @@ const AccountBalanceRow = observer(
     }
 
     const renderStatusIcon = (account: Address) => {
-      let statusIcon
+      let statusIcon: React.ReactNode | null = null
       let tooltipContent = 'Checking status...'
 
       if (account.isLoading) {
@@ -184,10 +184,10 @@ const AccountBalanceRow = observer(
                 <MoreVertical className="h-4 w-4 text-muted-foreground cursor-pointer" />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                {actions.map((action, index) => (
-                  <div key={index} className={`flex flex-row items-center justify-between gap-2 ${action.tooltip ? 'mr-2' : ''}`}>
+                {actions.map(action => (
+                  <div key={action.label} className={`flex flex-row items-center justify-between gap-2 ${action.tooltip ? 'mr-2' : ''}`}>
                     <DropdownMenuItem
-                      key={index}
+                      key={action.label}
                       onClick={action.onClick}
                       disabled={action.disabled}
                       className={`flex gap-2 ${!action.tooltip ? 'w-full' : ''}`}
@@ -205,7 +205,14 @@ const AccountBalanceRow = observer(
             </DropdownMenu>
           )}
         </TableCell>
-        <UnstakeDialog open={unstakeOpen} setOpen={setUnstakeOpen} maxUnstake={maxUnstake!} token={token} account={account} appId={appId} />
+        <UnstakeDialog
+          open={unstakeOpen}
+          setOpen={setUnstakeOpen}
+          maxUnstake={maxUnstake ?? 0}
+          token={token}
+          account={account}
+          appId={appId}
+        />
       </TableRow>
     )
   }
@@ -250,7 +257,7 @@ function AccountsTable({
                 <TableHead className="text-left">Public Key</TableHead>
                 <TableHead className="text-left">Destination Address</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
-                <TableHead className="w-[100px]"></TableHead>
+                <TableHead className="w-[100px]" />
               </TableRow>
             </TableHeader>
             <TableBody>

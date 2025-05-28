@@ -27,5 +27,10 @@ jobs:
 
   playwright-tests:
     needs: [ts-checks, logo-size-check]
-    uses: ./.github/workflows/playwright.yml
-    secrets: inherit
+    uses: zondax/_workflows/.github/workflows/_checks-playwright.yaml@v0.1.0
+    secrets: 
+      env_local: |
+        # Project-specific variables
+        PROJECT="polkadot-migration"
+        NAMESPACE="polkadot"
+

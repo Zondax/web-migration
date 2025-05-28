@@ -1,6 +1,6 @@
 import { TransactionStatus } from '@/state/types/ledger'
 
-import { UpdateTransactionStatus } from '../account'
+import type { UpdateTransactionStatus } from '../account'
 
 /**
  * Simulates the transaction submission and status updates without actually sending the transaction.
@@ -37,7 +37,7 @@ export async function simulateAndHandleTransaction(
   })
   await wait(simulateDelayMs)
 
-  updateStatus(TransactionStatus.COMPLETED, `Transaction is completed. Waiting confirmation...`, {
+  updateStatus(TransactionStatus.COMPLETED, 'Transaction is completed. Waiting confirmation...', {
     txHash,
     blockHash,
     blockNumber,
