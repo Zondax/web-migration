@@ -14,7 +14,7 @@ import { hasAddressBalance, hasBalance } from '@/lib/utils/ledger'
 import { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
 import { notifications$ } from './notifications'
-import { Address, AddressBalance, AddressStatus, Collection, TransactionStatus, UpdateMigratedStatusFn } from './types/ledger'
+import { Address, AddressStatus, Collection, TransactionStatus, UpdateMigratedStatusFn } from './types/ledger'
 import { Notification } from './types/notifications'
 
 export enum AppStatus {
@@ -722,8 +722,8 @@ export const ledgerState$ = observable({
       const migrationPromises = []
       let hasFailures = false
 
-      for (const balance of account.balances) {
-        const migrationResult = await ledgerState$.migrateBalance(appId, account.address, account.path, balance)
+      for (const balanceIndex in account.balances) {
+        const migrationResult = await ledgerState$.migrateBalance(appId, account, account.path, parseInt(balanceIndex))
 
         if (migrationResult?.txPromise) {
           migrationPromises.push(migrationResult.txPromise)
@@ -751,14 +751,20 @@ export const ledgerState$ = observable({
   // Migrate Balance for a specific account
   async migrateBalance(
     appId: AppId,
-    address: string,
+    account: Address,
     path: string,
-    balance: AddressBalance
+    balanceIndex: number
   ): Promise<{ txPromise: Promise<void> | undefined } | undefined> {
-    console.debug(`[${balance.type}] Starting balance migration for account ${address} in app ${appId}`)
+    const balance = account.balances?.[balanceIndex]
+    if (!balance) {
+      console.warn(`Balance at index ${balanceIndex} not found for account ${account.address} in app ${appId}`)
+      return undefined
+    }
+
+    console.debug(`[${balance.type}] Starting balance migration for account ${account.address} in app ${appId}`)
 
     if (!balance.transaction?.destinationAddress) {
-      console.warn(`[${balance.type}] No destination address set for account ${address}`)
+      console.warn(`[${balance.type}] No destination address set for account ${account.address}`)
       return undefined
     }
 
@@ -767,7 +773,7 @@ export const ledgerState$ = observable({
     updateMigrationResultCounter('total')
 
     try {
-      const response = await ledgerClient.migrateAccount(appId, address, path, balance, updateMigratedStatus)
+      const response = await ledgerClient.migrateAccount(appId, account, path, updateMigratedStatus, balanceIndex)
 
       if (!response?.txPromise) {
         updateMigratedStatus(appId, path, balance.type, TransactionStatus.ERROR, errorDetails.migration_error.description)
@@ -775,14 +781,17 @@ export const ledgerState$ = observable({
         // Increment fails counter
         updateMigrationResultCounter('fails')
 
-        console.debug(`[${balance.type}] Balance migration for account ${address} in app ${appId} failed:`, InternalErrors.MIGRATION_ERROR)
+        console.debug(
+          `[${balance.type}] Balance migration for account ${account.address} in app ${appId} failed:`,
+          InternalErrors.MIGRATION_ERROR
+        )
         return undefined
       }
 
       // The transaction has been signed and sent, but has not yet been finalized
       updateMigratedStatus(appId, path, balance.type, TransactionStatus.PENDING)
 
-      console.debug(`[${balance.type}] Balance migration for account ${address} in app ${appId} transaction submitted`)
+      console.debug(`[${balance.type}] Balance migration for account ${account.address} in app ${appId} transaction submitted`)
 
       // Return the transaction promise
       return { txPromise: response.txPromise }

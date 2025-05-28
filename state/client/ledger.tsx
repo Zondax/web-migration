@@ -10,14 +10,7 @@ import type { ConnectionResponse } from '@/lib/ledger/types'
 import { hasBalance } from '@/lib/utils'
 import { getBip44Path } from '@/lib/utils/address'
 
-import {
-  BalanceType,
-  type Address,
-  type AddressBalance,
-  type Nft,
-  type TransactionStatus,
-  type UpdateMigratedStatusFn,
-} from '../types/ledger'
+import { BalanceType, type Address, type Nft, type TransactionStatus, type UpdateMigratedStatusFn } from '../types/ledger'
 import { withErrorHandling } from './base'
 
 export const ledgerClient = {
@@ -58,12 +51,18 @@ export const ledgerClient = {
 
   async migrateAccount(
     appId: AppId,
-    address: string,
+    account: Address,
     path: string,
-    balance: AddressBalance,
-    updateStatus: UpdateMigratedStatusFn
+    updateStatus: UpdateMigratedStatusFn,
+    balanceIndex: number
   ): Promise<{ txPromise?: Promise<void> } | undefined> {
-    const senderAddress = address
+    const balance = account.balances?.[balanceIndex]
+    if (!balance) {
+      console.warn(`Balance at index ${balanceIndex} not found for account ${account.address} in app ${appId}`)
+      return undefined
+    }
+
+    const senderAddress = account.address
     const receiverAddress = balance.transaction?.destinationAddress
     const hasAvailableBalance = hasBalance([balance])
     const appConfig = appsConfigs.get(appId)
@@ -89,25 +88,29 @@ export const ledgerClient = {
       // Determine which type of balance we're dealing with
       let nftsToTransfer: Nft[] = []
       let nativeAmount = undefined
+      let transferebleAmount = 0
 
       if (balance.type === BalanceType.NATIVE) {
         // For native balance, use the balance amount
         nativeAmount = balance.balance
+        transferebleAmount = balance.balance
       } else if (balance.type === BalanceType.UNIQUE || balance.type === BalanceType.NFT) {
         // For NFT balances, add them to the transfer list
         nftsToTransfer = balance.balance
+        transferebleAmount = account.balances?.find(b => b.type === BalanceType.NATIVE)?.balance ?? 0
       }
 
       // Use minimum amount for development if needed
       if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && MINIMUM_AMOUNT && balance.type === BalanceType.NATIVE) {
         nativeAmount = MINIMUM_AMOUNT
       }
-      // Prepare transaction with all assets
+
+      // Prepare transaction with the specific asset type
       const preparedTx = await prepareTransaction(
         api,
         senderAddress,
         receiverAddress,
-        account.balance?.native ?? 0,
+        transferebleAmount,
         nftsToTransfer,
         appConfig,
         nativeAmount

@@ -1,7 +1,7 @@
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { ISubmittableResult } from '@polkadot/types/types'
 import { App, AppStatus } from 'state/ledger'
-import { Address, Collection, Nft } from 'state/types/ledger'
+import { Address, BalanceType, Collection, Nft } from 'state/types/ledger'
 import { vi } from 'vitest'
 
 import { AppConfig } from '@/config/apps'
