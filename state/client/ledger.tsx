@@ -17,10 +17,9 @@ import { ledgerService } from '@/lib/ledger/ledgerService'
 import type { ConnectionResponse } from '@/lib/ledger/types'
 import { hasBalance } from '@/lib/utils'
 import { getBip44Path } from '@/lib/utils/address'
-import { hasBalance } from '@/lib/utils/ledger'
 import { isNativeBalance, isNftBalance } from '@/lib/utils/balance'
 
-import { BalanceType, type Address, type Nft, type TransactionStatus, type UpdateMigratedStatusFn, type AddressBalance, ConnectionResponse } from '../types/ledger'
+import { BalanceType, type Address, type Nft, type TransactionStatus, type UpdateMigratedStatusFn } from '../types/ledger'
 import { withErrorHandling } from './base'
 
 export const ledgerClient = {
@@ -103,11 +102,11 @@ export const ledgerClient = {
       if (isNativeBalance(balance)) {
         // For native balance, use the balance amount
         nativeAmount = balance.balance.transferable
-        transferebleAmount = balance.balance
+        transferebleAmount = balance.balance.transferable
       } else if (isNftBalance(balance)) {
         // For NFT balances, add them to the transfer list
         nftsToTransfer = balance.balance
-        transferebleAmount = account.balances?.find(b => b.type === BalanceType.NATIVE)?.balance ?? 0
+        transferebleAmount = account.balances?.find(b => b.type === BalanceType.NATIVE)?.balance.transferable ?? 0
       }
 
       // Use minimum amount for development if needed

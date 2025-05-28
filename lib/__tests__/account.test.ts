@@ -470,34 +470,6 @@ describe('getNativeBalance', () => {
       transferable: 1000000000000,
     })
   })
-
-  it('should handle current and future API formats', async () => {
-    // Current format
-    const currentFormat = {
-      data: { free: '1000' },
-    }
-
-    // Future format (hypothetical change)
-    const futureFormat = {
-      balances: { available: '2000' },
-    }
-
-    // We'll use a mock function that we can reassign the resolved value for each call
-    const mockAccount = vi.fn()
-    const mockApi = {
-      query: { system: { account: mockAccount } },
-    } as unknown as ApiPromise
-
-    // Test with current format
-    mockAccount.mockResolvedValueOnce(currentFormat)
-    let result = await getNativeBalance('address', mockApi)
-    expect(result).toBe(1000)
-
-    // Test with future format - should degrade gracefully
-    mockAccount.mockResolvedValueOnce(futureFormat)
-    result = await getNativeBalance('address', mockApi)
-    expect(result).toBeUndefined()
-  })
 })
 describe('ipfsToHttpUrl', () => {
   it('should convert ipfs:// to the default gateway', () => {

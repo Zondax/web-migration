@@ -14,15 +14,7 @@ import { mapLedgerError } from '@/lib/utils/error'
 import { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
 import { notifications$ } from './notifications'
-import {
-  Address,
-  AddressBalance,
-  AddressStatus,
-  Collection,
-  DeviceConnectionProps,
-  TransactionStatus,
-  UpdateMigratedStatusFn,
-} from './types/ledger'
+import { Address, AddressStatus, Collection, TransactionStatus, UpdateMigratedStatusFn } from './types/ledger'
 import { Notification } from './types/notifications'
 
 export enum AppStatus {
