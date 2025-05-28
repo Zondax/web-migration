@@ -453,7 +453,7 @@ describe('getNativeBalance', () => {
   // 1. Unit Tests for Transformation
   it('should extract free balance correctly', async () => {
     const mockAccountInfo = {
-      data: { free: '1000000000000' },
+      data: { free: '1000000000000', frozen: '0' },
     }
 
     const mockApi = {
@@ -467,7 +467,7 @@ describe('getNativeBalance', () => {
   it('should handle current and future API formats', async () => {
     // Current format
     const currentFormat = {
-      data: { free: '1000' },
+      data: { free: '1000', frozen: '0' },
     }
 
     // Future format (hypothetical change)
