@@ -47,7 +47,7 @@ const SimpleTooltip = ({
         <TooltipContent
           side="top"
           align="center"
-          className={cn('max-w-[250px] z-[100] break-words whitespace-normal', className)}
+          className={cn('max-w-[250px] z-[100] break-words whitespace-normal text-center', className)}
           sideOffset={5}
         >
           <p>{tooltipText}</p>

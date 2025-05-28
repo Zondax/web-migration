@@ -5,11 +5,11 @@ import { errorApps, syncApps } from 'config/mockData'
 
 import { Token } from '@/config/apps'
 import { maxAddressesToFetch } from '@/config/config'
-import { getApiAndProvider, getBalance } from '@/lib/account'
+import { getApiAndProvider, getBalance, UpdateTransactionStatus } from '@/lib/account'
 import { DeviceConnectionProps } from '@/lib/ledger/types'
 import { convertSS58Format } from '@/lib/utils/address'
+import { hasAddressBalance, hasBalance } from '@/lib/utils/balance'
 import { mapLedgerError } from '@/lib/utils/error'
-import { hasAddressBalance, hasBalance } from '@/lib/utils/ledger'
 
 import { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
@@ -418,7 +418,6 @@ export const ledgerState$ = observable({
   // Synchronize Single Account
   async synchronizeAccount(appId: AppId) {
     updateApp(appId, { status: AppStatus.RESCANNING, error: undefined })
-
     const appConfig = appsConfigs.get(appId)
     if (!appConfig) {
       console.error(`App with id ${appId} not found.`)
@@ -853,6 +852,21 @@ export const ledgerState$ = observable({
     } catch (error) {
       handleLedgerError(error as LedgerClientError, InternalErrors.MIGRATION_ERROR)
       ledgerState$.apps.error.set('Failed to complete migration')
+    }
+  },
+
+  async unstakeBalance(appId: AppId, address: string, path: string, amount: number, updateTxStatus: UpdateTransactionStatus) {
+    const appConfig = appsConfigs.get(appId)
+    if (!appConfig) {
+      console.error(`App with id ${appId} not found.`)
+      return
+    }
+
+    try {
+      await ledgerClient.unstakeBalance(appId, address, path, amount, updateTxStatus)
+    } catch (error) {
+      const errorDetail = (error as LedgerClientError).message || errorDetails.unstake_error.description
+      updateTxStatus(TransactionStatus.ERROR, errorDetail)
     }
   },
 })

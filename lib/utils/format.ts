@@ -46,6 +46,21 @@ export const formatBalance = (balance: number, token?: Token, maxDecimals?: numb
 }
 
 /**
+ * Converts a human-readable token amount to raw units based on token decimals.
+ *
+ * @param {number} amount - The amount in token units to convert.
+ * @param {Token} token - Token information containing decimals.
+ * @returns {number} The amount converted to raw units.
+ */
+export const convertToRawUnits = (amount: number, token: Token): number => {
+  if (!token?.decimals) {
+    return amount
+  }
+
+  return Math.round(amount * Math.pow(10, token.decimals))
+}
+
+/**
  * Formats a version object into a string.
  *
  * @param {ResponseVersion} version - The version object to format.

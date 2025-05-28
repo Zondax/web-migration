@@ -32,7 +32,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Disable shallow clone
-          submodules: false
 
       - name: Install system dependencies
         run: |

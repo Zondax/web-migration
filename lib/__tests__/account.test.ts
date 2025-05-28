@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   disconnectSafely,
+  eraToHumanTime,
   fetchFromIpfs,
   getApiAndProvider,
   getEnrichedNftMetadata,
@@ -453,7 +454,7 @@ describe('getNativeBalance', () => {
   // 1. Unit Tests for Transformation
   it('should extract free balance correctly', async () => {
     const mockAccountInfo = {
-      data: { free: '1000000000000', frozen: '0' },
+      data: { free: '1000000000000', reserved: '0', frozen: '0' },
     }
 
     const mockApi = {
@@ -461,35 +462,13 @@ describe('getNativeBalance', () => {
     } as unknown as ApiPromise
 
     const result = await getNativeBalance('address', mockApi)
-    expect(result).toBe(1000000000000)
-  })
-
-  it('should handle current and future API formats', async () => {
-    // Current format
-    const currentFormat = {
-      data: { free: '1000', frozen: '0' },
-    }
-
-    // Future format (hypothetical change)
-    const futureFormat = {
-      balances: { available: '2000' },
-    }
-
-    // We'll use a mock function that we can reassign the resolved value for each call
-    const mockAccount = vi.fn()
-    const mockApi = {
-      query: { system: { account: mockAccount } },
-    } as unknown as ApiPromise
-
-    // Test with current format
-    mockAccount.mockResolvedValueOnce(currentFormat)
-    let result = await getNativeBalance('address', mockApi)
-    expect(result).toBe(1000)
-
-    // Test with future format - should degrade gracefully
-    mockAccount.mockResolvedValueOnce(futureFormat)
-    result = await getNativeBalance('address', mockApi)
-    expect(result).toBeUndefined()
+    expect(result).toEqual({
+      free: 1000000000000,
+      reserved: 0,
+      frozen: 0,
+      total: 1000000000000,
+      transferable: 1000000000000,
+    })
   })
 })
 describe('ipfsToHttpUrl', () => {
@@ -512,5 +491,21 @@ describe('ipfsToHttpUrl', () => {
 
   it('should return empty string unchanged', () => {
     expect(ipfsToHttpUrl('')).toBe('')
+  })
+})
+
+describe('eraToHumanTime', () => {
+  it('should return hours when less than 24 hours remaining', () => {
+    expect(eraToHumanTime(101, 100)).toBe('6 hours')
+  })
+
+  it('should return days and hours when more than 24 hours remaining', () => {
+    expect(eraToHumanTime(105, 100)).toBe('1 days and 6 hours')
+  })
+
+  it('should handle zero values', () => {
+    expect(eraToHumanTime(0, 0)).toBe('0 hours')
+    expect(eraToHumanTime(1, 0)).toBe('6 hours')
+    expect(eraToHumanTime(4, 0)).toBe('1 days and 0 hours')
   })
 })

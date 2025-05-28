@@ -5,17 +5,17 @@ import { useRouter } from 'next/navigation'
 import { observer, use$ } from '@legendapp/state/react'
 import { AlertCircle, CheckCircle, Clock, Info, ShieldCheck, XCircle } from 'lucide-react'
 import { App } from 'state/ledger'
-import { Address, TransactionStatus } from 'state/types/ledger'
+import { Address } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
 import { hasBalance } from '@/lib/utils'
 import { muifyHtml } from '@/lib/utils/html'
+import { getTransactionStatus } from '@/lib/utils/ui'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip } from '@/components/ui/tooltip'
 import { AddressLink } from '@/components/AddressLink'
 import { useMigration } from '@/components/hooks/useMigration'
-import { Spinner } from '@/components/icons'
 
 import { AddressVerificationDialog } from './address-verification-dialog'
 import BalanceHoverCard from './balance-hover-card'
@@ -43,44 +43,10 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
   const renderStatusIcon = (account: Address, balanceIndex: number) => {
     const txStatus = account.balances?.[balanceIndex].transaction?.status
     const txStatusMessage = account.balances?.[balanceIndex].transaction?.statusMessage
-    let statusIcon
-    let tooltipContent = txStatusMessage
 
-    switch (txStatus) {
-      case TransactionStatus.IS_LOADING:
-        statusIcon = <Spinner />
-        tooltipContent = 'Loading...'
-        break
-      case TransactionStatus.PENDING:
-        statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-        tooltipContent = 'Transaction pending...'
-        break
-      case TransactionStatus.IN_BLOCK:
-        statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-        break
-      case TransactionStatus.FINALIZED:
-        statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-        break
-      case TransactionStatus.SUCCESS:
-        statusIcon = <CheckCircle className="h-4 w-4 text-green-500" />
-        break
-      case TransactionStatus.FAILED:
-        statusIcon = <XCircle className="h-4 w-4 text-red-500" />
-        break
-      case TransactionStatus.ERROR:
-        statusIcon = <AlertCircle className="h-4 w-4 text-red-500" />
-        break
-      case TransactionStatus.WARNING:
-        statusIcon = <AlertCircle className="h-4 w-4 text-yellow-500" />
-        break
-      case TransactionStatus.COMPLETED:
-        statusIcon = <Clock className="h-4 w-4 text-muted-foreground" />
-        break
-      default:
-        statusIcon = <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Ready to migrate</span>
-    }
+    const { statusIcon, statusMessage } = getTransactionStatus(txStatus, txStatusMessage)
 
-    return tooltipContent ? <SimpleTooltip tooltipText={tooltipContent}>{statusIcon}</SimpleTooltip> : statusIcon
+    return statusMessage ? <SimpleTooltip tooltipText={statusMessage}>{statusIcon}</SimpleTooltip> : statusIcon
   }
 
   // Render a row for each account in the app
@@ -88,7 +54,7 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
     <>
       {app.accounts.map((account, accountIndex) => {
         return account.balances
-          ?.filter(balance => hasBalance([balance]) && balance.transaction?.destinationAddress)
+          ?.filter(balance => hasBalance([balance], true) && balance.transaction?.destinationAddress)
           .map((balance, balanceIndex) => (
             <TableRow key={`${app.id}-${account.address}-${accountIndex}-${balanceIndex}`}>
               <TableCell className="px-2 hidden sm:table-cell">
@@ -106,7 +72,7 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
                 <AddressLink value={balance.transaction?.destinationAddress || ''} className="font-mono" />
               </TableCell>
               <TableCell>
-                <BalanceHoverCard balance={balance} collections={collections} token={app.token} />
+                <BalanceHoverCard balances={[balance]} collections={collections} token={app.token} isMigration />
               </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-2">

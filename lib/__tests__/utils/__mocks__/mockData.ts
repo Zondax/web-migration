@@ -1,7 +1,7 @@
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { ISubmittableResult } from '@polkadot/types/types'
 import { App, AppStatus } from 'state/ledger'
-import { Address, BalanceType, Collection, Nft } from 'state/types/ledger'
+import { Address, BalanceType, Collection, Native, Nft, Staking } from 'state/types/ledger'
 import { vi } from 'vitest'
 
 import { AppConfig } from '@/config/apps'
@@ -15,6 +15,26 @@ export const TEST_ADDRESSES = {
   ADDRESS5: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL',
   ADDRESS6: '5H4MvAsobfZ6bBCDyj5dsrWYLrA8HrRzaqa9p61UXtxMhSCY',
   ADDRESS7: '5DAUh2JEqgjoq7xKmvUdaNkDRRtwqYGtxKzovLHdkkNcsuFJ',
+}
+
+// =========== Mock Staking ===========
+export const mockStaking: Staking = {
+  total: 1000000000000,
+  active: 800000000000,
+  unlocking: [
+    {
+      value: 100000000000,
+      era: 2400,
+      timeRemaining: '7 days and 2 hours',
+    },
+    {
+      value: 100000000000,
+      era: 2500,
+      timeRemaining: '7 days and 0 hours',
+    },
+  ],
+  claimedRewards: [2300, 2350],
+  controller: TEST_ADDRESSES.ADDRESS1,
 }
 
 // =========== Mock NFTs ===========
@@ -101,6 +121,52 @@ export const mockCollection4: Collection = {
 }
 
 // =========== Mock Addresses ===========
+// mock empty native balance
+export const mockEmptyNativeBalance: Native = {
+  total: 0,
+  free: 0,
+  reserved: 0,
+  frozen: 0,
+  transferable: 0,
+}
+
+// mock free native balance
+export const mockFreeNativeBalance: Native = {
+  total: 1000,
+  free: 1000,
+  reserved: 0,
+  frozen: 0,
+  transferable: 1000,
+}
+
+// mock reserved native balance
+export const mockReservedNativeBalance: Native = {
+  total: 1000,
+  free: 0,
+  reserved: 1000,
+  frozen: 0,
+  transferable: 0,
+}
+
+// mock reserved native balance
+export const mockFrozenNativeBalance: Native = {
+  total: 1000,
+  free: 0,
+  reserved: 0,
+  frozen: 1000,
+  transferable: 0,
+}
+
+// mock staked native balance
+export const mockStakedNativeBalance: Native = {
+  total: 1000,
+  free: 0,
+  reserved: 0,
+  frozen: 0,
+  transferable: 0,
+  staking: mockStaking,
+}
+
 export const mockAddress1: Address = {
   path: "m/44'/354'/0'/0'",
   pubKey: '0x123',
@@ -108,7 +174,7 @@ export const mockAddress1: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: 1000,
+      balance: mockFreeNativeBalance,
     },
     {
       type: BalanceType.NFT,
@@ -128,7 +194,7 @@ export const mockAddress2: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: 0,
+      balance: mockEmptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
@@ -148,7 +214,7 @@ export const mockAddress3: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: 0,
+      balance: mockEmptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
@@ -190,7 +256,7 @@ export const mockAddressNoBalance: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: 0,
+      balance: mockEmptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
@@ -210,7 +276,7 @@ export const mockAddressPartialBalance: Address = {
   balances: [
     {
       type: BalanceType.NATIVE,
-      balance: 0,
+      balance: mockEmptyNativeBalance,
     },
     {
       type: BalanceType.NFT,
