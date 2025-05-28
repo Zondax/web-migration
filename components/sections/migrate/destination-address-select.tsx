@@ -1,10 +1,10 @@
-import { useMemo } from 'react'
 import { observer } from '@legendapp/state/react'
-import { AddressBalance } from 'state/types/ledger'
+import { useMemo } from 'react'
+import type { AddressBalance } from 'state/types/ledger'
 
-import { hasBalance } from '@/lib/utils'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AddressLink } from '@/components/AddressLink'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { hasBalance } from '@/lib/utils'
 
 interface DestinationAddressSelectProps {
   balance: AddressBalance
@@ -33,7 +33,7 @@ function DestinationAddressSelect({ balance, index, polkadotAddresses, onDestina
       </SelectTrigger>
       <SelectContent>
         {polkadotAddresses?.map((polkadotAddress, addrIndex) => (
-          <SelectItem key={addrIndex} value={polkadotAddress}>
+          <SelectItem key={polkadotAddress} value={polkadotAddress}>
             <div className="flex items-center gap-2">
               <span className="font-semibold">Polkadot {addrIndex + 1}:</span>
               <AddressLink value={polkadotAddress} disableTooltip className="break-all" hasCopyButton={false} />

@@ -1,7 +1,7 @@
+import { type Transaction, TransactionStatus } from '@/state/types/ledger'
 import { useCallback, useMemo, useState } from 'react'
-import { Transaction, TransactionStatus } from '@/state/types/ledger'
 
-import { UpdateTransactionStatus } from '@/lib/account'
+import type { UpdateTransactionStatus } from '@/lib/account'
 
 type GenericFunction = (...args: any[]) => Promise<void>
 

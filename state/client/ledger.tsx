@@ -1,17 +1,17 @@
 import type { GenericeResponseAddress } from '@zondax/ledger-substrate/dist/common'
-import { appsConfigs, type AppConfig, type AppId } from 'config/apps'
+import { type AppConfig, type AppId, appsConfigs } from 'config/apps'
 import { maxAddressesToFetch } from 'config/config'
 import { InternalErrors } from 'config/errors'
 
 import { MINIMUM_AMOUNT } from '@/config/mockData'
 import {
+  type UpdateTransactionStatus,
   createSignedExtrinsic,
   getApiAndProvider,
   prepareTransaction,
   prepareTransactionPayload,
   prepareUnstakeTransaction,
   submitAndHandleTransaction,
-  UpdateTransactionStatus,
 } from '@/lib/account'
 import { ledgerService } from '@/lib/ledger/ledgerService'
 import type { ConnectionResponse } from '@/lib/ledger/types'
@@ -19,7 +19,7 @@ import { hasBalance } from '@/lib/utils'
 import { getBip44Path } from '@/lib/utils/address'
 import { isNativeBalance, isNftBalance } from '@/lib/utils/balance'
 
-import { BalanceType, type Address, type Nft, type TransactionStatus, type UpdateMigratedStatusFn } from '../types/ledger'
+import { type Address, BalanceType, type Nft, type TransactionStatus, type UpdateMigratedStatusFn } from '../types/ledger'
 import { withErrorHandling } from './base'
 
 export const ledgerClient = {
@@ -89,7 +89,7 @@ export const ledgerClient = {
       throw InternalErrors.APP_CONFIG_NOT_FOUND
     }
     return withErrorHandling(async () => {
-      const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint!)
+      const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint ?? '')
       if (error || !api) {
         throw new Error(error ?? 'Failed to connect to the blockchain.')
       }
@@ -159,12 +159,12 @@ export const ledgerClient = {
 
   async unstakeBalance(appId: AppId, address: string, path: string, amount: number, updateTxStatus: UpdateTransactionStatus) {
     const appConfig = appsConfigs.get(appId)
-    if (!appConfig) {
+    if (!appConfig?.rpcEndpoint) {
       throw InternalErrors.APP_CONFIG_NOT_FOUND
     }
 
     return withErrorHandling(async () => {
-      const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint!)
+      const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint ?? '')
       if (error || !api) {
         throw new Error(error ?? 'Failed to connect to the blockchain.')
       }

@@ -9,7 +9,17 @@ import { hexToU8a } from '@polkadot/util'
 import type { AppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
-import { Address, AddressBalance, BalanceType, Collection, Native, Nft, NftsInfo, Staking, TransactionStatus } from 'state/types/ledger'
+import {
+  type Address,
+  type AddressBalance,
+  BalanceType,
+  type Collection,
+  type Native,
+  type Nft,
+  type NftsInfo,
+  type Staking,
+  TransactionStatus,
+} from 'state/types/ledger'
 
 // Get API and Provider
 export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
@@ -55,11 +65,11 @@ export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: Ap
 
     if (errorMessage.includes('timeout')) {
       return { error: 'Connection timeout: The node is not responding.' }
-    } else if (errorMessage.includes('refused') || errorMessage.includes('WebSocket')) {
-      return { error: 'Connection refused: The node endpoint is unreachable.' }
-    } else {
-      return { error: `Failed to connect to the blockchain: ${errorMessage}` }
     }
+    if (errorMessage.includes('refused') || errorMessage.includes('WebSocket')) {
+      return { error: 'Connection refused: The node endpoint is unreachable.' }
+    }
+    return { error: `Failed to connect to the blockchain: ${errorMessage}` }
   }
 }
 
@@ -150,8 +160,8 @@ export async function getNativeBalance(addressString: string, api: ApiPromise): 
         free: Number.parseFloat(free.toString()),
         reserved: Number.parseFloat(reserved.toString()),
         frozen: Number.parseFloat(frozen.toString()),
-        total: Number.parseFloat(free.toString()) + parseFloat(reserved.toString()),
-        transferable: Number.parseFloat(free.toString()) - parseFloat(frozen.toString()),
+        total: Number.parseFloat(free.toString()) + Number.parseFloat(reserved.toString()),
+        transferable: Number.parseFloat(free.toString()) - Number.parseFloat(frozen.toString()),
       }
 
       if (nativeBalance.frozen > 0) {
@@ -219,7 +229,7 @@ export async function prepareTransactionPayload(
     runtimeVersion: api.runtimeVersion,
     version: api.extrinsicVersion,
     mode: 1,
-    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex')),
+    metadataHash: hexToU8a(`01${Buffer.from(metadataHash).toString('hex')}`),
   })
 
   const payloadBytes = payload.toU8a(true)
@@ -278,7 +288,7 @@ export async function prepareTransaction(
 
     // Send the max amount of native tokens
     if (nativeAmount === transferableBalance) {
-      const adjustedAmount = transferableBalance - parseFloat(partialFee.toString())
+      const adjustedAmount = transferableBalance - Number.parseFloat(partialFee.toString())
 
       if (adjustedAmount <= 0) {
         throw new Error(errorDetails.insufficient_balance.description)
@@ -286,7 +296,7 @@ export async function prepareTransaction(
       // Rebuild the calls with the adjusted amount
       calls = [...calls, api.tx.balances.transferKeepAlive(receiverAddress, adjustedAmount)]
     } else {
-      const totalNeeded = parseFloat(partialFee.toString()) + nativeAmount
+      const totalNeeded = Number.parseFloat(partialFee.toString()) + nativeAmount
       if (transferableBalance < totalNeeded) {
         throw new Error(errorDetails.insufficient_balance_to_cover_fee.description)
       }
@@ -300,7 +310,7 @@ export async function prepareTransaction(
     // No nativeAmount sent, only NFTs or other assets
     // Calculate the fee and check if the balance is enough
     const { partialFee } = await transfer.paymentInfo(senderAddress)
-    if (transferableBalance < parseFloat(partialFee.toString())) {
+    if (transferableBalance < Number.parseFloat(partialFee.toString())) {
       throw new Error(errorDetails.insufficient_balance.description)
     }
   }
@@ -334,7 +344,7 @@ export function createSignedExtrinsic(
     tip: 0,
     transactionVersion: api.runtimeVersion.transactionVersion,
     mode: 1,
-    metadataHash: hexToU8a('01' + Buffer.from(metadataHash).toString('hex')),
+    metadataHash: hexToU8a(`01${Buffer.from(metadataHash).toString('hex')}`),
   }
 
   return transfer.addSignature(senderAddress, signature, payloadValue)
@@ -476,7 +486,7 @@ export async function getTransactionDetails(
   let success = false
   let errorInfo: string | undefined
 
-  relatedEvents.forEach(({ event }: { event: any }) => {
+  for (const { event } of relatedEvents) {
     if (apiAt.events.system.ExtrinsicSuccess.is(event)) {
       success = true
     } else if (apiAt.events.system.ExtrinsicFailed.is(event)) {
@@ -492,12 +502,13 @@ export async function getTransactionDetails(
         errorInfo = dispatchError.toString()
       }
     }
-  })
+  }
 
   if (success) {
     console.debug('Transaction successful!')
     return { success: true }
-  } else if (errorInfo) {
+  }
+  if (errorInfo) {
     return {
       success: false,
       error: `Transaction failed on-chain: ${errorInfo}`,
@@ -838,7 +849,8 @@ export function ipfsToHttpUrl(ipfsUrl: string): string {
   // Replace the ipfs:// prefix with the gateway
   if (ipfsUrl.startsWith('ipfs://ipfs/')) {
     return ipfsUrl.replace('ipfs://ipfs/', gateway)
-  } else if (ipfsUrl.startsWith('ipfs://')) {
+  }
+  if (ipfsUrl.startsWith('ipfs://')) {
     return ipfsUrl.replace('ipfs://', gateway)
   }
 
@@ -887,7 +899,7 @@ export async function getEnrichedNftMetadata(metadataUrl: string): Promise<{
   try {
     // If it's a direct CID (starts with 'Q' or similar), convert it to ipfs:// format
     const isDirectCid = /^Q[a-zA-Z0-9]{44,}$/.test(metadataUrl) || /^bafy[a-zA-Z0-9]{44,}$/.test(metadataUrl)
-    let ipfsUrl
+    let ipfsUrl: string
 
     if (isDirectCid) {
       // It's a direct CID, convert it to HTTP URL format
@@ -947,7 +959,7 @@ export async function getStakingInfo(address: string, api: ApiPromise): Promise<
   if (controller.isSome) {
     stakingInfo = {
       controller: controller.toHuman() as string,
-      canUnstake: controller.toHuman() == address, // if controller is the same as the address, we can unstake
+      canUnstake: controller.toHuman() === address, // if controller is the same as the address, we can unstake
     }
   } else {
     // Account has no active staking

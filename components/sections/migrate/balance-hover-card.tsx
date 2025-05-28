@@ -1,12 +1,12 @@
+import type { AddressBalance, Native, Nft } from '@/state/types/ledger'
 import { useMemo } from 'react'
-import { AddressBalance, Native, Nft } from '@/state/types/ledger'
-import { Collections } from 'state/ledger'
+import type { Collections } from 'state/ledger'
 
-import { Token } from '@/config/apps'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import type { Token } from '@/config/apps'
 import { formatBalance } from '@/lib/utils'
 import { hasStakedBalance, isNativeBalance, isNftBalanceType, isUniqueBalanceType } from '@/lib/utils/balance'
 import { createNftBalances } from '@/lib/utils/nft'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 
 import { BalanceTypeFlag } from './balance-detail-card'
 import BalanceGallery from './balance-gallery'
@@ -34,11 +34,11 @@ const BalanceHoverCard = ({ balances, collections, token, isMigration }: Balance
     let native: Native | undefined
 
     // Process each balance in the balances array
-    balances.forEach(balance => {
+    for (const balance of balances) {
       if (isNftBalanceType(balance)) nfts = balance.balance as Nft[]
       else if (isUniqueBalanceType(balance)) uniques = balance.balance as Nft[]
       else if (isNativeBalance(balance)) native = balance.balance
-    })
+    }
 
     // Convert collections map to array for easier lookup
     const uniquesCollectionsArray = Array.from(collections?.uniques.values() || [])

@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react'
 import { use$, useObservable } from '@legendapp/state/react'
-import { App, AppStatus, ledgerState$ } from 'state/ledger'
+import { useCallback, useState } from 'react'
+import { type App, AppStatus, ledgerState$ } from 'state/ledger'
 
 import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors } from '@/lib/utils'
 

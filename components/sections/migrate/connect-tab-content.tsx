@@ -2,8 +2,8 @@
 
 import { useCallback } from 'react'
 
-import { Button } from '@/components/ui/button'
 import { useConnection } from '@/components/hooks/useConnection'
+import { Button } from '@/components/ui/button'
 
 interface ConnectTabContentProps {
   onContinue: () => void

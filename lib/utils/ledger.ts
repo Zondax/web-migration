@@ -1,6 +1,6 @@
 import axios from 'axios'
-import { App, AppStatus } from 'state/ledger'
-import { Address } from 'state/types/ledger'
+import { type App, AppStatus } from 'state/ledger'
+import type { Address } from 'state/types/ledger'
 
 /**
  * Retrieves a light icon for a given app from the Hub backend.
@@ -18,7 +18,7 @@ export const getAppLightIcon = async (appId: string) => {
     }
 
     try {
-      const response = await axios.get(hubUrl + `/app/${appId}/icon/light`)
+      const response = await axios.get(`${hubUrl}/app/${appId}/icon/light`)
       return { data: response.data, error: undefined }
     } catch (apiError) {
       // API call failed, try local image as fallback

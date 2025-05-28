@@ -1,4 +1,4 @@
-import { Address, AddressBalance, BalanceType, NativeBalance, NftBalance } from '@/state/types/ledger'
+import { type Address, type AddressBalance, BalanceType, type NativeBalance, type NftBalance } from '@/state/types/ledger'
 
 /**
  * Type guard to check if a balance is a native balance
@@ -75,9 +75,8 @@ export const hasBalance = (balances: AddressBalance[], checkTransferable = false
   return balances.some(balance => {
     if (isNativeBalance(balance)) {
       return checkTransferable ? balance.balance.transferable > 0 : balance.balance.total > 0
-    } else {
-      return Array.isArray(balance.balance) && balance.balance.length > 0
     }
+    return Array.isArray(balance.balance) && balance.balance.length > 0
   })
 }
 

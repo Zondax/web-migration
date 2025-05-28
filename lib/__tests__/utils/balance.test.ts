@@ -1,4 +1,4 @@
-import { Address, AddressBalance, BalanceType, NativeBalance } from 'state/types/ledger'
+import { type Address, type AddressBalance, BalanceType, type NativeBalance } from 'state/types/ledger'
 import { describe, expect, it } from 'vitest'
 
 import {

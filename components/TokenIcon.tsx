@@ -16,7 +16,7 @@ const TokenIcon = ({ icon, symbol, size = 'md' }: TokenIconProps) => {
   return (
     <div className={`overflow-hidden rounded-full ${sizeClasses[size]}`}>
       {icon ? (
-        <div className={`flex h-full w-full items-center justify-center`}>{muifyHtml(icon)}</div>
+        <div className={'flex h-full w-full items-center justify-center'}>{muifyHtml(icon)}</div>
       ) : (
         <div className="flex h-full items-center justify-center bg-muted">
           <span className="text-xs text-muted-foreground">{symbol}</span>

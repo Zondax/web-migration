@@ -1,14 +1,14 @@
 'use client'
 
-import { ReactNode } from 'react'
-import { Native, Staking } from '@/state/types/ledger'
+import type { Native, Staking } from '@/state/types/ledger'
 import { LockClosedIcon } from '@radix-ui/react-icons'
 import { ArrowRightLeftIcon, BarChartIcon, ClockIcon, LockOpenIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 
-import { Token } from '@/config/apps'
-import { formatBalance } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import type { Token } from '@/config/apps'
+import { formatBalance } from '@/lib/utils'
 
 interface NativeBalanceVisualizationProps {
   data: Native
@@ -141,9 +141,9 @@ export const NativeBalanceVisualization = ({ data, token }: NativeBalanceVisuali
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      {balanceTypes.map((type, index) => (
+      {balanceTypes.map(type => (
         <BalanceCard
-          key={index}
+          key={type.label}
           value={Number(formatBalance(type.value || 0, token, undefined, true))}
           total={Number(formatBalance(data.total || 0, token, undefined, true))}
           label={type.label}

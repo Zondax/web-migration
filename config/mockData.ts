@@ -1,4 +1,4 @@
-import { AppId } from './apps'
+import type { AppId } from './apps'
 
 export const mockBalances = process.env.NEXT_PUBLIC_MOCK_BALANCES
   ? process.env.NEXT_PUBLIC_MOCK_BALANCES.split(',').map(pair => {
@@ -17,5 +17,5 @@ export const syncApps = process.env.NEXT_PUBLIC_SYNC_APPS?.split(',') as AppId[]
 export const errorApps = process.env.NEXT_PUBLIC_ERROR_SYNC_APPS?.split(',') as AppId[]
 
 export const MINIMUM_AMOUNT = process.env.NEXT_PUBLIC_NATIVE_TRANSFER_AMOUNT
-  ? parseInt(process.env.NEXT_PUBLIC_NATIVE_TRANSFER_AMOUNT)
+  ? Number.parseInt(process.env.NEXT_PUBLIC_NATIVE_TRANSFER_AMOUNT)
   : undefined
