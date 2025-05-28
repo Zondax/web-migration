@@ -192,7 +192,6 @@ export const ledgerClient = {
 
       // Create and wait for transaction to be submitted
       await submitAndHandleTransaction(transfer, updateTxStatus, api)
-      
     }, InternalErrors.UNKNOWN_ERROR)
   },
 
