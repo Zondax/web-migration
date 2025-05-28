@@ -7,14 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { Token } from '@/config/apps'
 import { formatBalance } from '@/lib/utils/format'
 
-import { NativeBalanceVisualization } from './balance-visualizations'
-
 interface NftDetailCardProps {
   balance: number
   collection: Collection
   isUnique?: boolean
 }
 
+/**
+ * A card component that displays NFT collection details including image, name, and balance
+ * Shows a placeholder if no image is available
+ * Displays collection ID and balance type (NFT or UNIQUE)
+ */
 const NftDetailCard = ({ balance, collection, isUnique }: NftDetailCardProps) => {
   const imageUrl = collection?.image || collection?.mediaUri
 
@@ -58,33 +61,41 @@ const NftDetailCard = ({ balance, collection, isUnique }: NftDetailCardProps) =>
 interface NativeTokensDetailCardProps {
   balance: Native
   token: Token
-  isMigration?: boolean // if true, don't show the balance visualization
 }
 
-const NativeTokensDetailCard = ({ balance, token, isMigration }: NativeTokensDetailCardProps) => {
+/**
+ * A card component that displays native token details including icon, symbol and total balance
+ * Shows the token's native status and formatted balance amount
+ */
+const NativeTokensDetailCard = ({ balance, token }: NativeTokensDetailCardProps) => {
   const icon = uiState$.icons.get()[token.logoId || '']
   const total = Number(formatBalance(balance.total || 0, token, undefined, true))
 
   return (
-    <div className="flex flex-col gap-2">
-      <Card className="flex flex-row items-center p-3 gap-3">
-        <TokenIcon icon={icon} symbol={token.symbol} size="lg" />
-        <div className="flex-1">
-          <CardHeader className="p-0">
-            <CardTitle className="text-base flex items-center gap-2">
-              {token.symbol}
-              <span className="bg-font-semibold text-white text-[10px] px-2 py-0 rounded-full">NATIVE</span>
-              <span className="ml-auto font-medium font-mono">{total}</span>
-            </CardTitle>
-          </CardHeader>
-        </div>
-      </Card>
-
-      {!isMigration && <NativeBalanceVisualization data={balance} token={token} />}
-    </div>
+    <Card className="flex flex-row items-center p-3 gap-3">
+      <TokenIcon icon={icon} symbol={token.symbol} size="lg" />
+      <div className="flex-1">
+        <CardHeader className="p-0">
+          <CardTitle className="text-base flex items-center gap-2">
+            {token.symbol}
+            <span className="bg-font-semibold text-white text-[10px] px-2 py-0 rounded-full">NATIVE</span>
+            <span className="ml-auto font-medium font-mono">{total}</span>
+          </CardTitle>
+        </CardHeader>
+      </div>
+    </Card>
   )
 }
 
+interface NativeTokensDetailCardProps {
+  balance: Native
+  token: Token
+  isMigration?: boolean // if true, don't show the balance visualization
+}
+
+/**
+ * Props for the balance type flag component
+ */
 interface BalanceTypeFlagProps {
   type: string
   variant?: BadgeVariant
