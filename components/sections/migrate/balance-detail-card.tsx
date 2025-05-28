@@ -103,7 +103,7 @@ interface BalanceTypeFlagProps {
 
 const BalanceTypeFlag = ({ type, variant = 'gray' }: BalanceTypeFlagProps) => {
   return (
-    <Badge variant={variant} className="text-[10px] uppercase flex-shrink-0">
+    <Badge variant={variant} className="text-[10px] leading-tight uppercase flex-shrink-0">
       {type}
     </Badge>
   )

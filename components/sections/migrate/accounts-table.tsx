@@ -15,7 +15,7 @@ import { canUnstake, hasNonTransferableBalance, hasStakedBalance, isNativeBalanc
 
 import { AddressLink } from '@/components/AddressLink'
 import { Spinner } from '@/components/icons'
-import { LockedBalanceHoverCard } from './balance-hover-card'
+import { BalanceHoverCard, LockedBalanceHoverCard } from './balance-hover-card'
 import DestinationAddressSelect from './destination-address-select'
 import UnstakeDialog from './unstake-dialog'
 
@@ -98,8 +98,19 @@ const AccountBalanceRow = observer(
       )
     }
 
+    const renderTransferableBalance = () => {
+      const transferableBalance = isNative ? (balance?.balance.transferable ?? 0) : 0
+      const balances = balance ? [balance] : []
+
+      return (
+        <div className="flex flex-row items-center justify-end gap-2">
+          <span className="font-mono">{formatBalance(transferableBalance, token)}</span>
+          {!isNative ? <BalanceHoverCard balances={balances} collections={collections} token={token} isMigration /> : null}
+        </div>
+      )
+    }
+
     const totalBalance = isNative ? (balance?.balance.total ?? 0) : 0
-    const transferableBalance = isNative ? (balance?.balance.transferable ?? 0) : 0
 
     return (
       <TableRow key={`${account.address ?? accountIndex}-${balance?.type}`}>
@@ -137,9 +148,7 @@ const AccountBalanceRow = observer(
           {balance !== undefined ? formatBalance(totalBalance, token) : '-'}
         </TableCell>
         {/* Transferable */}
-        <TableCell className="py-2 text-sm text-right w-1/4 font-mono">
-          {balance !== undefined ? formatBalance(transferableBalance, token) : '-'}
-        </TableCell>
+        <TableCell className="py-2 text-sm text-right w-1/4">{balance !== undefined ? renderTransferableBalance() : '-'}</TableCell>
         {/* Locked */}
         <TableCell className="py-2 text-sm text-right w-1/4">{balance !== undefined ? renderLockedBalance(balance) : '-'}</TableCell>
         {/* Actions */}
