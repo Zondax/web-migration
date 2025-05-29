@@ -87,12 +87,6 @@ const NativeTokensDetailCard = ({ balance, token }: NativeTokensDetailCardProps)
   )
 }
 
-interface NativeTokensDetailCardProps {
-  balance: Native
-  token: Token
-  isMigration?: boolean // if true, don't show the balance visualization
-}
-
 /**
  * Props for the balance type flag component
  */
