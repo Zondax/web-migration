@@ -8,6 +8,7 @@ import { formatBalance } from '@/lib/utils'
 import { isNativeBalance, isNftBalanceType, isUniqueBalanceType } from '@/lib/utils/balance'
 import { createNftBalances } from '@/lib/utils/nft'
 
+import { Info } from 'lucide-react'
 import BalanceGallery from './balance-gallery'
 import { NativeBalanceVisualization } from './balance-visualizations'
 import NftCircles from './nft-circles'
@@ -63,9 +64,14 @@ const BalanceHoverCard = ({ balances, collections, token, isMigration }: Balance
           {/* Show formatted native balance */}
           {formattedNativeBalance && <span className="font-mono">{formattedNativeBalance}</span>}
           {/* Show NFT circles for visual representation when NFTs are present */}
-          {(nfts || uniques) && (
-            <NftCircles collections={[...(nfts?.map(nft => nft.collection) || []), ...(uniques?.map(unique => unique.collection) || [])]} />
-          )}
+          {nfts || uniques ? (
+            <>
+              <NftCircles
+                collections={[...(nfts?.map(nft => nft.collection) || []), ...(uniques?.map(unique => unique.collection) || [])]}
+              />
+              <Info className="w-4 h-4 text-gray-400" />
+            </>
+          ) : null}
         </div>
       </HoverCardTrigger>
       <HoverCardContent className="w-[calc(100vw-32px)] sm:w-auto max-w-full p-0 ml-4 mr-0 sm:mx-0" align="end">
@@ -95,13 +101,14 @@ const LockedBalanceHoverCard = ({ balance, token }: { balance?: Native; token: T
       <HoverCardTrigger asChild>
         <div className="flex items-center gap-2 cursor-pointer">
           <span className="font-mono">{formattedLockedBalance}</span>
+          {lockedBalance ? <Info className="w-4 h-4 text-gray-400" /> : null}
         </div>
       </HoverCardTrigger>
-      {balance !== undefined && (
+      {lockedBalance && balance ? (
         <HoverCardContent className="w-[calc(100vw-32px)] sm:w-auto max-w-full p-0 ml-4 mr-0 sm:mx-0" align="end">
           <NativeBalanceVisualization data={balance} token={token} types={['staking', 'reserved']} hidePercentage />
         </HoverCardContent>
-      )}
+      ) : null}
     </HoverCard>
   )
 }

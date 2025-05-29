@@ -38,8 +38,10 @@ const BalanceCard = ({ value, total, label, icon, colorScheme, details, hidePerc
   const percentage = Number(((value / total) * 100).toFixed(2))
 
   return (
-    <Card className={`p-4 bg-gradient-to-br ${colorScheme.gradient} ${colorScheme.border} transition-all duration-300 hover:shadow-md`}>
-      <CardContent className="p-0 flex flex-col items-center justify-between h-full">
+    <Card
+      className={`w-full min-w-[150px] p-4 bg-gradient-to-br ${colorScheme.gradient} ${colorScheme.border} transition-all duration-300 hover:shadow-md`}
+    >
+      <CardContent className="p-0 flex flex-col items-center justify-between min-h-[150px]">
         <div className="flex flex-col items-center justify-center">
           <div className={`${colorScheme.iconColor} mb-2`}>{icon}</div>
           <div className="text-2xl font-mono text-center font-semibold mb-1">{value}</div>
@@ -153,10 +155,16 @@ export const NativeBalanceVisualization = ({
   ]
 
   const filteredBalanceTypes = balanceTypes.filter(type => types.includes(type.id))
-  const columns = `sm:grid-cols-${filteredBalanceTypes.length}`
+  // The properties can't be dynamic in tailwind, so we need to use a record
+  type GridColumnCount = 1 | 2 | 3
+  const gridCols: Record<GridColumnCount, string> = {
+    1: 'sm:grid-cols-1',
+    2: 'sm:grid-cols-2',
+    3: 'sm:grid-cols-3',
+  }
 
   return (
-    <div className={`grid grid-cols-1 gap-3 p-2 ${columns}`}>
+    <div className={`grid grid-cols-1 ${gridCols[filteredBalanceTypes.length as GridColumnCount]} gap-3 p-2`}>
       {filteredBalanceTypes.map(type => (
         <BalanceCard
           key={type.label}
