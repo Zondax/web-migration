@@ -70,7 +70,7 @@
     "isomorphic-dompurify": "^2.25.0",
     "lucide-react": "^0.487.0",
     "next": "15.2.4",
-    "next-auth": "5.0.0-beta.19",
+    "next-auth": "5.0.0-beta.28",
     "postcss": "^8.5.3",
     "prop-types": "^15.8.1",
     "react": "19.1.0",
