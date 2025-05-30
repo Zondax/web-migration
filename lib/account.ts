@@ -318,7 +318,6 @@ export async function prepareTransaction(
   return prepareTransactionPayload(api, senderAddress, appConfig, transfer)
 }
 
-export async function prepareUnstakeTransaction(api: ApiPromise, amount: number): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
 export async function prepareUnstakeTransaction(
   api: ApiPromise,
   amount: number
