@@ -3,7 +3,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { GenericExtrinsicPayload } from '@polkadot/types'
 import type { Option, u32 } from '@polkadot/types-codec'
-import type { AccountId32, Hash, OpaqueMetadata, StakingLedger } from '@polkadot/types/interfaces'
+import type { AccountId32, Hash, OpaqueMetadata, RuntimeDispatchInfo, StakingLedger } from '@polkadot/types/interfaces'
 import type { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
 import { hexToU8a } from '@polkadot/util'
 import type { AppConfig } from 'config/apps'
@@ -318,10 +318,25 @@ export async function prepareTransaction(
   return prepareTransactionPayload(api, senderAddress, appConfig, transfer)
 }
 
-export async function prepareUnstakeTransaction(api: ApiPromise, amount: number) {
+export async function prepareUnstakeTransaction(
+  api: ApiPromise,
+  amount: number
+): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
   const unstakeTx: SubmittableExtrinsic<'promise', ISubmittableResult> = api.tx.staking.unbond(amount)
 
   return unstakeTx
+}
+
+export async function prepareWithdrawTransaction(api: ApiPromise): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
+  const numSlashingSpans = 0
+  const withdrawTx = api.tx.staking.withdrawUnbonded(numSlashingSpans) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  return withdrawTx
+}
+
+export async function getTxFee(tx: SubmittableExtrinsic<'promise', ISubmittableResult>, senderAddress: string): Promise<string> {
+  const paymentInfo: RuntimeDispatchInfo = await tx.paymentInfo(senderAddress)
+  return paymentInfo.partialFee.toString()
 }
 
 // Create Signed Extrinsic
@@ -947,6 +962,16 @@ export function eraToHumanTime(era: number, currentEra: number): string {
 }
 
 /**
+ * Checks if a staking unlock chunk is ready to withdraw (era is less than or equal to current era)
+ * @param chunkEra The era of the unlock chunk
+ * @param currentEra The current era
+ * @returns True if ready to withdraw, false otherwise
+ */
+export function isReadyToWithdraw(chunkEra: number, currentEra: number): boolean {
+  return chunkEra <= currentEra
+}
+
+/**
  * Gets the staking information for an address
  * @param address The address to check
  * @param api The API instance
@@ -982,6 +1007,7 @@ export async function getStakingInfo(address: string, api: ApiPromise): Promise<
       value: chunk.value.toNumber(),
       era: Number(chunk.era.toString()),
       timeRemaining: eraToHumanTime(Number(chunk.era.toString()), currentEra),
+      canWithdraw: isReadyToWithdraw(Number(chunk.era.toString()), currentEra),
     }))
     return stakingInfo
   }

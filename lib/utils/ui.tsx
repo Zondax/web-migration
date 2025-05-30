@@ -3,6 +3,14 @@ import { AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react'
 
 import { Spinner } from '@/components/icons'
 
+/**
+ * Returns a status icon and message corresponding to the given transaction status.
+ *
+ * @param status - The current transaction status (optional).
+ * @param txStatusMessage - An optional custom status message to display.
+ * @param size - The size of the status icon ('sm', 'md', or 'lg'). Defaults to 'sm'.
+ * @returns An object containing the statusIcon (ReactNode) and an optional statusMessage (string).
+ */
 export const getTransactionStatus = (
   status?: TransactionStatus,
   txStatusMessage?: string,
@@ -57,6 +65,26 @@ export const getTransactionStatus = (
   return { statusIcon, statusMessage }
 }
 
-export const isValidNumberInput = (value: string): boolean => {
-  return /^\d*\.?\d*$/.test(value)
+/**
+ * Validates a numeric input value against required, numeric, positive, and maximum constraints.
+ *
+ * @param value - The input value as a string to validate.
+ * @param max - The maximum allowed value (inclusive).
+ * @returns An object with a boolean `valid` flag and a `helperText` message for user feedback.
+ */
+export const validateNumberInput = (value: string, max: number): { valid: boolean; helperText: string } => {
+  if (value === '') {
+    return { valid: false, helperText: 'Amount is required.' }
+  }
+  const numValue = Number(value)
+  if (Number.isNaN(numValue)) {
+    return { valid: false, helperText: 'Amount must be a number.' }
+  }
+  if (numValue <= 0) {
+    return { valid: false, helperText: 'Amount must be greater than zero.' }
+  }
+  if (numValue > max) {
+    return { valid: false, helperText: `Amount cannot exceed your staked balance (${max}).` }
+  }
+  return { valid: true, helperText: '' }
 }

@@ -9,6 +9,7 @@ import {
   getEnrichedNftMetadata,
   getNativeBalance,
   ipfsToHttpUrl,
+  isReadyToWithdraw,
   processCollectionMetadata,
   processNftItem,
 } from '../account'
@@ -507,5 +508,24 @@ describe('eraToHumanTime', () => {
     expect(eraToHumanTime(0, 0)).toBe('0 hours')
     expect(eraToHumanTime(1, 0)).toBe('6 hours')
     expect(eraToHumanTime(4, 0)).toBe('1 days and 0 hours')
+  })
+})
+
+describe('isReadyToWithdraw', () => {
+  it('should return true when chunkEra is less than currentEra', () => {
+    expect(isReadyToWithdraw(5, 10)).toBe(true)
+  })
+
+  it('should return true when chunkEra is equal to currentEra', () => {
+    expect(isReadyToWithdraw(10, 10)).toBe(true)
+  })
+
+  it('should return false when chunkEra is greater than currentEra', () => {
+    expect(isReadyToWithdraw(15, 10)).toBe(false)
+  })
+
+  it('should handle negative eras', () => {
+    expect(isReadyToWithdraw(-1, 0)).toBe(true)
+    expect(isReadyToWithdraw(0, -1)).toBe(false)
   })
 })

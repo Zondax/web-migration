@@ -154,11 +154,12 @@ export interface Staking {
     value: number
     era: number
     timeRemaining: string
+    canWithdraw: boolean
   }[]
   claimedRewards?: number[]
   stash?: string
   controller?: string
-  canUnstake?: boolean
+  canUnstake: boolean
 }
 
 /**
