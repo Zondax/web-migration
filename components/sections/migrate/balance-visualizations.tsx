@@ -2,7 +2,7 @@
 
 import type { Native, Staking } from '@/state/types/ledger'
 import { LockClosedIcon } from '@radix-ui/react-icons'
-import { ArrowRightLeftIcon, BarChartIcon, ClockIcon, LockOpenIcon } from 'lucide-react'
+import { ArrowRightLeftIcon, BarChartIcon, Check, ClockIcon, LockOpenIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Badge } from '@/components/ui/badge'
@@ -62,6 +62,10 @@ const BalanceCard = ({ value, total, label, icon, colorScheme, details, hidePerc
 }
 
 const StakingDetails = ({ stakingData, token }: { stakingData: Staking; token: Token }) => {
+  const readyToWithdraw: number = stakingData.unlocking?.filter(u => u.canWithdraw).reduce((sum, u) => sum + u.value, 0) || 0
+  const notReadyToWithdraw = stakingData.unlocking?.filter(u => !u.canWithdraw)
+  const unLockingBalance = (stakingData.total ?? 0) - (stakingData.active ?? 0)
+
   const renderItem = (icon: ReactNode, label: string, value?: number) => (
     <div className="flex justify-between mb-1 gap-1.5">
       <span className="flex items-center gap-1.5">
@@ -77,17 +81,24 @@ const StakingDetails = ({ stakingData, token }: { stakingData: Staking; token: T
 
       {stakingData.unlocking && stakingData.unlocking.length > 0 && (
         <div className="space-y-3 mt-3">
-          {renderItem(
-            <LockOpenIcon className="w-4 h-4 text-polkadot-cyan" />,
-            'Unlocking',
-            (stakingData.total ?? 0) - (stakingData.active ?? 0)
-          )}
+          {renderItem(<LockOpenIcon className="w-4 h-4 text-polkadot-cyan" />, 'Unlocking', unLockingBalance)}
 
           <div className="space-y-3 px-1">
-            {stakingData.unlocking.map(unlock => (
+            {/* Staked balance ready to withdraw */}
+            {readyToWithdraw > 0 && (
+              <div className="bg-green-400/60 flex justify-between text-xxs gap-1.5 px-1.5 rounded-xl text-black">
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-gray-600" />
+                  Ready to withdraw
+                </span>
+                <span className="font-mono font-medium">{formatBalance(readyToWithdraw, token, undefined, true)}</span>
+              </div>
+            )}
+            {/* Staked balance not ready to withdraw */}
+            {notReadyToWithdraw?.map(unlock => (
               <div
                 key={`${unlock.era}-${unlock.value}`}
-                className="bg-polkadot-cyan/20 flex justify-between text-xxs gap-1.5 px-1 rounded-xl"
+                className="bg-polkadot-cyan/20 flex justify-between text-xxs gap-1.5 px-1.5 rounded-xl"
               >
                 <span className="flex items-center gap-1.5">
                   <ClockIcon className="w-3.5 h-3.5 text-gray-600" /> {unlock.timeRemaining}

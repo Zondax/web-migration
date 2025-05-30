@@ -1,6 +1,6 @@
 import { BalanceType, type Collection, type Native } from 'state/types/ledger'
-import { uiState$ } from 'state/ui'
 
+import { useTokenLogo } from '@/components/hooks/useTokenLogo'
 import TokenIcon from '@/components/TokenIcon'
 import { Badge, type BadgeVariant } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -68,7 +68,7 @@ interface NativeTokensDetailCardProps {
  * Shows the token's native status and formatted balance amount
  */
 const NativeTokensDetailCard = ({ balance, token }: NativeTokensDetailCardProps) => {
-  const icon = uiState$.icons.get()[token.logoId || '']
+  const icon = useTokenLogo(token.logoId)
   const total = Number(formatBalance(balance.total || 0, token, undefined, true))
 
   return (

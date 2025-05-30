@@ -1,17 +1,18 @@
 import { ledgerState$ } from '@/state/ledger'
-import { uiState$ } from '@/state/ui'
-import { useMemo, useState } from 'react'
-import { type Address, type Transaction, TransactionStatus } from 'state/types/ledger'
+import { useEffect, useMemo, useState } from 'react'
+import type { Address, TransactionStatus } from 'state/types/ledger'
 
 import { AddressLink } from '@/components/AddressLink'
 import TokenIcon from '@/components/TokenIcon'
+import { useTokenLogo } from '@/components/hooks/useTokenLogo'
 import { useTransactionStatus } from '@/components/hooks/useTransactionStatus'
-import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/icons'
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { type AppId, type Token, getChainName } from '@/config/apps'
 import { convertToRawUnits, formatBalance } from '@/lib/utils/format'
-import { getTransactionStatus, isValidNumberInput } from '@/lib/utils/ui'
+import { validateNumberInput } from '@/lib/utils/ui'
+import { TransactionDialogFooter, TransactionStatusBody } from './transaction-dialog'
 
 interface UnstakeDialogProps {
   appId: AppId
@@ -23,66 +24,49 @@ interface UnstakeDialogProps {
 }
 
 interface UnstakeFormProps {
-  unstakeAmount: number
-  setUnstakeAmount: (amount: number) => void
+  unstakeAmount?: number
+  setUnstakeAmount: (amount: number | undefined) => void
   maxUnstake: number
   token: Token
   account: Address
   appId: AppId
+  estimatedFee: string | undefined
+  estimatedFeeLoading: boolean
+  setIsUnstakeAmountValid: (valid: boolean) => void
 }
 
-function UnstakeStatusBody({ status, statusMessage: txStatusMessage, hash, blockHash, blockNumber }: Transaction) {
-  if (!status) return null
-
-  const details: { label: string; value: string | undefined }[] =
-    hash || blockHash || blockNumber
-      ? [
-          { label: 'Transaction Hash', value: hash },
-          { label: 'Block Hash', value: blockHash },
-          { label: 'Block Number', value: blockNumber },
-        ]
-      : []
-
-  // Common transaction details section to display hash, blockHash and blockNumber if they exist
-  const renderTransactionDetails = () => {
-    return (
-      <div className="text-xs w-full">
-        {details.map(
-          item =>
-            item.value && (
-              <div key={item.label} className="flex justify-between items-center gap-1">
-                <div className="text-xs text-muted-foreground mb-1">{item.label}</div>
-                <AddressLink value={item.value} />
-              </div>
-            )
-        )}
-      </div>
-    )
-  }
-
-  const { statusIcon, statusMessage } = getTransactionStatus(status, txStatusMessage, 'lg')
-
-  return (
-    <div className="w-full flex flex-col items-center space-y-4">
-      {statusIcon}
-      <span className="text-base font-medium max-w-[80%] text-center">
-        {status === TransactionStatus.IS_LOADING ? 'Please sign the transaction in your Ledger device' : statusMessage}
-      </span>
-      {details.length > 0 && renderTransactionDetails()}
-    </div>
-  )
-}
-
-function UnstakeForm({ unstakeAmount, setUnstakeAmount, maxUnstake, token, account, appId }: UnstakeFormProps) {
-  const icon = uiState$.icons.get()[token.logoId || '']
+function UnstakeForm({
+  unstakeAmount,
+  setUnstakeAmount,
+  maxUnstake,
+  token,
+  account,
+  appId,
+  estimatedFee,
+  estimatedFeeLoading,
+  setIsUnstakeAmountValid,
+}: UnstakeFormProps) {
+  const icon = useTokenLogo(token.logoId)
   const appName = getChainName(appId)
+
+  const [helperText, setHelperText] = useState<string>('')
+
+  const handleUnstakeAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    const { valid, helperText } = validateNumberInput(val, maxUnstake)
+    setIsUnstakeAmountValid(valid)
+    setUnstakeAmount(Number(val))
+    setHelperText(helperText)
+  }
 
   return (
     <>
-      <div>
+      {/* Source Address */}
+      <div className="text-sm">
         <div className="text-xs text-muted-foreground mb-1">Source Address</div>
         <AddressLink value={account.address} />
       </div>
+      {/* Network */}
       <div>
         <div className="text-xs text-muted-foreground mb-1">Network</div>
         <div className="flex items-center gap-2">
@@ -90,11 +74,12 @@ function UnstakeForm({ unstakeAmount, setUnstakeAmount, maxUnstake, token, accou
           <span className="font-semibold text-base">{appName}</span>
         </div>
       </div>
+      {/* Amount to Unstake */}
       <div>
         <div className="flex justify-between items-center mb-1">
           <span className="text-xs text-muted-foreground">Amount to Unstake</span>
           <span className="text-xs text-muted-foreground">
-            Max: {maxUnstake} {token.symbol}
+            Available Balance: {maxUnstake} {token.symbol}
           </span>
         </div>
         <Input
@@ -102,20 +87,31 @@ function UnstakeForm({ unstakeAmount, setUnstakeAmount, maxUnstake, token, accou
           min={0}
           max={maxUnstake}
           value={unstakeAmount}
-          onChange={e => {
-            const val = e.target.value
-            if (isValidNumberInput(val)) setUnstakeAmount(Number(val))
-          }}
-          placeholder="Enter amount"
+          onChange={handleUnstakeAmountChange}
+          placeholder="Amount"
           className="font-mono"
+          error={Boolean(helperText)}
+          helperText={helperText}
         />
       </div>
+      {/* Estimated Fee */}
+      {!helperText && unstakeAmount ? (
+        <div className="flex flex-col items-start justify-start">
+          <div className="text-xs text-muted-foreground mb-1">Estimated Fee</div>
+          {estimatedFeeLoading ? (
+            <Spinner className="w-4 h-4" />
+          ) : (
+            <span className={`text-sm ${estimatedFee ? ' font-mono' : ''}`}>{estimatedFee ?? 'Could not be calculated at this time'}</span>
+          )}
+        </div>
+      ) : null}
     </>
   )
 }
 
 export default function UnstakeDialog({ open, setOpen, maxUnstake: maxUnstakeRaw, token, account, appId }: UnstakeDialogProps) {
-  const [unstakeAmount, setUnstakeAmount] = useState<number>(0)
+  const [unstakeAmount, setUnstakeAmount] = useState<number | undefined>(undefined)
+  const [isUnstakeAmountValid, setIsUnstakeAmountValid] = useState<boolean>(true)
   const maxUnstake = useMemo(() => Number(formatBalance(maxUnstakeRaw, token, undefined, true)), [maxUnstakeRaw, token])
 
   // Wrap ledgerState$.unstakeBalance to match the generic hook's expected signature
@@ -133,10 +129,32 @@ export default function UnstakeDialog({ open, setOpen, maxUnstake: maxUnstakeRaw
     await ledgerState$.unstakeBalance(appId, address, path, amount, updateTxStatus)
   }
 
-  const { runTransaction, txStatus, clearTx, isTxFinished, isTxFailed, updateSynchronization, isSynchronizing } =
-    useTransactionStatus(unstakeTxFn)
+  const {
+    runTransaction,
+    txStatus,
+    clearTx,
+    isTxFinished,
+    isTxFailed,
+    updateSynchronization,
+    isSynchronizing,
+    getEstimatedFee,
+    estimatedFee,
+    estimatedFeeLoading,
+  } = useTransactionStatus(unstakeTxFn, ledgerState$.getUnstakeFee)
+
+  // Estimate fee on mount and when amount to unstake changes
+  useEffect(() => {
+    if (!open || !unstakeAmount) return
+
+    const rawUnstakeAmount = convertToRawUnits(unstakeAmount, token)
+    getEstimatedFee(appId, account.address, rawUnstakeAmount)
+  }, [open, getEstimatedFee, appId, account.address, unstakeAmount, token])
+
+  const formattedFee = useMemo(() => (estimatedFee ? formatBalance(Number(estimatedFee), token) : undefined), [estimatedFee, token])
 
   const signUnstakeTx = async () => {
+    if (!unstakeAmount) return
+
     const rawUnstakeAmount = convertToRawUnits(unstakeAmount, token)
     await runTransaction(appId, account.address, account.path, rawUnstakeAmount)
   }
@@ -156,14 +174,18 @@ export default function UnstakeDialog({ open, setOpen, maxUnstake: maxUnstakeRaw
     <Dialog open={open} onOpenChange={closeDialog}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Unstake and Transfer</DialogTitle>
+          <DialogTitle>Unstake your balance</DialogTitle>
           <DialogDescription>
             Unstake tokens from your balance to make them available for use. Enter the amount you wish to unstake below.
+          </DialogDescription>
+          <DialogDescription>
+            After unbonding, your tokens enter a withdrawal period. Once this period ends, you can withdraw your unbonded balance to your
+            account.
           </DialogDescription>
         </DialogHeader>
         <DialogBody>
           {txStatus ? (
-            <UnstakeStatusBody {...txStatus} />
+            <TransactionStatusBody {...txStatus} />
           ) : (
             <UnstakeForm
               unstakeAmount={unstakeAmount}
@@ -172,37 +194,23 @@ export default function UnstakeDialog({ open, setOpen, maxUnstake: maxUnstakeRaw
               token={token}
               account={account}
               appId={appId}
+              estimatedFee={formattedFee}
+              estimatedFeeLoading={estimatedFeeLoading}
+              setIsUnstakeAmountValid={setIsUnstakeAmountValid}
             />
           )}
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={closeDialog}>
-            {isTxFinished ? 'Close' : 'Cancel'}
-          </Button>
-          {!isTxFinished ? (
-            <Button
-              className="bg-[#7916F3] hover:bg-[#6B46C1] text-white"
-              onClick={signUnstakeTx}
-              disabled={
-                !unstakeAmount ||
-                !maxUnstake ||
-                Number.isNaN(Number(unstakeAmount)) ||
-                Number(unstakeAmount) <= 0 ||
-                Number(unstakeAmount) > maxUnstake ||
-                Boolean(txStatus)
-              }
-            >
-              Sign Transfer
-            </Button>
-          ) : (
-            <Button
-              className="bg-[#7916F3] hover:bg-[#6B46C1] text-white"
-              onClick={isTxFailed ? clearTx : synchronizeAccount}
-              disabled={isSynchronizing}
-            >
-              {isSynchronizing ? 'Synchronizing...' : isTxFailed ? 'Try again' : 'Update Synchronization'}
-            </Button>
-          )}
+          <TransactionDialogFooter
+            isTxFinished={isTxFinished}
+            isTxFailed={isTxFailed}
+            isSynchronizing={isSynchronizing}
+            clearTx={clearTx}
+            synchronizeAccount={synchronizeAccount}
+            closeDialog={closeDialog}
+            signTransfer={signUnstakeTx}
+            isSignDisabled={!isUnstakeAmountValid || Boolean(txStatus)}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

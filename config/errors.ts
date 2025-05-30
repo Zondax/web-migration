@@ -24,6 +24,7 @@ export enum InternalErrors {
   INSUFFICIENT_BALANCE = 'insufficient_balance',
   INSUFFICIENT_BALANCE_TO_COVER_FEE = 'insufficient_balance_to_cover_fee',
   UNSTAKE_ERROR = 'unstake_error',
+  WITHDRAW_ERROR = 'withdraw_error',
 }
 
 export enum LedgerErrors {
@@ -155,6 +156,11 @@ export const errorDetails: ErrorDetailsMap = {
   unstake_error: {
     title: 'Unstake Error',
     description: 'Failed to unstake balance.',
+    content: 'Please try again later or contact support if the issue persists.',
+  },
+  withdraw_error: {
+    title: 'Withdraw Error',
+    description: 'Failed to withdraw balance.',
     content: 'Please try again later or contact support if the issue persists.',
   },
 }

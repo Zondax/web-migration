@@ -869,4 +869,50 @@ export const ledgerState$ = observable({
       updateTxStatus(TransactionStatus.ERROR, errorDetail)
     }
   },
+
+  async getUnstakeFee(appId: AppId, address: string, amount: number): Promise<string | undefined> {
+    const appConfig = appsConfigs.get(appId)
+    if (!appConfig) {
+      console.error(`App with id ${appId} not found.`)
+      return
+    }
+
+    try {
+      console.log('getUnstakeFee ledger state 1', appId, address, amount)
+      const estimatedFee = await ledgerClient.getUnstakeFee(appId, address, amount)
+      console.log('getUnstakeFee ledger state 2', estimatedFee)
+      return estimatedFee
+    } catch (error) {
+      return undefined
+    }
+  },
+
+  async withdrawBalance(appId: AppId, address: string, path: string, updateTxStatus: UpdateTransactionStatus) {
+    const appConfig = appsConfigs.get(appId)
+    if (!appConfig) {
+      console.error(`App with id ${appId} not found.`)
+      return
+    }
+
+    try {
+      await ledgerClient.withdrawBalance(appId, address, path, updateTxStatus)
+    } catch (error) {
+      const errorDetail = (error as LedgerClientError).message || errorDetails.withdraw_error.description
+      updateTxStatus(TransactionStatus.ERROR, errorDetail)
+    }
+  },
+
+  async getWithdrawFee(appId: AppId, address: string): Promise<string | undefined> {
+    const appConfig = appsConfigs.get(appId)
+    if (!appConfig) {
+      console.error(`App with id ${appId} not found.`)
+      return
+    }
+
+    try {
+      return await ledgerClient.getWithdrawFee(appId, address)
+    } catch (error) {
+      return undefined
+    }
+  },
 })

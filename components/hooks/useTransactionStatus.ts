@@ -12,6 +12,9 @@ interface TransactionStatusReturn<T extends GenericFunction> {
   isTxFailed: boolean
   updateSynchronization: (syncFn?: GenericFunction, ...args: any[]) => Promise<void>
   isSynchronizing: boolean
+  estimatedFee: string | undefined
+  estimatedFeeLoading: boolean
+  getEstimatedFee: (...args: Parameters<T>) => Promise<string | undefined>
   clearTx: () => void
 }
 
@@ -20,9 +23,12 @@ interface TransactionStatusReturn<T extends GenericFunction> {
  * @returns Functions for running a transaction and tracking its status
  */
 export const useTransactionStatus = <T extends GenericFunction>(
-  transactionFn: (updateTxStatus: UpdateTransactionStatus, ...args: Parameters<T>) => Promise<void>
+  transactionFn: (updateTxStatus: UpdateTransactionStatus, ...args: Parameters<T>) => Promise<void>,
+  feeTxFn?: (...args: Parameters<T>) => Promise<string | undefined>
 ): TransactionStatusReturn<T> => {
   // Track the status of transactions
+  const [fee, setFee] = useState<string | undefined>(undefined)
+  const [feeLoading, setFeeLoading] = useState<boolean>(false)
   const [txStatus, setTxStatus] = useState<Transaction | undefined>(undefined)
   const [isTxFinished, setIsTxFinished] = useState<boolean>(false)
   const [isSynchronizing, setIsSynchronizing] = useState<boolean>(false)
@@ -30,6 +36,17 @@ export const useTransactionStatus = <T extends GenericFunction>(
   const isTxFailed = useMemo(() => {
     return Boolean(txStatus?.status && [TransactionStatus.FAILED, TransactionStatus.ERROR].includes(txStatus.status))
   }, [txStatus])
+
+  const getEstimatedFee = useCallback(
+    async (...args: Parameters<T>) => {
+      if (!feeTxFn) return undefined
+      setFeeLoading(true)
+      const fee = await feeTxFn(...args)
+      setFeeLoading(false)
+      setFee(fee)
+    },
+    [feeTxFn]
+  )
 
   /**
    * Updates the transaction status for a specific operation
@@ -77,6 +94,9 @@ export const useTransactionStatus = <T extends GenericFunction>(
     isTxFailed,
     updateSynchronization,
     isSynchronizing,
+    estimatedFee: fee,
+    estimatedFeeLoading: feeLoading,
+    getEstimatedFee,
     clearTx,
   }
 }
