@@ -272,7 +272,7 @@ export async function prepareTransaction(
 
   if (!transferableBalance) throw new Error(errorDetails.insufficient_balance.description)
 
-  let calls = nfts.map(item => {
+  let calls: SubmittableExtrinsic<'promise', ISubmittableResult>[] = nfts.map(item => {
     return !item.isUnique
       ? api.tx.nfts.transfer(item.collectionId, item.itemId, receiverAddress)
       : api.tx.uniques.transfer(item.collectionId, item.itemId, receiverAddress)
@@ -319,7 +319,7 @@ export async function prepareTransaction(
 }
 
 export async function prepareUnstakeTransaction(api: ApiPromise, amount: number) {
-  const unstakeTx = api.tx.staking.unbond(amount) as SubmittableExtrinsic<'promise', ISubmittableResult>
+  const unstakeTx: SubmittableExtrinsic<'promise', ISubmittableResult> = api.tx.staking.unbond(amount)
 
   return unstakeTx
 }
