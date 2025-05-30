@@ -5,6 +5,7 @@ import { type Address, BalanceType, type Collection, type Native, type Nft, type
 import { vi } from 'vitest'
 
 import type { AppConfig } from '@/config/apps'
+import { appsConfigs } from '@/config/apps'
 
 // =========== Common Test Addresses ===========
 export const TEST_ADDRESSES = {
@@ -15,7 +16,13 @@ export const TEST_ADDRESSES = {
   ADDRESS5: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL',
   ADDRESS6: '5H4MvAsobfZ6bBCDyj5dsrWYLrA8HrRzaqa9p61UXtxMhSCY',
   ADDRESS7: '5DAUh2JEqgjoq7xKmvUdaNkDRRtwqYGtxKzovLHdkkNcsuFJ',
+  ADDRESS8: 'Gsmu7iGq4cQg7oAxFgAA9dUPKu9iRKGvbFLNUGhEkEB3Ybt', // kusama asset hub address with uniques
+  ADDRESS9: 'Gq9CTYACKtgA1dyrM5yh7oDK6yh1P3ErjcxZvDmJu9YjdB5', // kusama staking address with bonded
 }
+
+// test rpc endpoints
+export const KUSAMA_RPC = appsConfigs.get('kusama')?.rpcEndpoint || 'wss://kusama-rpc.polkadot.io'
+export const KUSAMA_ASSET_HUB_RPC = appsConfigs.get('kusama-asset-hub')?.rpcEndpoint || 'wss://asset-hub-kusama-rpc.dwellir.com'
 
 // =========== Mock Staking ===========
 export const mockStaking: Staking = {
