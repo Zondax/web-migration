@@ -1,18 +1,18 @@
 'use client'
 
 import { observable } from '@legendapp/state'
-import { Info, RefreshCw } from 'lucide-react'
+import { FolderSync, Info, RefreshCw } from 'lucide-react'
 import { AppStatus } from 'state/ledger'
 
 import { AddressLink } from '@/components/AddressLink'
 import { useSynchronization } from '@/components/hooks/useSynchronization'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SimpleTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
-import AppRow from './app-row'
+import EmptyStateRow from './empty-state-row'
+import AppRow from './synchronized-app'
 
 interface SynchronizeTabContentProps {
   onContinue: () => void
@@ -45,7 +45,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
       return null
     }
     return (
-      <div className="flex flex-col sm:flex-row items-start sm:items-center text-sm text-gray-600 gap-2 p-3 border border-polkadot-cyan rounded-md bg-polkadot-cyan bg-opacity-10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center text-sm text-gray-600 gap-2 p-3 border border-polkadot-cyan rounded-lg bg-polkadot-cyan bg-opacity-10">
         <Info className="h-5 w-5 sm:h-8 sm:w-8 text-polkadot-cyan flex-shrink-0" />
         <span>
           <TooltipProvider>
@@ -118,33 +118,18 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
         </div>
       )}
 
-      <Table className="shadow-sm border border-gray-200">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50px]" />
-            <TableHead className="hidden w-[50px] sm:table-cell" />
-            <TableHead className="w-[25%]">Chain</TableHead>
-            <TableHead className="w-[25%]">Addresses</TableHead>
-            <TableHead className="w-[25%]">Total Balance</TableHead>
-            <TableHead className="w-[100px]" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isSynchronized && appsWithoutErrors.length ? (
-            appsWithoutErrors.map(app => <AppRow key={app.id.toString()} app={observable(app)} />)
-          ) : (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground p-4">
-                {isSynchronized ? 'No accounts to migrate' : 'No synchronized accounts'}
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+      {isSynchronized && appsWithoutErrors.length ? (
+        appsWithoutErrors.map(app => <AppRow key={app.id.toString()} app={observable(app)} />)
+      ) : (
+        <EmptyStateRow
+          label={isSynchronized ? 'No accounts to migrate' : 'No synchronized accounts'}
+          icon={<FolderSync className="h-8 w-8 text-gray-300" />}
+        />
+      )}
 
       {accountsWithErrors && (
         <>
-          <div className="flex justify-between items-center mb-6 mt-6">
+          <div className="flex justify-between items-start gap-2 mb-6 mt-6">
             <div>
               <h2 className="text-2xl font-bold">Failed Synchronization</h2>
               <p className="text-gray-600">
@@ -155,26 +140,10 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
               {isRescaning ? 'Loading...' : 'Rescan'}
             </Button>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]"> </TableHead>
-                <TableHead className="hidden w-[100px] sm:table-cell">
-                  <span className="sr-only">Image</span>
-                </TableHead>
-                <TableHead className="w-[25%]">Name</TableHead>
-                <TableHead className="w-[25%]">Addresses</TableHead>
-                <TableHead className="w-[25%]" />
-                <TableHead className="w-[100px]" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {/* Filter and show only apps with error accounts */}
-              {appsWithErrors.map(app => (
-                <AppRow key={app.id.toString()} app={observable(app)} failedSync />
-              ))}
-            </TableBody>
-          </Table>
+          {/* Filter and show only apps with error accounts */}
+          {appsWithErrors.map(app => (
+            <AppRow key={app.id.toString()} app={observable(app)} failedSync />
+          ))}
         </>
       )}
     </div>

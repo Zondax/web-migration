@@ -13,6 +13,8 @@ import { formatBalance } from '@/lib/utils'
 interface NativeBalanceVisualizationProps {
   data: Native
   token: Token
+  types?: string[]
+  hidePercentage?: boolean
 }
 
 interface BalanceCardProps {
@@ -29,26 +31,31 @@ interface BalanceCardProps {
     badgeBorder: string
   }
   details?: ReactNode
+  hidePercentage?: boolean
 }
 
-const BalanceCard = ({ value, total, label, icon, colorScheme, details }: BalanceCardProps) => {
+const BalanceCard = ({ value, total, label, icon, colorScheme, details, hidePercentage }: BalanceCardProps) => {
   const percentage = Number(((value / total) * 100).toFixed(2))
 
   return (
-    <Card className={`p-4 bg-gradient-to-br ${colorScheme.gradient} ${colorScheme.border} transition-all duration-300 hover:shadow-md`}>
-      <CardContent className="p-0 flex flex-col items-center justify-between h-full">
+    <Card
+      className={`w-full min-w-[150px] p-4 bg-gradient-to-br ${colorScheme.gradient} ${colorScheme.border} transition-all duration-300 hover:shadow-md`}
+    >
+      <CardContent className="p-0 flex flex-col items-center justify-between min-h-[150px]">
         <div className="flex flex-col items-center justify-center">
           <div className={`${colorScheme.iconColor} mb-2`}>{icon}</div>
           <div className="text-2xl font-mono text-center font-semibold mb-1">{value}</div>
           <div className="text-sm text-gray-600 mb-2">{label}</div>
         </div>
         {details && <div className="w-full mt-1">{details}</div>}
-        <Badge
-          variant="outline"
-          className={`${colorScheme.badgeBg} ${colorScheme.badgeText} ${colorScheme.badgeBorder} text-xs font-medium px-3 py-0.5 rounded-full mt-2`}
-        >
-          {percentage}%
-        </Badge>
+        {!hidePercentage && (
+          <Badge
+            variant="outline"
+            className={`${colorScheme.badgeBg} ${colorScheme.badgeText} ${colorScheme.badgeBorder} text-xs font-medium px-3 py-0.5 rounded-full mt-2`}
+          >
+            {percentage}%
+          </Badge>
+        )}
       </CardContent>
     </Card>
   )
@@ -95,9 +102,15 @@ const StakingDetails = ({ stakingData, token }: { stakingData: Staking; token: T
   )
 }
 
-export const NativeBalanceVisualization = ({ data, token }: NativeBalanceVisualizationProps) => {
+export const NativeBalanceVisualization = ({
+  data,
+  token,
+  types = ['transferable', 'staking', 'reserved'],
+  hidePercentage = false,
+}: NativeBalanceVisualizationProps) => {
   const balanceTypes = [
     {
+      id: 'transferable',
       value: data.transferable,
       label: 'Transferable',
       icon: <ArrowRightLeftIcon className="w-6 h-6" />,
@@ -111,6 +124,7 @@ export const NativeBalanceVisualization = ({ data, token }: NativeBalanceVisuali
       },
     },
     {
+      id: 'staking',
       value: data.staking?.total || 0,
       label: 'Staked',
       icon: <BarChartIcon className="w-6 h-6" />,
@@ -125,6 +139,7 @@ export const NativeBalanceVisualization = ({ data, token }: NativeBalanceVisuali
       details: data.staking && <StakingDetails stakingData={data.staking} token={token} />,
     },
     {
+      id: 'reserved',
       value: data.reserved,
       label: 'Reserved',
       icon: <LockClosedIcon className="w-6 h-6" />,
@@ -139,17 +154,27 @@ export const NativeBalanceVisualization = ({ data, token }: NativeBalanceVisuali
     },
   ]
 
+  const filteredBalanceTypes = balanceTypes.filter(type => types.includes(type.id))
+  // The properties can't be dynamic in tailwind, so we need to use a record
+  type GridColumnCount = 1 | 2 | 3
+  const gridCols: Record<GridColumnCount, string> = {
+    1: 'sm:grid-cols-1',
+    2: 'sm:grid-cols-2',
+    3: 'sm:grid-cols-3',
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      {balanceTypes.map(type => (
+    <div className={`grid grid-cols-1 ${gridCols[filteredBalanceTypes.length as GridColumnCount]} gap-3 p-2`}>
+      {filteredBalanceTypes.map(type => (
         <BalanceCard
           key={type.label}
           value={Number(formatBalance(type.value || 0, token, undefined, true))}
-          total={Number(formatBalance(data.total || 0, token, undefined, true))}
+          total={Number(formatBalance(data.total ?? 0, token, undefined, true))}
           label={type.label}
           icon={type.icon}
           colorScheme={type.colorScheme}
           details={type.details}
+          hidePercentage={hidePercentage}
         />
       ))}
     </div>

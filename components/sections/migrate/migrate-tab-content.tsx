@@ -1,7 +1,7 @@
 'use client'
 
 import { observer, use$ } from '@legendapp/state/react'
-import { AlertCircle, CheckCircle, Clock, Info, ShieldCheck, XCircle } from 'lucide-react'
+import { Info, ShieldCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { App } from 'state/ledger'
@@ -18,7 +18,7 @@ import { muifyHtml } from '@/lib/utils/html'
 import { getTransactionStatus } from '@/lib/utils/ui'
 
 import { AddressVerificationDialog } from './address-verification-dialog'
-import BalanceHoverCard from './balance-hover-card'
+import { BalanceHoverCard } from './balance-hover-card'
 import { SuccessDialog } from './success-dialog'
 import TransactionDropdown from './transaction-dropdown'
 
@@ -144,7 +144,7 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
               Balance
               <SimpleTooltip
                 tooltipText="Balance to be transferred. The transaction fee will be deducted from this amount."
-                className="!normal-case"
+                className="!normal-case font-normal"
               >
                 <Info className="h-4 w-4 inline-block ml-1 text-gray-400" />
               </SimpleTooltip>
