@@ -43,7 +43,7 @@ export const ledgerClient = {
 
       const filteredAddresses = addresses.filter((address): address is Address => address !== undefined)
 
-      return { result: filteredAddresses.map(address => ({ ...address, address: 'F4aqRHwLaCk2EoEewPWKpJBGdrvkssQAtrBmQ5LdNSweUfV' })) }
+      return { result: filteredAddresses }
     }, InternalErrors.SYNC_ERROR)
   },
 

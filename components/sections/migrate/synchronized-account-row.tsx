@@ -195,7 +195,7 @@ const SynchronizedAccountRow = observer(
               {/* Identity Icon and Tooltip */}
               {account.registration?.identity ? (
                 <CustomTooltip tooltipBody={tooltipIdentity()}>
-                  <User className="h-4 w-4 text-muted-foreground" />
+                  <User className="h-4 w-4 text-polkadot-pink" />
                 </CustomTooltip>
               ) : null}
               {/* Address Info Icon and Tooltip */}
