@@ -2,8 +2,16 @@ import { merkleizeMetadata } from '@polkadot-api/merkleize-metadata'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { GenericExtrinsicPayload } from '@polkadot/types'
-import type { Option, u32 } from '@polkadot/types-codec'
-import type { AccountId32, Hash, OpaqueMetadata, RuntimeDispatchInfo, StakingLedger } from '@polkadot/types/interfaces'
+import type { Option, u32, Vec } from '@polkadot/types-codec'
+import type {
+  AccountId32,
+  Balance,
+  Hash,
+  OpaqueMetadata,
+  Registration as PolkadotRegistration,
+  RuntimeDispatchInfo,
+  StakingLedger,
+} from '@polkadot/types/interfaces'
 import type { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
 import { hexToU8a } from '@polkadot/util'
 import type { AppConfig } from 'config/apps'
@@ -17,6 +25,7 @@ import {
   type Native,
   type Nft,
   type NftsInfo,
+  type Registration,
   type Staking,
   TransactionStatus,
 } from 'state/types/ledger'
@@ -332,6 +341,15 @@ export async function prepareWithdrawTransaction(api: ApiPromise): Promise<Submi
   const withdrawTx = api.tx.staking.withdrawUnbonded(numSlashingSpans) as SubmittableExtrinsic<'promise', ISubmittableResult>
 
   return withdrawTx
+}
+
+export async function prepareRemoveIdentityTransaction(
+  api: ApiPromise,
+  address: string
+): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
+  const removeIdentityTx = api.tx.identity?.killIdentity(address) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  return removeIdentityTx
 }
 
 export async function getTxFee(tx: SubmittableExtrinsic<'promise', ISubmittableResult>, senderAddress: string): Promise<string> {
@@ -1014,4 +1032,71 @@ export async function getStakingInfo(address: string, api: ApiPromise): Promise<
 
   // Account has no active staking ledger
   return undefined
+}
+
+/**
+ * Logs the identity information for a specific address
+ * @param address The address to check
+ * @param api The API instance
+ */
+export async function getIdentityInfo(address: string, api: ApiPromise): Promise<Registration | undefined> {
+  let registration: Registration | undefined
+
+  try {
+    // Get the derived identity for display info
+    const derivedIdentity = await api.derive.accounts.identity(address)
+
+    // If identity has a parent it means it is a sub-account and we cannot remove it
+    if (derivedIdentity.displayParent) {
+      registration = {
+        canRemove: false,
+        identity: {
+          displayParent: derivedIdentity.displayParent,
+          display: derivedIdentity.display,
+          parent: derivedIdentity.parent?.toHuman(),
+        },
+      }
+    } else {
+      registration = { canRemove: true }
+    }
+
+    // Get the raw identity info
+    const identity = (await api.query.identity.identityOf(address)) as Option<PolkadotRegistration>
+
+    if (!identity.isNone) {
+      // Parse the raw response
+      const rawResponse = identity.unwrap() as PolkadotRegistration
+
+      if (rawResponse) {
+        registration.identity = {
+          display: rawResponse.info.display?.isRaw ? rawResponse.info.display.asRaw.toUtf8() : undefined,
+          legal: rawResponse.info.legal?.isRaw ? rawResponse.info.legal.asRaw.toUtf8() : undefined,
+          web: rawResponse.info.web?.isRaw ? rawResponse.info.web.asRaw.toUtf8() : undefined,
+          email: rawResponse.info.email?.isRaw ? rawResponse.info.email.asRaw.toUtf8() : undefined,
+          pgpFingerprint: rawResponse.info.pgpFingerprint?.isSome ? rawResponse.info.pgpFingerprint.unwrap().toString() : undefined,
+          image: rawResponse.info.image?.isRaw ? rawResponse.info.image.asRaw.toUtf8() : undefined,
+          twitter: rawResponse.info.twitter?.isRaw ? rawResponse.info.twitter.asRaw.toUtf8() : undefined,
+        }
+        registration.deposit = rawResponse.deposit.toNumber()
+
+        // Get the sub-identities
+        const subs = await api.query.identity.subsOf(address)
+
+        if (subs) {
+          const subsTuple = subs as unknown as [Balance, Vec<AccountId32>]
+          const [deposit, subAccounts] = subsTuple
+
+          registration.subIdentities = {
+            subAccounts: subAccounts.toHuman() as string[],
+            deposit: deposit.toNumber(),
+          }
+        }
+      }
+    }
+
+    return registration
+  } catch (error) {
+    console.error('Error fetching identity information:', error)
+    return undefined
+  }
 }

@@ -23,19 +23,19 @@ function TransactionDropdown({ transaction }: TransactionDropdownProps) {
         {transaction.hash && (
           <DropdownMenuItem className="gap-2">
             Transaction Hash:
-            <AddressLink value={transaction.hash ?? ''} tooltipText={transaction.hash} className="break-all" />
+            <AddressLink value={transaction.hash ?? ''} tooltipBody={transaction.hash} className="break-all" />
           </DropdownMenuItem>
         )}
         {transaction.blockHash && (
           <DropdownMenuItem className="gap-2">
             Block Hash:
-            <AddressLink value={transaction.blockHash ?? ''} tooltipText={transaction.blockHash} className="break-all" />
+            <AddressLink value={transaction.blockHash ?? ''} tooltipBody={transaction.blockHash} className="break-all" />
           </DropdownMenuItem>
         )}
         {transaction.blockNumber && (
           <DropdownMenuItem className="gap-2">
             Block Number:
-            <AddressLink value={transaction.blockNumber ?? ''} tooltipText={transaction.blockNumber} className="break-all" />
+            <AddressLink value={transaction.blockNumber ?? ''} tooltipBody={transaction.blockNumber} className="break-all" />
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

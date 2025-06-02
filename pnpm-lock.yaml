@@ -29,6 +29,9 @@ dependencies:
   '@polkadot/api':
     specifier: ^16.1.1
     version: 16.1.1
+  '@polkadot/api-derive':
+    specifier: ^16.1.1
+    version: 16.1.1
   '@polkadot/keyring':
     specifier: ^13.4.3
     version: 13.5.1(@polkadot/util-crypto@13.5.1)(@polkadot/util@13.5.1)

@@ -1,20 +1,22 @@
 import { observer } from '@legendapp/state/react'
-import { AlertCircle, Info, TriangleAlert } from 'lucide-react'
+import { AlertCircle, BanknoteArrowDown, Info, KeyRound, LockOpen, Route, Trash2, TriangleAlert, User } from 'lucide-react'
 import { useState } from 'react'
 import type { Collections } from 'state/ledger'
 import type { Address, AddressBalance } from 'state/types/ledger'
 
+import { CustomTooltip, TooltipBody } from '@/components/CustomTooltip'
 import { TableCell, TableRow } from '@/components/ui/table'
-import { SimpleTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { AppId, Token } from '@/config/apps'
-import { cn, formatBalance } from '@/lib/utils'
+import { formatBalance } from '@/lib/utils'
 import { canUnstake, hasNonTransferableBalance, hasStakedBalance, isNativeBalance } from '@/lib/utils/balance'
 
 import { AddressLink } from '@/components/AddressLink'
 import { Spinner } from '@/components/icons'
 import { Button, type ButtonVariant } from '@/components/ui/button'
+import { getIdentityItems } from '@/lib/utils/ui'
 import { BalanceHoverCard, LockedBalanceHoverCard } from './balance-hover-card'
 import DestinationAddressSelect from './destination-address-select'
+import RemoveIdentityDialog from './remove-identity-dialog'
 import UnstakeDialog from './unstake-dialog'
 import WithdrawDialog from './withdraw-dialog'
 
@@ -37,7 +39,8 @@ interface Action {
   tooltip?: string
   onClick: () => void
   disabled: boolean
-  variant: ButtonVariant
+  icon?: React.ReactNode
+  variant?: ButtonVariant
 }
 
 const SynchronizedAccountRow = observer(
@@ -55,6 +58,7 @@ const SynchronizedAccountRow = observer(
   }: AccountBalanceRowProps) => {
     const [unstakeOpen, setUnstakeOpen] = useState<boolean>(false)
     const [withdrawOpen, setWithdrawOpen] = useState<boolean>(false)
+    const [removeIdentityOpen, setRemoveIdentityOpen] = useState<boolean>(false)
     const isNoBalance: boolean = balance === undefined
     const isFirst: boolean = balanceIndex === 0 || isNoBalance
     const isNative = isNativeBalance(balance)
@@ -68,21 +72,36 @@ const SynchronizedAccountRow = observer(
     if (hasStaked) {
       actions.push({
         label: 'Unstake',
-        tooltip: !isUnstakeAvailable ? 'Only the controller address can unstake this balance' : undefined,
+        tooltip: !isUnstakeAvailable ? 'Only the controller address can unstake this balance' : 'Unlock your staked assets',
         onClick: () => setUnstakeOpen(true),
         disabled: !isUnstakeAvailable,
-        variant: 'secondary',
+        icon: <LockOpen className="h-4 w-4" />,
       })
     }
     const canWithdraw: boolean = isNative ? (balance?.balance.staking?.unlocking?.some(u => u.canWithdraw) ?? false) : false
     if (canWithdraw) {
       actions.push({
         label: 'Withdraw',
-        tooltip: 'Withdraw the balance',
+        tooltip: 'Move your unlocked assets to your available balance',
         onClick: () => setWithdrawOpen(true),
         disabled: false,
-        variant: 'outline',
+        icon: <BanknoteArrowDown className="h-4 w-4" />,
       })
+    }
+
+    if (account.registration?.identity) {
+      const identityItems = getIdentityItems(account.registration)
+      if (identityItems.length > 0) {
+        actions.push({
+          label: 'Identity',
+          tooltip: account.registration?.canRemove
+            ? 'Remove account identity'
+            : 'Account identity cannot be removed because it has a parent account',
+          onClick: () => setRemoveIdentityOpen(true),
+          disabled: !account.registration?.canRemove,
+          icon: <Trash2 className="h-4 w-4" />,
+        })
+      }
     }
 
     const renderStatusIcon = (account: Address): React.ReactNode | null => {
@@ -94,7 +113,7 @@ const SynchronizedAccountRow = observer(
         tooltipContent = 'Loading...'
       }
 
-      return statusIcon ? <SimpleTooltip tooltipText={tooltipContent}>{statusIcon}</SimpleTooltip> : null
+      return statusIcon ? <CustomTooltip tooltipBody={tooltipContent}>{statusIcon}</CustomTooltip> : null
     }
 
     const renderLockedBalance = (balance: AddressBalance): React.ReactNode | null => {
@@ -108,11 +127,11 @@ const SynchronizedAccountRow = observer(
         <div className="flex flex-row items-center justify-end gap-2">
           <LockedBalanceHoverCard balance={isNative ? balance?.balance : undefined} token={token} />
           {hasNonTransferableBalanceWith && (
-            <SimpleTooltip
-              tooltipText={`Not all balance is transferable${actions.length > 0 ? ' - see available actions at the end of the row' : ''}`}
+            <CustomTooltip
+              tooltipBody={`Not all balance is transferable${actions.length > 0 ? ' - see available actions at the end of the row' : ''}`}
             >
               <TriangleAlert className="h-4 w-4 text-red-500" />
-            </SimpleTooltip>
+            </CustomTooltip>
           )}
         </div>
       )
@@ -131,32 +150,36 @@ const SynchronizedAccountRow = observer(
     }
 
     const tooltipAddres = (): React.ReactNode => (
-      <div className="flex flex-col p-2 min-w-[320px]">
-        {(
-          [
-            { label: 'Source Address', value: account.address },
-            { label: 'Derivation Path', value: account.path },
-            { label: 'Public Key', value: account.pubKey },
-          ] as { label: string; value: string }[]
-        ).map(item => (
-          <div key={item.label}>
-            <span className="text-xs text-muted-foreground">{item.label}</span>
-            <AddressLink value={item.value} disableTooltip truncate={false} className="break-all" />
-          </div>
-        ))}
+      <div className="p-2 min-w-[320px]">
+        <TooltipBody
+          items={[
+            { label: 'Source Address', value: account.address, icon: User, hasCopyButton: true },
+            { label: 'Derivation Path', value: account.path, icon: Route },
+            { label: 'Public Key', value: account.pubKey, icon: KeyRound, hasCopyButton: true },
+          ]}
+        />
       </div>
     )
 
+    const tooltipIdentity = (): React.ReactNode => {
+      if (!account.registration?.identity) return null
+      return (
+        <div className="p-2 min-w-[240px]">
+          <TooltipBody items={getIdentityItems(account.registration)} />
+        </div>
+      )
+    }
     const renderAction = (action: Action): React.ReactNode => {
       const button = (
-        <Button key={action.label} variant={action.variant} size="sm" onClick={action.onClick} disabled={action.disabled}>
+        <Button key={action.label} variant={action.variant ?? 'secondary'} size="sm" onClick={action.onClick} disabled={action.disabled}>
+          {action.icon}
           {action.label}
         </Button>
       )
       return action.tooltip ? (
-        <SimpleTooltip tooltipText={action.tooltip} key={action.label}>
+        <CustomTooltip tooltipBody={action.tooltip} key={action.label}>
           <div className="inline-block">{button}</div>
-        </SimpleTooltip>
+        </CustomTooltip>
       ) : (
         button
       )
@@ -169,16 +192,16 @@ const SynchronizedAccountRow = observer(
           <TableCell className="py-2 text-sm" rowSpan={rowSpan}>
             <div className="flex items-center gap-2">
               <AddressLink value={account.address ?? ''} disableTooltip className="break-all" />
-              <TooltipProvider>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent side="top" align="center" className={cn('z-[100] break-words whitespace-normal')} sideOffset={5}>
-                    {tooltipAddres()}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              {/* Identity Icon and Tooltip */}
+              {account.registration?.identity ? (
+                <CustomTooltip tooltipBody={tooltipIdentity()}>
+                  <User className="h-4 w-4 text-muted-foreground" />
+                </CustomTooltip>
+              ) : null}
+              {/* Address Info Icon and Tooltip */}
+              <CustomTooltip tooltipBody={tooltipAddres()}>
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </CustomTooltip>
             </div>
           </TableCell>
         )}
@@ -207,9 +230,9 @@ const SynchronizedAccountRow = observer(
         <TableCell>
           <div className="flex gap-2 justify-end items-center">
             {account.error?.description && (
-              <SimpleTooltip tooltipText={account.error?.description ?? ''}>
+              <CustomTooltip tooltipBody={account.error?.description ?? ''}>
                 <AlertCircle className="h-4 w-4 text-destructive cursor-help" />
-              </SimpleTooltip>
+              </CustomTooltip>
             )}
             {renderStatusIcon(account)}
           </div>
@@ -220,6 +243,7 @@ const SynchronizedAccountRow = observer(
         </TableCell>
         <UnstakeDialog open={unstakeOpen} setOpen={setUnstakeOpen} maxUnstake={maxUnstake} token={token} account={account} appId={appId} />
         <WithdrawDialog open={withdrawOpen} setOpen={setWithdrawOpen} token={token} account={account} appId={appId} />
+        <RemoveIdentityDialog open={removeIdentityOpen} setOpen={setRemoveIdentityOpen} token={token} account={account} appId={appId} />
       </TableRow>
     )
   }

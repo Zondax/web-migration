@@ -1,6 +1,7 @@
-import { TransactionStatus } from '@/state/types/ledger'
-import { AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { type Registration, TransactionStatus } from '@/state/types/ledger'
+import { AlertCircle, AtSign, CheckCircle, Clock, Globe, Mail, Twitter, User, Users, XCircle } from 'lucide-react'
 
+import type { TooltipItem } from '@/components/CustomTooltip'
 import { Spinner } from '@/components/icons'
 
 /**
@@ -87,4 +88,55 @@ export const validateNumberInput = (value: string, max: number): { valid: boolea
     return { valid: false, helperText: `Amount cannot exceed your staked balance (${max}).` }
   }
   return { valid: true, helperText: '' }
+}
+
+/**
+ * Returns an array of identity items for display from a Registration object.
+ * Each item contains a label, value, icon, and optional href.
+ */
+export function getIdentityItems(registration: Registration | undefined): TooltipItem[] {
+  if (!registration?.identity) return []
+  const identity = registration.identity
+  const items = [
+    {
+      label: 'Parent account',
+      value: identity.parent,
+      icon: Users,
+      hasCopyButton: true,
+    },
+    {
+      label: 'Parent legal name',
+      value: identity.displayParent,
+      icon: AtSign,
+    },
+    {
+      label: 'Display name',
+      value: identity.display,
+      icon: User,
+    },
+    {
+      label: 'Legal name',
+      value: identity.legal,
+      icon: AtSign,
+    },
+    {
+      label: 'Website',
+      value: identity.web,
+      icon: Globe,
+      href: identity.web,
+    },
+    {
+      label: 'Email',
+      value: identity.email,
+      icon: Mail,
+      href: identity.email ? `mailto:${identity.email}` : undefined,
+    },
+    {
+      label: 'Twitter',
+      value: identity.twitter,
+      icon: Twitter,
+      href: identity.twitter,
+    },
+  ]
+  return items.filter(item => item.value !== undefined) as TooltipItem[]
 }

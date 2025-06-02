@@ -25,7 +25,7 @@ function DestinationAddressSelect({ balance, index, polkadotAddresses, onDestina
         <SelectValue>
           <AddressLink
             value={destinationAddress || ''}
-            tooltipText={destinationAddress || ''}
+            tooltipBody={destinationAddress || ''}
             className="break-all"
             hasCopyButton={false}
           />

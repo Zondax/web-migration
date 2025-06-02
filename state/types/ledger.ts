@@ -96,6 +96,7 @@ export interface Address extends GenericeResponseAddress {
     description: string
   }
   path: string
+  registration?: Registration
 }
 
 /**
@@ -172,4 +173,28 @@ export interface Native {
   total: number // free + reserved
   transferable: number // free - frozen
   staking?: Staking
+}
+
+export interface IdentityInfo {
+  display?: string
+  displayParent?: string
+  parent?: string
+  legal?: string
+  web?: string
+  email?: string
+  pgpFingerprint?: string
+  image?: string
+  twitter?: string
+}
+
+export interface SubIdentities {
+  deposit?: number
+  subAccounts?: string[]
+}
+
+export interface Registration {
+  deposit?: number
+  identity?: IdentityInfo
+  subIdentities?: SubIdentities // review the type
+  canRemove: boolean
 }

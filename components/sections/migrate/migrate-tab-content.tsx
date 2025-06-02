@@ -9,10 +9,10 @@ import type { Address } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
 import { AddressLink } from '@/components/AddressLink'
+import { CustomTooltip } from '@/components/CustomTooltip'
 import { useMigration } from '@/components/hooks/useMigration'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { SimpleTooltip } from '@/components/ui/tooltip'
 import { hasBalance } from '@/lib/utils'
 import { muifyHtml } from '@/lib/utils/html'
 import { getTransactionStatus } from '@/lib/utils/ui'
@@ -46,7 +46,7 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
 
     const { statusIcon, statusMessage } = getTransactionStatus(txStatus, txStatusMessage)
 
-    return statusMessage ? <SimpleTooltip tooltipText={statusMessage}>{statusIcon}</SimpleTooltip> : statusIcon
+    return statusMessage ? <CustomTooltip tooltipBody={statusMessage}>{statusIcon}</CustomTooltip> : statusIcon
   }
 
   // Render a row for each account in the app
@@ -63,7 +63,7 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
                 </div>
               </TableCell>
               <TableCell>
-                <AddressLink value={account.address} className="font-mono" tooltipText={`${account.address} - ${account.path}`} />
+                <AddressLink value={account.address} className="font-mono" tooltipBody={`${account.address} - ${account.path}`} />
               </TableCell>
               <TableCell>
                 <AddressLink value={account.pubKey} className="font-mono" />
@@ -142,12 +142,12 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
             <TableHead>Destination Address</TableHead>
             <TableHead className="flex items-center">
               Balance
-              <SimpleTooltip
-                tooltipText="Balance to be transferred. The transaction fee will be deducted from this amount."
+              <CustomTooltip
+                tooltipBody="Balance to be transferred. The transaction fee will be deducted from this amount."
                 className="!normal-case font-normal"
               >
                 <Info className="h-4 w-4 inline-block ml-1 text-gray-400" />
-              </SimpleTooltip>
+              </CustomTooltip>
             </TableHead>
             <TableHead>Status</TableHead>
           </TableRow>

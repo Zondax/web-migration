@@ -3,10 +3,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import type { ApiPromise, WsProvider } from '@polkadot/api'
-import type { Option, u32 } from '@polkadot/types-codec'
-import type { AccountId32, StakingLedger } from '@polkadot/types/interfaces'
+import type { Option, u32, Vec } from '@polkadot/types-codec'
+import type { AccountId32, Balance, Registration, StakingLedger } from '@polkadot/types/interfaces'
 import { disconnectSafely, getApiAndProvider } from '../account'
-import { KUSAMA_ASSET_HUB_RPC, KUSAMA_RPC, TEST_ADDRESSES } from './utils/__mocks__/mockData'
+import { KUSAMA_ASSET_HUB_RPC, KUSAMA_PEOPLE_RPC, KUSAMA_RPC, TEST_ADDRESSES } from './utils/__mocks__/mockData'
 
 describe('Account Integration', () => {
   // Shared connections for each endpoint
@@ -18,17 +18,29 @@ describe('Account Integration', () => {
   let assetHubProvider: WsProvider | undefined
   let assetHubError: string | undefined
 
+  let peopleApi: ApiPromise | undefined
+  let peopleProvider: WsProvider | undefined
+  let peopleError: string | undefined
+
   beforeAll(async () => {
-    // Connect to KUSAMA_RPC
-    const result = await getApiAndProvider(KUSAMA_RPC)
+    // Connect to all endpoints in parallel for faster setup
+    const [result, assetHubResult, peopleResult] = await Promise.all([
+      getApiAndProvider(KUSAMA_RPC),
+      getApiAndProvider(KUSAMA_ASSET_HUB_RPC),
+      getApiAndProvider(KUSAMA_PEOPLE_RPC),
+    ])
+
     api = result.api
     provider = result.provider
     error = result.error
-    // Connect to KUSAMA_ASSET_HUB_RPC
-    const assetHubResult = await getApiAndProvider(KUSAMA_ASSET_HUB_RPC)
+
     assetHubApi = assetHubResult.api
     assetHubProvider = assetHubResult.provider
     assetHubError = assetHubResult.error
+
+    peopleApi = peopleResult.api
+    peopleProvider = peopleResult.provider
+    peopleError = peopleResult.error
   })
 
   afterAll(async () => {
@@ -37,6 +49,9 @@ describe('Account Integration', () => {
     }
     if (assetHubApi && assetHubProvider) {
       await disconnectSafely(assetHubApi, assetHubProvider)
+    }
+    if (peopleApi && peopleProvider) {
+      await disconnectSafely(peopleApi, peopleProvider)
     }
   })
 
@@ -202,6 +217,99 @@ describe('Account Integration', () => {
         expect(typeof eraValue.toString()).toBe('string')
         expect(!Number.isNaN(Number(eraValue.toString()))).toBe(true)
       }
+    })
+  })
+
+  // Used in: prepareRemoveIdentityTransaction
+  describe('api.tx.identity.killIdentity', () => {
+    it('should create a valid remove identity extrinsic for ADDRESS10', async () => {
+      if (!peopleApi || !peopleProvider || peopleError) {
+        throw new Error('Failed to initialize API', { cause: peopleError })
+      }
+      const address = TEST_ADDRESSES.ADDRESS10
+      const extrinsic = peopleApi.tx.identity.killIdentity(address)
+
+      // Check that the extrinsic is of the correct type: SubmittableExtrinsic<'promise', ISubmittableResult>
+      expect(typeof extrinsic.send).toBe('function')
+      expect(typeof extrinsic.addSignature).toBe('function')
+      expect(extrinsic.method).toBeDefined()
+      expect(extrinsic.args[0].toString()).toBe(address)
+
+      // Check that method.toHex returns a string starting with '0x'
+      expect(typeof extrinsic.method.toHex()).toBe('string')
+      expect(extrinsic.method.toHex().startsWith('0x')).toBe(true)
+    })
+  })
+
+  // Used in: getIdentityInfo
+  describe('api.derive.accounts.identity', () => {
+    it('should return derived identity info for ADDRESS10 and ADDRESS11', async () => {
+      if (!peopleApi || !peopleProvider || peopleError) {
+        throw new Error('Failed to initialize API', { cause: peopleError })
+      }
+      const addresses = [TEST_ADDRESSES.ADDRESS11, TEST_ADDRESSES.ADDRESS10]
+      for (const address of addresses) {
+        const derived = await peopleApi.derive.accounts.identity(address)
+        expect(derived).toBeDefined()
+        // Should have display and displayParent (may be undefined)
+        expect(derived).toHaveProperty('display')
+        expect('displayParent' in derived).toBe(true)
+        // If identity has a parent, it should have the function toHuman()
+        if (derived.parent !== undefined && derived.parent !== null) {
+          expect(typeof derived.parent.toHuman).toBe('function')
+        }
+        // if displayParent is present, it should be a string
+        if (derived.displayParent !== undefined && derived.displayParent !== null) {
+          expect(typeof derived.displayParent).toBe('string')
+        }
+      }
+    })
+  })
+
+  // Used in: getIdentityInfo
+  describe('api.query.identity.identityOf', () => {
+    it('should return Option<Registration> for ADDRESS11', async () => {
+      if (!peopleApi || !peopleProvider || peopleError) {
+        throw new Error('Failed to initialize API', { cause: peopleError })
+      }
+      const address = TEST_ADDRESSES.ADDRESS11
+      const option = (await peopleApi.query.identity.identityOf(address)) as Option<Registration>
+      expect(option).toBeDefined()
+      expect(option).toHaveProperty('isNone')
+      expect(option).toHaveProperty('isSome')
+      expect(typeof option.unwrap).toBe('function')
+      expect(typeof option.isNone).toBe('boolean')
+      expect(typeof option.isSome).toBe('boolean')
+      if (option.isSome) {
+        const registration = option.unwrap()
+        expect(registration).toHaveProperty('info')
+        expect(registration).toHaveProperty('deposit')
+        expect(registration.info).toHaveProperty('display')
+        expect(registration.info).toHaveProperty('legal')
+        expect(registration.info).toHaveProperty('web')
+        expect(registration.info).toHaveProperty('email')
+        expect(registration.info).toHaveProperty('image')
+      } else {
+        console.warn('The result of api.query.identity.identityOf could not be tested because the address has no identity')
+      }
+    })
+  })
+
+  // Used in: getIdentityInfo
+  describe('api.query.identity.subsOf', () => {
+    it('should return a tuple [deposit, subAccounts] for ADDRESS10', async () => {
+      if (!peopleApi || !peopleProvider || peopleError) {
+        throw new Error('Failed to initialize API', { cause: peopleError })
+      }
+      const address = TEST_ADDRESSES.ADDRESS10
+      const subs = (await peopleApi.query.identity.subsOf(address)) as unknown as [Balance, Vec<AccountId32>]
+      expect(subs).toBeDefined()
+      // Should be a tuple [deposit, subAccounts]
+      expect(Array.isArray(subs)).toBe(true)
+      expect(subs.length).toBe(2)
+      const [deposit, subAccounts] = subs
+      expect(typeof deposit.toString()).toBe('string')
+      expect(Array.isArray(subAccounts.toHuman())).toBe(true)
     })
   })
 })

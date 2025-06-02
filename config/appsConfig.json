@@ -236,7 +236,8 @@
     "token": {
       "symbol": "KSM",
       "decimals": 12
-    }
+    },
+    "peopleRpcEndpoint": "wss://people-kusama.api.onfinality.io/public-ws"
   },
   {
     "id": "matrixchain",
