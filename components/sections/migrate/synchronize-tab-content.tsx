@@ -113,7 +113,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
 
       {/* Show apps scanning status */}
       <div className="space-y-2 mb-8">
-        {isLoading ? (
+        {isLoading && (
           <>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">
@@ -126,21 +126,20 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
               <AppScanningGrid />
             </div>
           </>
-        ) : undefined}
+        )}
       </div>
 
-      {!isLoading ? (
-        isSynchronized && appsWithoutErrors.length ? (
+      {!isLoading &&
+        (isSynchronized && appsWithoutErrors.length ? (
           appsWithoutErrors.map(app => <AppRow key={app.id.toString()} app={observable(app)} />)
         ) : (
           <EmptyStateRow
             label={isSynchronized ? 'No accounts to migrate' : 'No synchronized accounts'}
             icon={<FolderSync className="h-8 w-8 text-gray-300" />}
           />
-        )
-      ) : undefined}
+        ))}
 
-      {isSynchronized && accountsWithErrors ? (
+      {isSynchronized && accountsWithErrors && (
         <>
           <div className="flex justify-between items-start gap-2 mb-6 mt-6">
             <div>
@@ -158,7 +157,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
             <AppRow key={app.id.toString()} app={observable(app)} failedSync />
           ))}
         </>
-      ) : undefined}
+      )}
     </div>
   )
 }
