@@ -172,7 +172,6 @@ This project provides a flexible configuration system for adding custom blockcha
    {
      "id": "your-chain-id",
      "name": "Your Chain Name",
-     "cla": 123,
      "bip44Path": "m/44'/123'/0'/0'/0'",
      "ss58Prefix": 42,
      "rpcEndpoint": "wss://rpc.yourchain.network",

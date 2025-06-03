@@ -389,7 +389,6 @@ export const mockAppsExtended = [...mockApps, mockAppMixedErrorTypes, mockAppNoA
 export const mockAppConfig: AppConfig = {
   id: 'test',
   name: 'TestApp',
-  cla: 1234,
   bip44Path: "m/44'/354'/0'/0/0",
   ss58Prefix: 42,
   token: { decimals: 12, symbol: 'UNIT' },
