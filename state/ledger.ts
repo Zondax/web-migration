@@ -72,6 +72,7 @@ interface LedgerState {
       total: number
       percentage: number
     }
+    isSyncCancelRequested: boolean
     migrationResult: {
       [key in MigrationResultKey]: number
     }
@@ -95,6 +96,7 @@ const initialLedgerState: LedgerState = {
       total: 0,
       percentage: 0,
     },
+    isSyncCancelRequested: false,
     migrationResult: {
       success: 0,
       fails: 0,
@@ -277,6 +279,7 @@ export const ledgerState$ = observable({
         total: 0,
         percentage: 0,
       },
+      isSyncCancelRequested: false,
       migrationResult: {
         success: 0,
         fails: 0,
@@ -284,6 +287,18 @@ export const ledgerState$ = observable({
       },
     })
     ledgerState$.polkadotAddresses.set({})
+  },
+
+  // Add cancelSynchronization method before the fetchAndProcessAccountsForApp method
+  cancelSynchronization() {
+    ledgerState$.apps.isSyncCancelRequested.set(true)
+    ledgerState$.apps.status.set(undefined)
+    notifications$.push({
+      title: 'Synchronization Cancelled',
+      description: 'The synchronization process has been cancelled.',
+      type: 'info',
+      autoHideDuration: 5000,
+    })
   },
 
   // Fetch and Process Accounts for a Single App
@@ -614,6 +629,12 @@ export const ledgerState$ = observable({
 
       // request and save the accounts of each app synchronously
       for (const appConfig of appsToSync) {
+        // Check if cancellation is requested
+        if (ledgerState$.apps.isSyncCancelRequested.get()) {
+          ledgerState$.apps.status.set(undefined)
+          return
+        }
+
         if (appConfig) {
           ledgerState$.apps.apps.push({
             id: appConfig.id,
@@ -637,10 +658,17 @@ export const ledgerState$ = observable({
         ledgerState$.apps.syncProgress.percentage.set(progress)
       }
 
+      // Reset cancel flag when synchronization completes successfully
+      ledgerState$.apps.isSyncCancelRequested.set(false)
       ledgerState$.apps.status.set(AppStatus.SYNCHRONIZED)
     } catch (error) {
       handleLedgerError(error as LedgerClientError, InternalErrors.SYNC_ERROR)
       ledgerState$.apps.error.set('Failed to synchronize accounts')
+    } finally {
+      // Ensure we reset the cancel flag even if there was an error
+      if (ledgerState$.apps.isSyncCancelRequested.get()) {
+        ledgerState$.apps.isSyncCancelRequested.set(false)
+      }
     }
   },
 
@@ -731,7 +759,13 @@ export const ledgerState$ = observable({
     }
   },
 
-  async verifyDestinationAddresses(appId: AppId, address: string, path: string): Promise<{ isVerified: boolean }> {
+  async verifyDestinationAddresses(
+    appId: AppId,
+    address: string,
+    path: string
+  ): Promise<{
+    isVerified: boolean
+  }> {
     const appConfig = appsConfigs.get(appId)
     if (!appConfig) {
       console.error(`App with id ${appId} not found.`)
@@ -763,7 +797,15 @@ export const ledgerState$ = observable({
   },
 
   // Migrate Single Account
-  async migrateAccount(appId: AppId, accountIndex: number): Promise<{ txPromises: Promise<void>[] | undefined } | undefined> {
+  async migrateAccount(
+    appId: AppId,
+    accountIndex: number
+  ): Promise<
+    | {
+        txPromises: Promise<void>[] | undefined
+      }
+    | undefined
+  > {
     const apps = ledgerState$.apps.apps.get()
     const app = apps.find(app => app.id === appId)
     const account = app?.accounts?.[accountIndex]
@@ -813,7 +855,12 @@ export const ledgerState$ = observable({
     account: Address,
     path: string,
     balanceIndex: number
-  ): Promise<{ txPromise: Promise<void> | undefined } | undefined> {
+  ): Promise<
+    | {
+        txPromise: Promise<void> | undefined
+      }
+    | undefined
+  > {
     const balance = account.balances?.[balanceIndex]
     if (!balance) {
       console.warn(`Balance at index ${balanceIndex} not found for account ${account.address} in app ${appId}`)
