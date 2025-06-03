@@ -414,7 +414,14 @@ export const ledgerState$ = observable({
         autoHideDuration: 5000,
       })
 
-      return undefined // No accounts after filtering
+      // No accounts after filtering
+      return {
+        name: app.name,
+        id: app.id,
+        token: app.token,
+        status: AppStatus.SYNCHRONIZED,
+        accounts: [],
+      }
     } catch (error) {
       console.debug('Error fetching and processing accounts for app:', app.id)
       return {
@@ -440,6 +447,8 @@ export const ledgerState$ = observable({
     }
 
     try {
+      updateApp(appId, { status: AppStatus.LOADING, error: undefined })
+
       const app = await ledgerState$.fetchAndProcessAccountsForApp(appConfig)
       if (app) {
         updateApp(appId, app)
@@ -580,10 +589,18 @@ export const ledgerState$ = observable({
       // request and save the accounts of each app synchronously
       for (const appConfig of appsToSync) {
         if (appConfig) {
+          ledgerState$.apps.apps.push({
+            id: appConfig.id,
+            name: appConfig.name,
+            token: appConfig.token,
+            status: AppStatus.LOADING,
+            error: undefined,
+          })
+
           // Comment it later
           const app = await ledgerState$.fetchAndProcessAccountsForApp(appConfig)
           if (app) {
-            ledgerState$.apps.apps.push(app)
+            updateApp(appConfig.id, app)
           }
         }
 

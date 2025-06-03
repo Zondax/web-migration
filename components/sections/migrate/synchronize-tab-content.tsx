@@ -10,8 +10,10 @@ import { useSynchronization } from '@/components/hooks/useSynchronization'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { type AppConfig, type AppId, appsConfigs } from '@/config/apps'
 import { cn } from '@/lib/utils'
 
+import AppScanningGrid from './app-scanning-grid'
 import EmptyStateRow from './empty-state-row'
 import AppRow from './synchronized-app'
 
@@ -109,26 +111,35 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
       </div>
       <div className="hidden md:block mb-4">{renderDestinationAddressesInfo()}</div>
 
-      {isLoading && (
-        <div className="space-y-2 mb-8">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Synchronizing apps</span>
-            <span className="text-sm text-gray-600">{syncProgress}%</span>
-          </div>
-          <Progress value={syncProgress} />
-        </div>
-      )}
+      {/* Show apps scanning status */}
+      <div className="space-y-2 mb-8">
+        {isLoading ? (
+          <>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Synchronizing apps</span>
+              <span className="text-sm text-gray-600">{syncProgress}%</span>
+            </div>
+            <Progress value={syncProgress} />
+            <div className="mt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">{isLoading ? 'Scanning apps status' : 'Available apps'}</h3>
+              <AppScanningGrid />
+            </div>
+          </>
+        ) : undefined}
+      </div>
 
-      {isSynchronized && appsWithoutErrors.length ? (
-        appsWithoutErrors.map(app => <AppRow key={app.id.toString()} app={observable(app)} />)
-      ) : (
-        <EmptyStateRow
-          label={isSynchronized ? 'No accounts to migrate' : 'No synchronized accounts'}
-          icon={<FolderSync className="h-8 w-8 text-gray-300" />}
-        />
-      )}
+      {!isLoading ? (
+        isSynchronized && appsWithoutErrors.length ? (
+          appsWithoutErrors.map(app => <AppRow key={app.id.toString()} app={observable(app)} />)
+        ) : (
+          <EmptyStateRow
+            label={isSynchronized ? 'No accounts to migrate' : 'No synchronized accounts'}
+            icon={<FolderSync className="h-8 w-8 text-gray-300" />}
+          />
+        )
+      ) : undefined}
 
-      {accountsWithErrors && (
+      {isSynchronized && accountsWithErrors ? (
         <>
           <div className="flex justify-between items-start gap-2 mb-6 mt-6">
             <div>
@@ -146,7 +157,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
             <AppRow key={app.id.toString()} app={observable(app)} failedSync />
           ))}
         </>
-      )}
+      ) : undefined}
     </div>
   )
 }
