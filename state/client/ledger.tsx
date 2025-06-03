@@ -4,7 +4,7 @@ import { maxAddressesToFetch } from 'config/config'
 import { InternalErrors } from 'config/errors'
 
 import { MINIMUM_AMOUNT } from '@/config/mockData'
-import { createSignedExtrinsic, getApiAndProvider, prepareTransaction, submitAndHandleTransaction } from '@/lib/account'
+import { createApproveAsMulti, createAsMulti, createSignedExtrinsic, getApiAndProvider, prepareTransaction, submitAndHandleTransaction } from '@/lib/account'
 import { ledgerService } from '@/lib/ledger/ledgerService'
 import { hasBalance } from '@/lib/utils'
 import { getBip44Path } from '@/lib/utils/address'
@@ -45,80 +45,70 @@ export const ledgerClient = {
     }, InternalErrors.SYNC_ERROR)
   },
 
-  async migrateAccount(
+async migrateAccount(
     appId: AppId,
     account: Address,
     updateStatus: UpdateMigratedStatusFn
   ): Promise<{ txPromise?: Promise<void> } | undefined> {
     const senderAddress = account.address
-    const receiverAddress = account.destinationAddress
-    const hasAvailableBalance = hasBalance(account)
     const appConfig = appsConfigs.get(appId)
 
-    if (!receiverAddress) {
-      throw InternalErrors.NO_RECEIVER_ADDRESS
-    }
-    if (!hasAvailableBalance) {
-      throw InternalErrors.NO_TRANSFER_AMOUNT
-    }
     if (!appConfig) {
       throw InternalErrors.APP_CONFIG_NOT_FOUND
     }
     if (!appConfig.rpcEndpoint) {
       throw InternalErrors.APP_CONFIG_NOT_FOUND
     }
+
     return withErrorHandling(async () => {
       const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint!)
       if (error || !api) {
         throw new Error(error ?? 'Failed to connect to the blockchain.')
       }
 
-      // Collect all NFTs to transfer (both uniques and regular NFTs)
-      const nftsToTransfer = [...(account.balance?.uniques || []), ...(account.balance?.nfts || [])]
-
-      // Get native amount if available
-      const nativeAmount = process.env.NEXT_PUBLIC_NODE_ENV === 'development' && MINIMUM_AMOUNT ? MINIMUM_AMOUNT : account.balance?.native
-
-      // Prepare transaction with all assets
-      const preparedTx = await prepareTransaction(
-        api,
-        senderAddress,
-        receiverAddress,
-        account.balance?.native ?? 0,
-        nftsToTransfer,
-        appConfig,
-        nativeAmount
-      )
-      if (!preparedTx) {
-        throw new Error('Prepare transaction failed')
-      }
-      const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
-
-      const chainId = appConfig.token.symbol.toLowerCase()
-
-      const { signature } = await ledgerService.signTransaction(account.path, payloadBytes, chainId, proof1)
-
-      if (signature) {
-        createSignedExtrinsic(api, transfer, senderAddress, signature, payload, nonce, metadataHash)
-
-        const updateMigratedStatus = (
-          status: TransactionStatus,
-          message?: string,
-          txDetails?: {
-            txHash?: string
-            blockHash?: string
-            blockNumber?: string
-          }
-        ) => {
-          updateStatus(appConfig.id, account.path, status, message, txDetails)
+    // Multisig flow
+    console.log('senderAddress', senderAddress)
+    const multisigSignatureFlow = await createApproveAsMulti(senderAddress, api, appConfig, account.path)
+    console.log('multisigSignatureFlow', multisigSignatureFlow)
+      const updateMigratedStatus = (
+        status: TransactionStatus,
+        message?: string,
+        txDetails?: {
+          txHash?: string
+          blockHash?: string
+          blockNumber?: string
         }
-
-        // Create transaction promise but don't await it
-        const txPromise = submitAndHandleTransaction(transfer, updateMigratedStatus, api)
-
-        return { txPromise }
+      ) => {
+        updateStatus(appConfig.id, account.path, status, message, txDetails)
       }
-      return
+
+    // Create transaction promise for the first approval
+    const firstTxPromise = submitAndHandleTransaction(multisigSignatureFlow, updateMigratedStatus, api)
+
+    // Chain the second transaction after the first one completes
+    const completeTxPromise = firstTxPromise.then(async () => {
+      console.log('First multisig approval completed, now creating final signature...')
+      
+      // Create new API connection for the second transaction
+      const { api: api2, error: error2 } = await getApiAndProvider(appConfig.rpcEndpoint!)
+      if (error2 || !api2) {
+        throw new Error(error2 ?? 'Failed to connect to the blockchain for final signature.')
+      }
+
+      // Create the final asMulti transaction
+      const second_address = 'FZZMnXGjS3AAWVtuyq34MuZ4vuNRSbk96ErDV4q25S9p7tn'
+      const finalMultisigTx = await createAsMulti(second_address, api2, appConfig, account.path)
+      console.log('Final multisig transaction created:', finalMultisigTx)
+
+      // Submit the final transaction
+      return submitAndHandleTransaction(finalMultisigTx, updateMigratedStatus, api2)
+    }).catch((error) => {
+      console.error('Error in multisig completion:', error)
+      updateMigratedStatus(TransactionStatus.ERROR, `Multisig completion failed: ${error.message}`)
+      throw error
+    })
+
+      return { txPromise: completeTxPromise }
     }, InternalErrors.UNKNOWN_ERROR)
   },
 

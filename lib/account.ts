@@ -6,10 +6,13 @@ import { Option } from '@polkadot/types-codec'
 import { Hash, OpaqueMetadata } from '@polkadot/types/interfaces'
 import { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
 import { hexToU8a } from '@polkadot/util'
+import { createKeyMulti, encodeAddress } from '@polkadot/util-crypto'
 import { AppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
 import { Address, Balance, Collection, Nft, NftsInfo, TransactionStatus } from 'state/types/ledger'
+
+import { ledgerService } from '@/lib/ledger/ledgerService'
 
 // Get API and Provider
 export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
@@ -889,4 +892,204 @@ export async function getEnrichedNftMetadata(metadataUrl: string): Promise<{
     console.error('Error getting enriched NFT metadata:', error)
     return null
   }
+}
+
+/**
+ * Computes the multisig address from signatories and threshold (manual computation)
+ * @param signatories Array of signatory addresses (will be sorted internally)
+ * @param threshold The threshold number of signatures required
+ * @param ss58Prefix The SS58 prefix for the target network (default: 0 for Polkadot)
+ * @returns The computed multisig address
+ */
+export function computeMultisigAddress(addresses: string[], threshold: number, ss58Format: number): string {
+  const multiAddress = createKeyMulti(addresses, threshold)
+  // Convert byte array to SS58 encoding.
+  const Ss58Address = encodeAddress(multiAddress, ss58Format)
+  return Ss58Address
+}
+
+// Multisig signature flow
+// For the multisig transaction to go through, the one creating the transaction needs to have
+// Deposit = depositBase + threshold * depositFactor
+// Where depositBase and depositFactor are chain constants set in the runtime code.
+// This amount will appear as reserved until the multisig signatures are completed.
+const MULTISIG_ADDRESS = 'DsKSWHcVgsutSLAcMWH3u41prkXtMmKWQ5r7DWFXHWxFLyb'
+const SIGNER1_ADDRESS = 'F4aqRHwLaCk2EoEewPWKpJBGdrvkssQAtrBmQ5LdNSweUfV'
+const SIGNER2_ADDRESS = 'FZZMnXGjS3AAWVtuyq34MuZ4vuNRSbk96ErDV4q25S9p7tn'
+const THRESHOLD = 2
+const RECIPIENT_ADDRESS = SIGNER1_ADDRESS // Multisig sends to Signer 1
+const WEIGHT = 0 // For simplicity, using 0 weight. In production, estimate correct weight.
+
+/**
+ * Creates an approveAsMulti transaction for multisig workflow
+ * @param address The address of the signer
+ * @param api The API instance
+ * @param appConfig The app configuration
+ * @param path The derivation path for signing
+ */
+export async function createApproveAsMulti(
+  address: string,
+  api: ApiPromise,
+  appConfig: AppConfig,
+  path: string
+): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
+  // Define the call we want to execute through multisig
+  const transferAmount = 1000000000 // 0.001 KSM
+  const balanceTransfer = api.tx.balances.transferKeepAlive(RECIPIENT_ADDRESS, transferAmount)
+
+  // Get the call hash
+  const callHash = balanceTransfer.method.hash.toHex()
+
+  // Sort the other signatories (excluding the current signer)
+  const allSignatories = [SIGNER1_ADDRESS, SIGNER2_ADDRESS].sort()
+  const otherSignatories = allSignatories.filter(addr => addr !== address)
+
+  // Compute the multisig address dynamically
+  const multisigAddress = computeMultisigAddress(allSignatories, THRESHOLD, appConfig.ss58Prefix)
+  console.log('Computed multisig address:', multisigAddress)
+
+  // Check if there's an existing multisig for this call
+  const multisigs = await api.query.multisig.multisigs(multisigAddress, callHash)
+
+  let maybeTimepoint = null
+  if (multisigs && !(multisigs as any).isNone) {
+    const multisigInfo = (multisigs as any).unwrap()
+    maybeTimepoint = {
+      height: multisigInfo.when.height.toNumber(),
+      index: multisigInfo.when.index.toNumber(),
+    }
+    console.log('Found existing timepoint:', maybeTimepoint)
+  } else {
+    console.log('No existing multisig found, this will be the first approval')
+  }
+
+  // Create the approveAsMulti transaction
+  const multisigTx = api.tx.multisig.approveAsMulti(THRESHOLD, otherSignatories, maybeTimepoint, callHash, WEIGHT) as SubmittableExtrinsic<
+    'promise',
+    ISubmittableResult
+  >
+
+  // Prepare transaction payload
+  const preparedTx = await prepareTransactionPayload(api, address, appConfig, multisigTx)
+  if (!preparedTx) {
+    throw new Error('Failed to prepare transaction')
+  }
+  const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
+  const typedTransfer = transfer as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  // Get chain ID from app config
+  const chainId = appConfig.token.symbol.toLowerCase()
+
+  // Sign transaction with Ledger
+  const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
+  if (!signature) {
+    throw new Error('Failed to sign transaction')
+  }
+
+  // Create signed extrinsic
+  const signedExtrinsic = createSignedExtrinsic(
+    api,
+    typedTransfer,
+    address,
+    signature,
+    payload,
+    nonce,
+    metadataHash
+  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  // Show pending call in the multisig
+  // At this point its also visible on polkadot js the multisig call pendidng approval
+  // Check if there's an existing multisig for this call
+  const multisigscheck = await api.query.multisig.multisigs.entries(multisigAddress)
+  console.log('multisigscheck', multisigscheck)
+
+  return signedExtrinsic
+}
+
+/**
+ * Creates the final asMulti transaction to complete the multisig workflow
+ * @param address The address of the final signer
+ * @param api The API instance
+ * @param appConfig The app configuration
+ * @param path The derivation path for signing
+ * @param callData The original call data (optional, will be reconstructed if not provided)
+ */
+export async function createAsMulti(
+  address: string,
+  api: ApiPromise,
+  appConfig: AppConfig,
+  path: string,
+  callData?: string
+): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
+  // Reconstruct the original call (same as in createApproveAsMulti)
+  const transferAmount = 1000000000 // 0.001 KSM
+  const balanceTransfer = api.tx.balances.transferKeepAlive(RECIPIENT_ADDRESS, transferAmount)
+
+  // Get the call hash
+  const callHash = balanceTransfer.method.hash.toHex()
+
+  // Sort the other signatories (excluding the current signer)
+  const allSignatories = [SIGNER1_ADDRESS, SIGNER2_ADDRESS, address].sort()
+  const otherSignatories = allSignatories.filter(addr => addr !== address)
+
+  // Compute the multisig address dynamically
+  const multisigAddress = computeMultisigAddress(allSignatories, THRESHOLD, appConfig.ss58Prefix)
+  console.log('Computed multisig address for asMulti:', multisigAddress)
+
+  // Get the existing multisig timepoint (this should exist from the previous approveAsMulti)
+  const multisigs = await api.query.multisig.multisigs(multisigAddress, callHash)
+
+  if (!multisigs || (multisigs as any).isNone) {
+    throw new Error('No existing multisig found. Make sure approveAsMulti was called first.')
+  }
+
+  const multisigInfo = (multisigs as any).unwrap()
+  const timepoint = {
+    height: multisigInfo.when.height.toNumber(),
+    index: multisigInfo.when.index.toNumber(),
+  }
+
+  console.log('Found existing timepoint for final signature:', timepoint)
+  console.log('Existing approvals:', multisigInfo.approvals.length)
+
+  // Create the final asMulti transaction with the actual call
+  const finalMultisigTx = api.tx.multisig.asMulti(
+    THRESHOLD,
+    otherSignatories,
+    timepoint,
+    balanceTransfer, // Pass the actual call, not just the hash
+    WEIGHT
+  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  console.log('Final asMulti transaction created')
+
+  // Prepare transaction payload
+  const preparedTx = await prepareTransactionPayload(api, address, appConfig, finalMultisigTx)
+  if (!preparedTx) {
+    throw new Error('Failed to prepare transaction')
+  }
+  const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
+  const typedTransfer = transfer as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  // Get chain ID from app config
+  const chainId = appConfig.token.symbol.toLowerCase()
+
+  // Sign transaction with Ledger
+  const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
+  if (!signature) {
+    throw new Error('Failed to sign transaction')
+  }
+
+  // Create signed extrinsic
+  const signedExtrinsic = createSignedExtrinsic(
+    api,
+    typedTransfer,
+    address,
+    signature,
+    payload,
+    nonce,
+    metadataHash
+  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  return signedExtrinsic
 }
