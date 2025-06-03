@@ -10,7 +10,11 @@ interface UseSynchronizationReturn {
 
   // State
   status: AppStatus | undefined
-  syncProgress: number
+  syncProgress: {
+    scanned: number
+    total: number
+    percentage: number
+  }
   isLedgerConnected: boolean
   isRescaning: boolean
 

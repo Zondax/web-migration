@@ -91,9 +91,10 @@ const AppScanningGrid = observer(() => {
 
   // Show all available apps (from config), including those still loading
   const allApps: AppConfig[] = Array.from(appsConfigs.values())
+  const appsToSync = allApps.filter(appConfig => appConfig?.rpcEndpoint) as AppConfig[]
 
   // Create display apps with enhanced information
-  const displayApps: App[] = allApps.map(config => {
+  const displayApps: App[] = appsToSync.map(config => {
     const scannedApp = scannedApps.find(app => app.id === config.id)
 
     if (scannedApp) {

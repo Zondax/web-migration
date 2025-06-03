@@ -116,12 +116,13 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
         {isLoading ? (
           <>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Synchronizing apps</span>
-              <span className="text-sm text-gray-600">{syncProgress}%</span>
+              <span className="text-sm text-gray-600">
+                Synchronizing apps {syncProgress.total > 0 && `(${syncProgress.scanned} / ${syncProgress.total})`}
+              </span>
+              <span className="text-sm text-gray-600">{syncProgress.percentage}%</span>
             </div>
-            <Progress value={syncProgress} />
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">{isLoading ? 'Scanning apps status' : 'Available apps'}</h3>
+            <Progress value={syncProgress.percentage} />
+            <div className="pt-2">
               <AppScanningGrid />
             </div>
           </>

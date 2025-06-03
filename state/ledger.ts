@@ -67,7 +67,11 @@ interface LedgerState {
     polkadotApp: App
     status?: AppStatus
     error?: string
-    syncProgress: number
+    syncProgress: {
+      scanned: number
+      total: number
+      percentage: number
+    }
     migrationResult: {
       [key in MigrationResultKey]: number
     }
@@ -86,7 +90,11 @@ const initialLedgerState: LedgerState = {
     polkadotApp: polkadotAppConfig,
     status: undefined,
     error: undefined,
-    syncProgress: 0,
+    syncProgress: {
+      scanned: 0,
+      total: 0,
+      percentage: 0,
+    },
     migrationResult: {
       success: 0,
       fails: 0,
@@ -264,7 +272,11 @@ export const ledgerState$ = observable({
       polkadotApp: polkadotAppConfig,
       status: undefined,
       error: undefined,
-      syncProgress: 0,
+      syncProgress: {
+        scanned: 0,
+        total: 0,
+        percentage: 0,
+      },
       migrationResult: {
         success: 0,
         fails: 0,
@@ -540,7 +552,11 @@ export const ledgerState$ = observable({
     ledgerState$.apps.assign({
       status: AppStatus.LOADING,
       apps: [],
-      syncProgress: 0,
+      syncProgress: {
+        scanned: 0,
+        total: 0,
+        percentage: 0,
+      },
     })
 
     try {
@@ -549,7 +565,11 @@ export const ledgerState$ = observable({
         ledgerState$.apps.assign({
           status: undefined,
           apps: [],
-          syncProgress: 0,
+          syncProgress: {
+            scanned: 0,
+            total: 0,
+            percentage: 0,
+          },
         })
         return
       }
@@ -586,6 +606,12 @@ export const ledgerState$ = observable({
       const totalApps = appsToSync.length
       let syncedApps = 0
 
+      ledgerState$.apps.syncProgress.set({
+        scanned: syncedApps,
+        total: totalApps,
+        percentage: 0,
+      })
+
       // request and save the accounts of each app synchronously
       for (const appConfig of appsToSync) {
         if (appConfig) {
@@ -607,7 +633,8 @@ export const ledgerState$ = observable({
         // Update sync progress
         syncedApps++
         const progress = Math.round((syncedApps / totalApps) * 100)
-        ledgerState$.apps.syncProgress.set(progress)
+        ledgerState$.apps.syncProgress.scanned.set(syncedApps)
+        ledgerState$.apps.syncProgress.percentage.set(progress)
       }
 
       ledgerState$.apps.status.set(AppStatus.SYNCHRONIZED)
