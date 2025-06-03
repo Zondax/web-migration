@@ -229,8 +229,9 @@ export const ledgerState$ = observable({
       if (isDeviceConnected && !isAppOpen) {
         // Add notification to indicate the user should open the app
         notifications$.push({
-          title: 'App not open',
-          description: 'Please open the Polkadot Migration app on your Ledger device and click Connect again',
+          title: 'Polkadot Migration App not open',
+          description:
+            'Please open the Polkadot Migration App on your Ledger device. Once the app is open, click Connect again to continue.',
           type: 'warning',
           autoHideDuration: 5000,
         })
@@ -419,8 +420,8 @@ export const ledgerState$ = observable({
         }
       }
       notifications$.push({
-        title: 'No funds found',
-        description: `No accounts with balance to migrate for ${app.id.charAt(0).toUpperCase() + app.id.slice(1)}`,
+        title: 'No accounts to migrate',
+        description: `We could not find any accounts with a balance to migrate for ${app.id.charAt(0).toUpperCase() + app.id.slice(1)}. If you believe this is an error, please check your Ledger device and try again.`,
         appId: app.id,
         type: 'info',
         autoHideDuration: 5000,
@@ -483,8 +484,9 @@ export const ledgerState$ = observable({
       const response = await ledgerClient.synchronizeAccounts(app)
 
       const noAccountsNotification: Omit<Notification, 'id' | 'createdAt'> = {
-        title: 'No migration source',
-        description: 'No Polkadot accounts available to migrate from',
+        title: 'No Polkadot accounts found',
+        description:
+          'There are no Polkadot accounts available to migrate from on your Ledger device. Please ensure your Ledger is connected and has accounts to migrate.',
         appId: app.id,
         type: 'info',
         autoHideDuration: 5000,
@@ -576,7 +578,7 @@ export const ledgerState$ = observable({
 
       notifications$.push({
         title: 'Synchronizing accounts',
-        description: `The first ${maxAddressesToFetch} accounts will be synchronized for each blockchain.`,
+        description: `We are synchronizing the first ${maxAddressesToFetch} accounts for each blockchain. Please wait while we gather your account information.`,
         type: 'info',
         autoHideDuration: 5000,
       })
