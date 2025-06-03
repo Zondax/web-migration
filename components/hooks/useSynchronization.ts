@@ -17,6 +17,7 @@ interface UseSynchronizationReturn {
   }
   isLedgerConnected: boolean
   isRescaning: boolean
+  isSyncCancelRequested: boolean
 
   // Computed values
   hasAccountsWithErrors: boolean
@@ -27,6 +28,7 @@ interface UseSynchronizationReturn {
   // Actions
   rescanFailedAccounts: () => Promise<void>
   restartSynchronization: () => void
+  cancelSynchronization: () => void
 }
 
 /**
@@ -36,6 +38,7 @@ export const useSynchronization = (): UseSynchronizationReturn => {
   const apps$ = ledgerState$.apps.apps
   const status = use$(ledgerState$.apps.status)
   const syncProgress = use$(ledgerState$.apps.syncProgress)
+  const isSyncCancelRequested = use$(ledgerState$.apps.isSyncCancelRequested)
   const [isRescaning, setIsRescaning] = useState<boolean>(false)
 
   // Check if Ledger is connected
@@ -102,6 +105,7 @@ export const useSynchronization = (): UseSynchronizationReturn => {
     syncProgress,
     isLedgerConnected,
     isRescaning,
+    isSyncCancelRequested,
 
     // Computed values
     hasAccountsWithErrors: accountsWithErrors,
@@ -112,5 +116,6 @@ export const useSynchronization = (): UseSynchronizationReturn => {
     // Actions
     rescanFailedAccounts,
     restartSynchronization,
+    cancelSynchronization: ledgerState$.cancelSynchronization,
   }
 }
