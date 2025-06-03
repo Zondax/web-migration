@@ -1,4 +1,4 @@
-import type { Address, TransactionStatus } from 'state/types/ledger'
+import type { Address, TransactionDetails, TransactionStatus } from 'state/types/ledger'
 
 import { AddressLink } from '@/components/AddressLink'
 import { useTokenLogo } from '@/components/hooks/useTokenLogo'
@@ -63,11 +63,7 @@ function RemoveIdentityForm({ token, account, appId, estimatedFee, estimatedFeeL
 export default function RemoveIdentityDialog({ open, setOpen, token, account, appId }: RemoveIdentityDialogProps) {
   // Wrap ledgerState$.withdrawBalance to match the generic hook's expected signature
   const removeIdentityTxFn = async (
-    updateTxStatus: (
-      status: TransactionStatus,
-      message?: string,
-      txDetails?: { txHash?: string; blockHash?: string; blockNumber?: string }
-    ) => void,
+    updateTxStatus: (status: TransactionStatus, message?: string, txDetails?: TransactionDetails) => void,
     appId: AppId,
     address: string,
     path: string

@@ -27,6 +27,7 @@ import {
   type NftsInfo,
   type Registration,
   type Staking,
+  type TransactionDetails,
   TransactionStatus,
 } from 'state/types/ledger'
 
@@ -190,11 +191,7 @@ export async function getNativeBalance(addressString: string, api: ApiPromise): 
 /**
  * Updates the transaction status with optional details.
  */
-export type UpdateTransactionStatus = (
-  status: TransactionStatus,
-  message?: string,
-  txDetails?: { txHash?: string; blockHash?: string; blockNumber?: string }
-) => void
+export type UpdateTransactionStatus = (status: TransactionStatus, message?: string, txDetails?: TransactionDetails) => void
 
 /**
  * Prepares a transaction payload for signing

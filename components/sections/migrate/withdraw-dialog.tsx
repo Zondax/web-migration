@@ -1,4 +1,4 @@
-import type { Address, TransactionStatus } from 'state/types/ledger'
+import type { Address, TransactionDetails, TransactionStatus } from 'state/types/ledger'
 
 import { AddressLink } from '@/components/AddressLink'
 import { useTokenLogo } from '@/components/hooks/useTokenLogo'
@@ -63,11 +63,7 @@ function WithdrawForm({ token, account, appId, estimatedFee, estimatedFeeLoading
 export default function WithdrawDialog({ open, setOpen, token, account, appId }: WithdrawDialogProps) {
   // Wrap ledgerState$.withdrawBalance to match the generic hook's expected signature
   const withdrawTxFn = async (
-    updateTxStatus: (
-      status: TransactionStatus,
-      message?: string,
-      txDetails?: { txHash?: string; blockHash?: string; blockNumber?: string }
-    ) => void,
+    updateTxStatus: (status: TransactionStatus, message?: string, txDetails?: TransactionDetails) => void,
     appId: AppId,
     address: string,
     path: string
