@@ -26,18 +26,20 @@ export function ConnectTabContent({ onContinue }: ConnectTabContentProps) {
         <p className="mb-6">To begin the migration process, please follow these steps:</p>
         <ol className="text-center space-y-3">
           <li className="flex items-center justify-center">
-            <span className={`mr-3 font-medium ${isLedgerConnected ? 'text-[#39cf9d]' : ''}`}>1.</span>
-            <span className={isLedgerConnected ? 'text-[#39cf9d]' : ''}>Connect your Ledger device to your computer</span>
+            <span className={`mr-3 font-medium ${isLedgerConnected ? 'text-polkadot-green' : ''}`}>1.</span>
+            <span className={isLedgerConnected ? 'text-polkadot-green' : ''}>Connect your Ledger device to your computer</span>
           </li>
           <li className="flex items-center justify-center">
-            <span className={`mr-3 font-medium ${isLedgerConnected ? 'text-[#39cf9d]' : ''}`}>2.</span>
-            <span className={isLedgerConnected ? 'text-[#39cf9d]' : ''}>Enter your PIN code on the device</span>
+            <span className={`mr-3 font-medium ${isLedgerConnected ? 'text-polkadot-green' : ''}`}>2.</span>
+            <span className={isLedgerConnected ? 'text-polkadot-green' : ''}>Enter your PIN code on the device</span>
           </li>
           <li className="flex items-center justify-center">
-            <span className={`mr-3 font-medium ${isLedgerConnected && !isAppOpen ? 'text-rose-400' : isAppOpen ? 'text-[#39cf9d]' : ''}`}>
+            <span
+              className={`mr-3 font-medium ${isLedgerConnected && !isAppOpen ? 'text-rose-400' : isAppOpen ? 'text-polkadot-green' : ''}`}
+            >
               3.
             </span>
-            <span className={isLedgerConnected && !isAppOpen ? 'text-rose-400' : isAppOpen ? 'text-[#39cf9d]' : ''}>
+            <span className={isLedgerConnected && !isAppOpen ? 'text-rose-400' : isAppOpen ? 'text-polkadot-green' : ''}>
               Open the Migration App on your Ledger
             </span>
           </li>
