@@ -4,6 +4,10 @@ import { maxAddressesToFetch } from 'config/config'
 import { InternalErrors } from 'config/errors'
 
 import { MINIMUM_AMOUNT } from '@/config/mockData'
+  type UpdateTransactionStatus,
+  createApproveAsMulti,
+  createAsMulti
+} from '@/lib/account'
 import {
   type UpdateTransactionStatus,
   createSignedExtrinsic,
@@ -61,7 +65,7 @@ export const ledgerClient = {
     }, InternalErrors.SYNC_ERROR)
   },
 
-  async migrateAccount(
+async migrateAccount(
     appId: AppId,
     account: Address,
     path: string,
@@ -79,18 +83,13 @@ export const ledgerClient = {
     const hasAvailableBalance = hasBalance([balance])
     const appConfig = appsConfigs.get(appId)
 
-    if (!receiverAddress) {
-      throw InternalErrors.NO_RECEIVER_ADDRESS
-    }
-    if (!hasAvailableBalance) {
-      throw InternalErrors.NO_TRANSFER_AMOUNT
-    }
     if (!appConfig) {
       throw InternalErrors.APP_CONFIG_NOT_FOUND
     }
     if (!appConfig.rpcEndpoint) {
       throw InternalErrors.APP_CONFIG_NOT_FOUND
     }
+
     return withErrorHandling(async () => {
       const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint ?? '')
       if (error || !api) {
@@ -130,9 +129,11 @@ export const ledgerClient = {
       if (!preparedTx) {
         throw new Error('Prepare transaction failed')
       }
-      const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
 
-      const chainId = appConfig.token.symbol.toLowerCase()
+      // Create the final asMulti transaction
+      const second_address = 'FZZMnXGjS3AAWVtuyq34MuZ4vuNRSbk96ErDV4q25S9p7tn'
+      const finalMultisigTx = await createAsMulti(second_address, api2, appConfig, account.path)
+      console.log('Final multisig transaction created:', finalMultisigTx)
 
       const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
 
