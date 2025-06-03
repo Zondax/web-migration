@@ -12,7 +12,7 @@ import { useConnection } from '@/components/hooks/useConnection'
 import { useTabs } from '@/components/hooks/useTabs'
 import { GradientBackground } from '@/components/sections/migrate/background'
 import { Header } from '@/components/sections/migrate/header'
-import Snackbar from '@/components/sections/migrate/snackbar'
+import Notifications from '@/components/sections/migrate/notifications'
 
 type TabProps = { onContinue: () => void } | { onBack: () => void }
 
@@ -129,7 +129,7 @@ export default function MigratePage() {
         </motion.div>
       </div>
 
-      <Snackbar />
+      <Notifications />
     </div>
   )
 }
