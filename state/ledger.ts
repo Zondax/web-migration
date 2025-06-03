@@ -756,6 +756,13 @@ export const ledgerState$ = observable({
 
     const polkadotConfig = polkadotAppConfig
     try {
+      notifications$.push({
+        title: 'Verify address on Ledger',
+        description:
+          'Please review and confirm the address on your Ledger device. This step is required to ensure your funds are sent to the correct destination.',
+        type: 'info',
+        autoHideDuration: 7000,
+      })
       const response = await ledgerClient.getAccountAddress(polkadotConfig.bip44Path, addressIndex, appConfig.ss58Prefix)
 
       return { isVerified: response.result?.address === address }
