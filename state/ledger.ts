@@ -5,7 +5,7 @@ import { errorApps, syncApps } from 'config/mockData'
 
 import type { Token } from '@/config/apps'
 import { maxAddressesToFetch } from '@/config/config'
-import { type UpdateTransactionStatus, getApiAndProvider, getBalance } from '@/lib/account'
+import { type UpdateTransactionStatus, getApiAndProvider, getBalance, getIdentityInfo } from '@/lib/account'
 import type { DeviceConnectionProps } from '@/lib/ledger/types'
 import { convertSS58Format } from '@/lib/utils/address'
 import { hasAddressBalance, hasBalance } from '@/lib/utils/balance'
@@ -14,7 +14,14 @@ import { mapLedgerError } from '@/lib/utils/error'
 import type { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
 import { notifications$ } from './notifications'
-import { type Address, AddressStatus, type Collection, TransactionStatus, type UpdateMigratedStatusFn } from './types/ledger'
+import {
+  type Address,
+  AddressStatus,
+  type Collection,
+  type Registration,
+  TransactionStatus,
+  type UpdateMigratedStatusFn,
+} from './types/ledger'
 import type { Notification } from './types/notifications'
 
 export enum AppStatus {
@@ -347,10 +354,19 @@ export const ledgerState$ = observable({
               }
             }
           }
+          let registration: Registration | undefined
+          if (app.peopleRpcEndpoint) {
+            const { api: peopleApi, error: peopleError } = await getApiAndProvider(app.peopleRpcEndpoint)
+
+            if (!peopleError && peopleApi) {
+              registration = await getIdentityInfo(address.address, peopleApi)
+            }
+          }
 
           return {
             ...address,
             balances,
+            registration,
             status: AddressStatus.SYNCHRONIZED,
             error: undefined,
             isLoading: false,
@@ -878,9 +894,7 @@ export const ledgerState$ = observable({
     }
 
     try {
-      console.log('getUnstakeFee ledger state 1', appId, address, amount)
       const estimatedFee = await ledgerClient.getUnstakeFee(appId, address, amount)
-      console.log('getUnstakeFee ledger state 2', estimatedFee)
       return estimatedFee
     } catch (error) {
       return undefined
@@ -911,6 +925,23 @@ export const ledgerState$ = observable({
 
     try {
       return await ledgerClient.getWithdrawFee(appId, address)
+    } catch (error) {
+      return undefined
+    }
+  },
+
+  async removeIdentity(appId: AppId, address: string, path: string, updateTxStatus: UpdateTransactionStatus) {
+    try {
+      await ledgerClient.removeIdentity(appId, address, path, updateTxStatus)
+    } catch (error) {
+      const errorDetail = (error as LedgerClientError).message || errorDetails.remove_identity_error.description
+      updateTxStatus(TransactionStatus.ERROR, errorDetail)
+    }
+  },
+
+  async getRemoveIdentityFee(appId: AppId, address: string): Promise<string | undefined> {
+    try {
+      return await ledgerClient.getRemoveIdentityFee(appId, address)
     } catch (error) {
       return undefined
     }

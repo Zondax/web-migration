@@ -1,14 +1,12 @@
 import { truncateMaxCharacters } from 'config/config'
-import { Check, Copy } from 'lucide-react'
-import { useCallback, useState } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { SimpleTooltip } from '@/components/ui/tooltip'
-import { copyContent, truncateMiddleOfString } from '@/lib/utils'
+import { CustomTooltip } from '@/components/CustomTooltip'
+import { truncateMiddleOfString } from '@/lib/utils'
+import { CopyButton } from './CopyButton'
 
 interface AddressLinkProps {
   value: string
-  tooltipText?: string
+  tooltipBody?: string
   disableTooltip?: boolean
   hasCopyButton?: boolean
   url?: string
@@ -18,21 +16,14 @@ interface AddressLinkProps {
 
 export function AddressLink({
   value,
-  tooltipText,
+  tooltipBody,
   disableTooltip = false,
   hasCopyButton = true,
   url,
   className,
   truncate = true,
 }: AddressLinkProps) {
-  const [copied, setCopied] = useState(false)
   const shortAddress = truncate ? truncateMiddleOfString(value, truncateMaxCharacters) : value
-
-  const handleCopy = useCallback(() => {
-    copyContent(value)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }, [value])
 
   const renderContent = () => {
     if (url) {
@@ -47,13 +38,9 @@ export function AddressLink({
 
   return (
     <div className="flex items-center gap-2">
-      {disableTooltip ? renderContent() : <SimpleTooltip tooltipText={tooltipText || value}>{renderContent()}</SimpleTooltip>}
+      {disableTooltip ? renderContent() : <CustomTooltip tooltipBody={tooltipBody || value}>{renderContent()}</CustomTooltip>}
 
-      {hasCopyButton && (
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={handleCopy}>
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-        </Button>
-      )}
+      {hasCopyButton && <CopyButton value={value} />}
     </div>
   )
 }

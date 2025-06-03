@@ -18,10 +18,13 @@ export const TEST_ADDRESSES = {
   ADDRESS7: '5DAUh2JEqgjoq7xKmvUdaNkDRRtwqYGtxKzovLHdkkNcsuFJ',
   ADDRESS8: 'Gsmu7iGq4cQg7oAxFgAA9dUPKu9iRKGvbFLNUGhEkEB3Ybt', // kusama asset hub address with uniques
   ADDRESS9: 'Gq9CTYACKtgA1dyrM5yh7oDK6yh1P3ErjcxZvDmJu9YjdB5', // kusama staking address with bonded
+  ADDRESS10: 'F4aqRHwLaCk2EoEewPWKpJBGdrvkssQAtrBmQ5LdNSweUfV', // internal address with identity and parent account
+  ADDRESS11: 'HHEEgVzcqL3kCXgsxSfJMbsTy8dxoTctuXtpY94n4s8F4pS', // address with identity and no parent account
 }
 
 // test rpc endpoints
 export const KUSAMA_RPC = appsConfigs.get('kusama')?.rpcEndpoint || 'wss://kusama-rpc.polkadot.io'
+export const KUSAMA_PEOPLE_RPC = appsConfigs.get('kusama')?.peopleRpcEndpoint || 'wss://people-rpc.dwellir.com'
 export const KUSAMA_ASSET_HUB_RPC = appsConfigs.get('kusama-asset-hub')?.rpcEndpoint || 'wss://asset-hub-kusama-rpc.dwellir.com'
 
 // =========== Mock Staking ===========
@@ -33,15 +36,18 @@ export const mockStaking: Staking = {
       value: 100000000000,
       era: 2400,
       timeRemaining: '7 days and 2 hours',
+      canWithdraw: false,
     },
     {
       value: 100000000000,
       era: 2500,
       timeRemaining: '7 days and 0 hours',
+      canWithdraw: false,
     },
   ],
   claimedRewards: [2300, 2350],
   controller: TEST_ADDRESSES.ADDRESS1,
+  canUnstake: false,
 }
 
 // =========== Mock NFTs ===========

@@ -1,6 +1,6 @@
 import { ledgerState$ } from '@/state/ledger'
 import { useEffect, useMemo, useState } from 'react'
-import type { Address, TransactionStatus } from 'state/types/ledger'
+import type { Address, TransactionDetails, TransactionStatus } from 'state/types/ledger'
 
 import { AddressLink } from '@/components/AddressLink'
 import TokenIcon from '@/components/TokenIcon'
@@ -116,11 +116,7 @@ export default function UnstakeDialog({ open, setOpen, maxUnstake: maxUnstakeRaw
 
   // Wrap ledgerState$.unstakeBalance to match the generic hook's expected signature
   const unstakeTxFn = async (
-    updateTxStatus: (
-      status: TransactionStatus,
-      message?: string,
-      txDetails?: { txHash?: string; blockHash?: string; blockNumber?: string }
-    ) => void,
+    updateTxStatus: (status: TransactionStatus, message?: string, txDetails?: TransactionDetails) => void,
     appId: AppId,
     address: string,
     path: string,

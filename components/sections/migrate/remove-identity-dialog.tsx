@@ -12,7 +12,7 @@ import { ledgerState$ } from '@/state/ledger'
 import { useEffect, useMemo } from 'react'
 import { TransactionDialogFooter, TransactionStatusBody } from './transaction-dialog'
 
-interface WithdrawDialogProps {
+interface RemoveIdentityDialogProps {
   appId: AppId
   open: boolean
   setOpen: (open: boolean) => void
@@ -20,7 +20,7 @@ interface WithdrawDialogProps {
   account: Address
 }
 
-interface WithdrawFormProps {
+interface RemoveIdentityFormProps {
   token: Token
   account: Address
   appId: AppId
@@ -28,7 +28,7 @@ interface WithdrawFormProps {
   estimatedFeeLoading: boolean
 }
 
-function WithdrawForm({ token, account, appId, estimatedFee, estimatedFeeLoading }: WithdrawFormProps) {
+function RemoveIdentityForm({ token, account, appId, estimatedFee, estimatedFeeLoading }: RemoveIdentityFormProps) {
   const icon = useTokenLogo(token.logoId)
   const appName = getChainName(appId)
 
@@ -60,15 +60,15 @@ function WithdrawForm({ token, account, appId, estimatedFee, estimatedFeeLoading
   )
 }
 
-export default function WithdrawDialog({ open, setOpen, token, account, appId }: WithdrawDialogProps) {
+export default function RemoveIdentityDialog({ open, setOpen, token, account, appId }: RemoveIdentityDialogProps) {
   // Wrap ledgerState$.withdrawBalance to match the generic hook's expected signature
-  const withdrawTxFn = async (
+  const removeIdentityTxFn = async (
     updateTxStatus: (status: TransactionStatus, message?: string, txDetails?: TransactionDetails) => void,
     appId: AppId,
     address: string,
     path: string
   ) => {
-    await ledgerState$.withdrawBalance(appId, address, path, updateTxStatus)
+    await ledgerState$.removeIdentity(appId, address, path, updateTxStatus)
   }
 
   const {
@@ -82,7 +82,7 @@ export default function WithdrawDialog({ open, setOpen, token, account, appId }:
     getEstimatedFee,
     estimatedFee,
     estimatedFeeLoading,
-  } = useTransactionStatus(withdrawTxFn, ledgerState$.getWithdrawFee)
+  } = useTransactionStatus(removeIdentityTxFn, ledgerState$.getRemoveIdentityFee)
 
   // Calculate fee on mount
   useEffect(() => {
@@ -111,7 +111,7 @@ export default function WithdrawDialog({ open, setOpen, token, account, appId }:
     <Dialog open={open} onOpenChange={closeDialog}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Withdraw your unbonded balance</DialogTitle>
+          <DialogTitle>Remove your identity</DialogTitle>
           <DialogDescription>
             This process may require a small transaction fee. Please review the details below before proceeding.
           </DialogDescription>
@@ -120,7 +120,7 @@ export default function WithdrawDialog({ open, setOpen, token, account, appId }:
           {txStatus ? (
             <TransactionStatusBody {...txStatus} />
           ) : (
-            <WithdrawForm
+            <RemoveIdentityForm
               token={token}
               account={account}
               appId={appId}

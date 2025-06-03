@@ -16,6 +16,7 @@ export interface AppConfig {
   bip44Path: string
   ss58Prefix: number
   rpcEndpoint?: string
+  peopleRpcEndpoint?: string
   token: Token
 }
 

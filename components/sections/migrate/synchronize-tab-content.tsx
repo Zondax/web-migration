@@ -5,10 +5,11 @@ import { FolderSync, Info, RefreshCw } from 'lucide-react'
 import { AppStatus } from 'state/ledger'
 
 import { AddressLink } from '@/components/AddressLink'
+import { CustomTooltip } from '@/components/CustomTooltip'
 import { useSynchronization } from '@/components/hooks/useSynchronization'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { SimpleTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 import EmptyStateRow from './empty-state-row'
@@ -95,11 +96,11 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
         </div>
         <div className="flex gap-2 self-start">
           {status !== AppStatus.LOADING && (
-            <SimpleTooltip tooltipText="Synchronize Again">
+            <CustomTooltip tooltipBody="Synchronize Again">
               <Button onClick={restartSynchronization} variant="outline" className="flex items-center gap-1" disabled={isRescaning}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
-            </SimpleTooltip>
+            </CustomTooltip>
           )}
           <Button onClick={handleMigrate} disabled={isLoading || appsWithoutErrors.length === 0} variant="purple">
             {isLoading ? 'Synchronizing...' : 'Migrate All'}
