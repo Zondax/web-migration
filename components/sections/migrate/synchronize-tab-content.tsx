@@ -125,7 +125,11 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
           appsWithoutErrors.map(app => <AppRow key={app.id.toString()} app={observable(app)} />)
         ) : (
           <EmptyStateRow
-            label={isSynchronized ? 'No accounts to migrate' : 'No synchronized accounts'}
+            label={
+              isSynchronized
+                ? 'There are no accounts available for migration. Please make sure your Ledger device contains accounts with a balance to migrate.'
+                : 'No accounts with funds have been synchronized yet.'
+            }
             icon={<FolderSync className="h-8 w-8 text-gray-300" />}
           />
         ))}

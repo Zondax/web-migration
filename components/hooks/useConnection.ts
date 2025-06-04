@@ -28,7 +28,8 @@ export const useConnection = (): UseConnectionReturn => {
     if (isSafari()) {
       notifications$.push({
         title: 'Safari Not Supported',
-        description: 'Connectivity to Ledger device is not possible on Safari. Please use Chrome or Firefox.',
+        description:
+          'Connecting to your Ledger device is not possible in Safari due to browser limitations. Please use Chrome or Firefox for the best experience.',
         type: 'warning',
         autoHideDuration: 6000,
       })

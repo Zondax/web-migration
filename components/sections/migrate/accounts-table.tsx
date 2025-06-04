@@ -86,7 +86,8 @@ function AccountsTable({ accounts, token, polkadotAddresses, collections, appId 
           ) : (
             <TableRow>
               <TableCell colSpan={7} className="text-center text-muted-foreground">
-                No accounts to migrate
+                There are no accounts available for migration in this network. Please check your Ledger device for accounts with a balance
+                to migrate.
               </TableCell>
             </TableRow>
           )}

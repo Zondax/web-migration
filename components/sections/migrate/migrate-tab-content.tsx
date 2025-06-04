@@ -158,7 +158,8 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
           ) : (
             <TableRow>
               <TableCell colSpan={6} className="text-center text-muted-foreground p-4">
-                No accounts to migrate
+                There are no accounts available for migration. Please ensure your Ledger device is connected and contains accounts with a
+                balance to migrate.
               </TableCell>
             </TableRow>
           )}
