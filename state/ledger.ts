@@ -67,7 +67,11 @@ interface LedgerState {
     polkadotApp: App
     status?: AppStatus
     error?: string
-    syncProgress: number
+    syncProgress: {
+      scanned: number
+      total: number
+      percentage: number
+    }
     migrationResult: {
       [key in MigrationResultKey]: number
     }
@@ -86,7 +90,11 @@ const initialLedgerState: LedgerState = {
     polkadotApp: polkadotAppConfig,
     status: undefined,
     error: undefined,
-    syncProgress: 0,
+    syncProgress: {
+      scanned: 0,
+      total: 0,
+      percentage: 0,
+    },
     migrationResult: {
       success: 0,
       fails: 0,
@@ -264,7 +272,11 @@ export const ledgerState$ = observable({
       polkadotApp: polkadotAppConfig,
       status: undefined,
       error: undefined,
-      syncProgress: 0,
+      syncProgress: {
+        scanned: 0,
+        total: 0,
+        percentage: 0,
+      },
       migrationResult: {
         success: 0,
         fails: 0,
@@ -414,7 +426,14 @@ export const ledgerState$ = observable({
         autoHideDuration: 5000,
       })
 
-      return undefined // No accounts after filtering
+      // No accounts after filtering
+      return {
+        name: app.name,
+        id: app.id,
+        token: app.token,
+        status: AppStatus.SYNCHRONIZED,
+        accounts: [],
+      }
     } catch (error) {
       console.debug('Error fetching and processing accounts for app:', app.id)
       return {
@@ -440,6 +459,8 @@ export const ledgerState$ = observable({
     }
 
     try {
+      updateApp(appId, { status: AppStatus.LOADING, error: undefined })
+
       const app = await ledgerState$.fetchAndProcessAccountsForApp(appConfig)
       if (app) {
         updateApp(appId, app)
@@ -531,7 +552,11 @@ export const ledgerState$ = observable({
     ledgerState$.apps.assign({
       status: AppStatus.LOADING,
       apps: [],
-      syncProgress: 0,
+      syncProgress: {
+        scanned: 0,
+        total: 0,
+        percentage: 0,
+      },
     })
 
     try {
@@ -540,7 +565,11 @@ export const ledgerState$ = observable({
         ledgerState$.apps.assign({
           status: undefined,
           apps: [],
-          syncProgress: 0,
+          syncProgress: {
+            scanned: 0,
+            total: 0,
+            percentage: 0,
+          },
         })
         return
       }
@@ -577,20 +606,35 @@ export const ledgerState$ = observable({
       const totalApps = appsToSync.length
       let syncedApps = 0
 
+      ledgerState$.apps.syncProgress.set({
+        scanned: syncedApps,
+        total: totalApps,
+        percentage: 0,
+      })
+
       // request and save the accounts of each app synchronously
       for (const appConfig of appsToSync) {
         if (appConfig) {
+          ledgerState$.apps.apps.push({
+            id: appConfig.id,
+            name: appConfig.name,
+            token: appConfig.token,
+            status: AppStatus.LOADING,
+            error: undefined,
+          })
+
           // Comment it later
           const app = await ledgerState$.fetchAndProcessAccountsForApp(appConfig)
           if (app) {
-            ledgerState$.apps.apps.push(app)
+            updateApp(appConfig.id, app)
           }
         }
 
         // Update sync progress
         syncedApps++
         const progress = Math.round((syncedApps / totalApps) * 100)
-        ledgerState$.apps.syncProgress.set(progress)
+        ledgerState$.apps.syncProgress.scanned.set(syncedApps)
+        ledgerState$.apps.syncProgress.percentage.set(progress)
       }
 
       ledgerState$.apps.status.set(AppStatus.SYNCHRONIZED)

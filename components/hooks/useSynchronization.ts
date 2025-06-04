@@ -5,9 +5,16 @@ import { type App, AppStatus, ledgerState$ } from 'state/ledger'
 import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors } from '@/lib/utils'
 
 interface UseSynchronizationReturn {
+  // General
+  apps: App[]
+
   // State
   status: AppStatus | undefined
-  syncProgress: number
+  syncProgress: {
+    scanned: number
+    total: number
+    percentage: number
+  }
   isLedgerConnected: boolean
   isRescaning: boolean
 
@@ -87,6 +94,9 @@ export const useSynchronization = (): UseSynchronizationReturn => {
   }, [])
 
   return {
+    // General
+    apps,
+
     // State
     status,
     syncProgress,

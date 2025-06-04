@@ -89,3 +89,23 @@ export const hasAccountsWithErrors = (apps: App[]): boolean => {
       app.accounts?.some(account => account.error && account.error?.source !== 'migration')
   )
 }
+
+/**
+ * Checks if the app has any accounts.
+ *
+ * @param app - The app to check.
+ * @returns True if the app has accounts, false otherwise.
+ */
+export const hasAppAccounts = (app: App): boolean => {
+  return Boolean(app.accounts && app.accounts.length > 0)
+}
+
+/**
+ * Gets the total number of accounts with balances for a single app.
+ *
+ * @param app - The app to check.
+ * @returns The number of accounts with balances for the app.
+ */
+export const getAppTotalAccounts = (app: App): number => {
+  return app.accounts?.length || 0
+}
