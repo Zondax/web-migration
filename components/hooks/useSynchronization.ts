@@ -70,6 +70,11 @@ export const useSynchronization = (): UseSynchronizationReturn => {
       const appsToRescan = filterAppsWithErrors(apps$.get())
 
       for (const app of appsToRescan) {
+        // Check if cancellation is requested
+        if (ledgerState$.apps.isSyncCancelRequested.get()) {
+          return
+        }
+
         // Skip apps without a valid ID
         if (!app.id) continue
 
@@ -79,6 +84,11 @@ export const useSynchronization = (): UseSynchronizationReturn => {
         } else if (app.accounts) {
           // Otherwise just rescan individual accounts with errors
           for (const account of app.accounts) {
+            // Check again for cancellation for each account
+            if (ledgerState$.apps.isSyncCancelRequested.get()) {
+              return
+            }
+
             if (account.error && app.id) {
               await ledgerState$.getAccountBalance(app.id, account)
             }
