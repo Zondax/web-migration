@@ -188,7 +188,6 @@ Each chain configuration contains these key parameters:
 
 - `id`: Unique identifier for the chain (must match the logo filename in the chains directory)
 - `name`: Display name of the chain
-- `cla`: Chain-specific class identifier
 - `bip44Path`: The HD derivation path for the chain
 - `ss58Prefix`: The SS58 address format prefix
 - `rpcEndpoint`: WebSocket endpoint for connecting to the chain
