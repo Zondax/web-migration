@@ -127,8 +127,8 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
           <EmptyStateRow
             label={
               isSynchronized
-                ? 'There are no accounts available for migration. Please make sure your Ledger device is connected and contains accounts with a balance to migrate.'
-                : 'No accounts have been synchronized yet. Please connect your Ledger device and synchronize to see your accounts.'
+                ? 'There are no accounts available for migration. Please make sure your Ledger device contains accounts with a balance to migrate.'
+                : 'No accounts with funds have been synchronized yet.'
             }
             icon={<FolderSync className="h-8 w-8 text-gray-300" />}
           />

@@ -421,7 +421,7 @@ export const ledgerState$ = observable({
       }
       notifications$.push({
         title: 'No accounts to migrate',
-        description: `We could not find any accounts with a balance to migrate for ${app.id.charAt(0).toUpperCase() + app.id.slice(1)}. If you believe this is an error, please check your Ledger device and try again.`,
+        description: `We could not find any accounts with a balance to migrate for ${app.id.charAt(0).toUpperCase() + app.id.slice(1)}.`,
         appId: app.id,
         type: 'info',
         autoHideDuration: 5000,
@@ -485,8 +485,7 @@ export const ledgerState$ = observable({
 
       const noAccountsNotification: Omit<Notification, 'id' | 'createdAt'> = {
         title: 'No Polkadot accounts found',
-        description:
-          'There are no Polkadot accounts available to migrate from on your Ledger device. Please ensure your Ledger is connected and has accounts to migrate.',
+        description: 'There are no Polkadot accounts available to migrate from on your Ledger device.',
         appId: app.id,
         type: 'info',
         autoHideDuration: 5000,
