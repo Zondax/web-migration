@@ -1,15 +1,15 @@
 'use client'
 
 import { observer, use$ } from '@legendapp/state/react'
-import { AlertCircle, CheckCircle, Info, Loader2 } from 'lucide-react'
-import { AppStatus, type App } from 'state/ledger'
+import { AlertCircle, Loader2 } from 'lucide-react'
+import { type App, AppStatus } from 'state/ledger'
 import { uiState$ } from 'state/ui'
 
-import { useSynchronization } from '@/components/hooks/useSynchronization'
 import TokenIcon from '@/components/TokenIcon'
+import { useSynchronization } from '@/components/hooks/useSynchronization'
 import { Badge } from '@/components/ui/badge'
-import { SimpleTooltip } from '@/components/ui/tooltip'
-import { appsConfigs, getChainName, type AppConfig, type AppId } from '@/config/apps'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { type AppConfig, appsConfigs, getChainName } from '@/config/apps'
 import { cn, getAppTotalAccounts, hasAppAccounts } from '@/lib/utils'
 
 interface AppScanItemProps {
@@ -40,7 +40,7 @@ const AppScanItem = ({ app }: AppScanItemProps) => {
       } else {
         statusIcon = totalAccounts
         statusClass = 'border-gray-200 bg-white opacity-80'
-        statusText = 'No accounts found'
+        statusText = 'No accounts with funds to migrate'
       }
       break
     case AppStatus.ERROR:
@@ -68,21 +68,26 @@ const AppScanItem = ({ app }: AppScanItemProps) => {
   }
 
   return (
-    <SimpleTooltip tooltipText={statusText}>
-      <div className={cn('flex flex-col items-center p-3 rounded-lg border transition-all', statusClass)}>
-        <div className="relative mb-2">
-          <TokenIcon icon={icon} symbol={appName.substring(0, 3)} size="md" />
-          {displayBadge && (
-            <div className="absolute -right-2 -bottom-2">
-              <Badge variant="outline" className="bg-white h-5 min-w-5 px-0 justify-center rounded-full text-xs">
-                {statusIcon}
-              </Badge>
+    <TooltipProvider>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          <div className={cn('flex flex-col items-center p-3 rounded-lg border transition-all', statusClass)}>
+            <div className="relative mb-2">
+              <TokenIcon icon={icon} symbol={appName.substring(0, 3)} size="md" />
+              {displayBadge && (
+                <div className="absolute -right-2 -bottom-2">
+                  <Badge variant="outline" className="bg-white h-5 min-w-5 px-0 justify-center rounded-full text-xs">
+                    {statusIcon}
+                  </Badge>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        <span className="text-xs font-medium truncate max-w-full">{appName}</span>
-      </div>
-    </SimpleTooltip>
+            <span className="text-xs font-medium truncate max-w-full">{appName}</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>{statusText}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
 

@@ -10,7 +10,6 @@ import { useSynchronization } from '@/components/hooks/useSynchronization'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { type AppConfig, type AppId, appsConfigs } from '@/config/apps'
 import { cn } from '@/lib/utils'
 
 import AppScanningGrid from './app-scanning-grid'
