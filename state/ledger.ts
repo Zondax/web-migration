@@ -293,13 +293,15 @@ export const ledgerState$ = observable({
   // Add cancelSynchronization method before the fetchAndProcessAccountsForApp method
   cancelSynchronization() {
     ledgerState$.apps.isSyncCancelRequested.set(true)
-    ledgerState$.apps.status.set(undefined)
     notifications$.push({
       title: 'Synchronization Cancelled',
       description: 'The synchronization process has been cancelled.',
       type: 'info',
       autoHideDuration: 5000,
     })
+
+    // Use clearSynchronization to properly reset all state
+    ledgerState$.clearSynchronization()
   },
 
   // Fetch and Process Accounts for a Single App
@@ -434,6 +436,11 @@ export const ledgerState$ = observable({
           collections: collectionsMap,
         }
       }
+
+      if (ledgerState$.apps.isSyncCancelRequested.get()) {
+        return undefined
+      }
+
       notifications$.push({
         title: 'No accounts to migrate',
         description: `We could not find any accounts with a balance to migrate for ${app.id.charAt(0).toUpperCase() + app.id.slice(1)}.`,
@@ -565,6 +572,7 @@ export const ledgerState$ = observable({
 
   // Synchronize Accounts
   async synchronizeAccounts() {
+    ledgerState$.apps.isSyncCancelRequested.set(false)
     ledgerState$.apps.assign({
       status: AppStatus.LOADING,
       apps: [],
@@ -632,8 +640,7 @@ export const ledgerState$ = observable({
       for (const appConfig of appsToSync) {
         // Check if cancellation is requested
         if (ledgerState$.apps.isSyncCancelRequested.get()) {
-          ledgerState$.apps.status.set(undefined)
-          return
+          return undefined
         }
 
         if (appConfig) {
