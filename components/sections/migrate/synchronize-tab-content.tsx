@@ -9,7 +9,6 @@ import { CustomTooltip } from '@/components/CustomTooltip'
 import { useSynchronization } from '@/components/hooks/useSynchronization'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 import AppScanningGrid from './app-scanning-grid'
@@ -50,32 +49,25 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
       <div className="flex flex-col sm:flex-row items-start sm:items-center text-sm text-gray-600 gap-2 p-3 border border-polkadot-cyan rounded-lg bg-polkadot-cyan bg-opacity-10">
         <Info className="h-5 w-5 sm:h-8 sm:w-8 text-polkadot-cyan flex-shrink-0" />
         <span>
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <span className="font-semibold cursor-help">Destination addresses</span>
-              </TooltipTrigger>
-              <TooltipContent
-                side="bottom"
-                align="center"
-                className={cn('min-w-[250px] z-[100] break-words whitespace-normal')}
-                sideOffset={5}
-              >
-                <div className="max-w-xs">
-                  <ul className="space-y-1">
-                    {polkadotAddresses.slice(0, 5).map((address, index) => (
-                      <li key={address} className="flex items-center gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">Polkadot {index + 1}:</span>
-                          <AddressLink value={address} disableTooltip className="break-all" hasCopyButton />
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>{' '}
+          <CustomTooltip
+            tooltipBody={
+              <div className="max-w-xs">
+                <ul className="space-y-1">
+                  {polkadotAddresses.slice(0, 5).map((address, index) => (
+                    <li key={address} className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">Polkadot {index + 1}:</span>
+                        <AddressLink value={address} disableTooltip className="break-all" hasCopyButton />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            }
+            className="min-w-[250px]"
+          >
+            <span className="font-semibold cursor-help">Destination addresses</span>
+          </CustomTooltip>{' '}
           come from the Polkadot HD path. These addresses are shown with different encodings based on each network&apos;s unique prefix, so
           the same key looks different depending on the network. You will have to verify all addresses before migration for security
           reasons.
