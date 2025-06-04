@@ -12,7 +12,6 @@ export type AppId = (typeof appsConfigData)[number]['id'] | 'polkadot'
 export interface AppConfig {
   id: AppId
   name: string
-  cla: number
   bip44Path: string
   ss58Prefix: number
   rpcEndpoint?: string
@@ -24,7 +23,6 @@ export interface AppConfig {
 export const polkadotAppConfig: AppConfig = {
   name: 'Polkadot',
   id: 'polkadot' as AppId,
-  cla: 144, // 0x90
   bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
   ss58Prefix: 0,
   rpcEndpoint: 'wss://rpc.polkadot.io',

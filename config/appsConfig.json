@@ -2,7 +2,6 @@
   {
     "id": "acala",
     "name": "Acala",
-    "cla": 155,
     "bip44Path": "m/44'/787'/0'/0'/0'",
     "ss58Prefix": 10,
     "rpcEndpoint": "wss://acala-rpc.aca-api.network",
@@ -14,7 +13,6 @@
   {
     "id": "ajuna",
     "name": "Ajuna",
-    "cla": 179,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 1328,
     "rpcEndpoint": "wss://ajuna.ibp.network",
@@ -26,7 +24,6 @@
   {
     "id": "alephzero",
     "name": "AlephZero",
-    "cla": 164,
     "bip44Path": "m/44'/643'/0'/0'/0'",
     "ss58Prefix": 42,
     "token": {
@@ -37,7 +34,6 @@
   {
     "id": "astar",
     "name": "Astar",
-    "cla": 169,
     "bip44Path": "m/44'/810'/0'/0'/0'",
     "ss58Prefix": 5,
     "rpcEndpoint": "wss://rpc.astar.network",
@@ -49,7 +45,6 @@
   {
     "id": "bifrost",
     "name": "Bifrost",
-    "cla": 161,
     "bip44Path": "m/44'/788'/0'/0'/0'",
     "ss58Prefix": 6,
     "token": {
@@ -60,7 +55,6 @@
   {
     "id": "bifrostkusama",
     "name": "BifrostKusama",
-    "cla": 174,
     "bip44Path": "m/44'/788'/0'/0'/0'",
     "ss58Prefix": 6,
     "token": {
@@ -71,7 +65,6 @@
   {
     "id": "bittensor",
     "name": "Bittensor",
-    "cla": 180,
     "bip44Path": "m/44'/1005'/0'/0'/0'",
     "ss58Prefix": 42,
     "token": {
@@ -82,7 +75,6 @@
   {
     "id": "centrifuge",
     "name": "Centrifuge",
-    "cla": 147,
     "bip44Path": "m/44'/747'/0'/0'/0'",
     "ss58Prefix": 36,
     "token": {
@@ -93,7 +85,6 @@
   {
     "id": "composable",
     "name": "Composable",
-    "cla": 168,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 49,
     "token": {
@@ -104,7 +95,6 @@
   {
     "id": "darwinia",
     "name": "Darwinia",
-    "cla": 178,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 18,
     "rpcEndpoint": "wss://darwinia-rpc.dwellir.com",
@@ -116,7 +106,6 @@
   {
     "id": "dock",
     "name": "Dock",
-    "cla": 146,
     "bip44Path": "m/44'/594'/0'/0'/0'",
     "ss58Prefix": 22,
     "token": {
@@ -127,7 +116,6 @@
   {
     "id": "edgeware",
     "name": "Edgeware",
-    "cla": 148,
     "bip44Path": "m/44'/523'/0'/0'/0'",
     "ss58Prefix": 7,
     "token": {
@@ -138,7 +126,6 @@
   {
     "id": "enjin",
     "name": "Enjin",
-    "cla": 185,
     "bip44Path": "m/44'/1155'/0'/0'/0'",
     "ss58Prefix": 2135,
     "rpcEndpoint": "wss://enjin-matrix-rpc-1.dwellir.com",
@@ -150,7 +137,6 @@
   {
     "id": "entropy",
     "name": "Entropy",
-    "cla": 189,
     "bip44Path": "m/44'/1312'/0'/0'/0'",
     "ss58Prefix": 42,
     "token": {
@@ -161,7 +147,6 @@
   {
     "id": "genshiro",
     "name": "Genshiro",
-    "cla": 158,
     "bip44Path": "m/44'/2242269180'/0'/0'/0'",
     "ss58Prefix": 67,
     "token": {
@@ -172,7 +157,6 @@
   {
     "id": "hydradx",
     "name": "HydraDX",
-    "cla": 171,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 63,
     "rpcEndpoint": "wss://hydradx-rpc.dwellir.com",
@@ -184,7 +168,6 @@
   {
     "id": "interlay",
     "name": "Interlay",
-    "cla": 165,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 2032,
     "token": {
@@ -195,7 +178,6 @@
   {
     "id": "joystream",
     "name": "Joystream",
-    "cla": 184,
     "bip44Path": "m/44'/537'/0'/0'/0'",
     "ss58Prefix": 126,
     "token": {
@@ -206,7 +188,6 @@
   {
     "id": "karura",
     "name": "Karura",
-    "cla": 154,
     "bip44Path": "m/44'/686'/0'/0'/0'",
     "ss58Prefix": 8,
     "rpcEndpoint": "wss://karura-rpc-0.aca-api.network",
@@ -218,7 +199,6 @@
   {
     "id": "khala",
     "name": "Khala",
-    "cla": 177,
     "bip44Path": "m/44'/434'/0'/0'/0'",
     "ss58Prefix": 30,
     "token": {
@@ -229,7 +209,6 @@
   {
     "id": "kusama",
     "name": "Kusama",
-    "cla": 153,
     "bip44Path": "m/44'/434'/0'/0'/0'",
     "ss58Prefix": 2,
     "rpcEndpoint": "wss://kusama-rpc.polkadot.io",
@@ -242,7 +221,6 @@
   {
     "id": "matrixchain",
     "name": "Matrixchain",
-    "cla": 186,
     "bip44Path": "m/44'/1155'/0'/0'/0'",
     "ss58Prefix": 1110,
     "token": {
@@ -253,7 +231,6 @@
   {
     "id": "nodle",
     "name": "Nodle",
-    "cla": 152,
     "bip44Path": "m/44'/1003'/0'/0'/0'",
     "ss58Prefix": 37,
     "rpcEndpoint": "wss://nodle-rpc.dwellir.com",
@@ -265,7 +242,6 @@
   {
     "id": "origintrail",
     "name": "OriginTrail",
-    "cla": 170,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 101,
     "token": {
@@ -276,7 +252,6 @@
   {
     "id": "parallel",
     "name": "Parallel",
-    "cla": 166,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 172,
     "token": {
@@ -287,7 +262,6 @@
   {
     "id": "peer",
     "name": "Peer",
-    "cla": 157,
     "bip44Path": "m/44'/718'/0'/0'/0'",
     "ss58Prefix": 42,
     "token": {
@@ -298,7 +272,6 @@
   {
     "id": "pendulum",
     "name": "Pendulum",
-    "cla": 182,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 56,
     "rpcEndpoint": "wss://rpc-pendulum.prd.pendulumchain.tech",
@@ -310,7 +283,6 @@
   {
     "id": "phala",
     "name": "Phala",
-    "cla": 175,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 30,
     "rpcEndpoint": "wss://phala-rpc.dwellir.com",
@@ -322,7 +294,6 @@
   {
     "id": "picasso",
     "name": "Picasso",
-    "cla": 167,
     "bip44Path": "m/44'/434'/0'/0'/0'",
     "ss58Prefix": 49,
     "rpcEndpoint": "wss://rpc.composablenodes.tech",
@@ -334,7 +305,6 @@
   {
     "id": "polkadex",
     "name": "Polkadex",
-    "cla": 160,
     "bip44Path": "m/44'/799'/0'/0'/0'",
     "ss58Prefix": 88,
     "rpcEndpoint": "wss://polkadex-parachain.public.curie.radiumblock.co/ws",
@@ -346,7 +316,6 @@
   {
     "id": "polymesh",
     "name": "Polymesh",
-    "cla": 145,
     "bip44Path": "m/44'/595'/0'/0'/0'",
     "ss58Prefix": 12,
     "token": {
@@ -357,7 +326,6 @@
   {
     "id": "quartz",
     "name": "Quartz",
-    "cla": 187,
     "bip44Path": "m/44'/631'/0'/0'/0'",
     "ss58Prefix": 255,
     "token": {
@@ -368,7 +336,6 @@
   {
     "id": "reef",
     "name": "Reef",
-    "cla": 162,
     "bip44Path": "m/44'/819'/0'/0'/0'",
     "ss58Prefix": 42,
     "token": {
@@ -379,7 +346,6 @@
   {
     "id": "sora",
     "name": "Sora",
-    "cla": 159,
     "bip44Path": "m/44'/617'/0'/0'/0'",
     "ss58Prefix": 69,
     "rpcEndpoint": "wss://ws.parachain-collator-3.pc3.sora2.soramitsu.co.jp",
@@ -391,7 +357,6 @@
   {
     "id": "stafi",
     "name": "Stafi",
-    "cla": 172,
     "bip44Path": "m/44'/907'/0'/0'/0'",
     "ss58Prefix": 20,
     "token": {
@@ -402,7 +367,6 @@
   {
     "id": "kusama-asset-hub",
     "name": "Kusama Asset Hub",
-    "cla": 151,
     "bip44Path": "m/44'/434'/0'/0'/0'",
     "ss58Prefix": 2,
     "rpcEndpoint": "wss://asset-hub-kusama-rpc.dwellir.com",
@@ -415,7 +379,6 @@
   {
     "id": "ternoa",
     "name": "Ternoa",
-    "cla": 181,
     "bip44Path": "m/44'/995'/0'/0'/0'",
     "ss58Prefix": 42,
     "token": {
@@ -426,7 +389,6 @@
   {
     "id": "unique",
     "name": "Unique",
-    "cla": 173,
     "bip44Path": "m/44'/661'/0'/0'/0'",
     "ss58Prefix": 7391,
     "token": {
@@ -437,7 +399,6 @@
   {
     "id": "vtb",
     "name": "VTB",
-    "cla": 156,
     "bip44Path": "m/44'/694'/0'/0'/0'",
     "ss58Prefix": 42,
     "token": {
@@ -448,7 +409,6 @@
   {
     "id": "xxnetwork",
     "name": "XXNetwork",
-    "cla": 163,
     "bip44Path": "m/44'/1955'/0'/0'/0'",
     "ss58Prefix": 55,
     "rpcEndpoint": "wss://xxnetwork-rpc.dwellir.com",
@@ -460,7 +420,6 @@
   {
     "id": "zeitgeist",
     "name": "Zeitgeist",
-    "cla": 183,
     "bip44Path": "m/44'/354'/0'/0'/0'",
     "ss58Prefix": 73,
     "token": {
