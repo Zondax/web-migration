@@ -17,9 +17,10 @@ const NotificationToast = ({
   description,
   time,
   appIcon,
-}: { title: string; description: string; time: string; appIcon?: React.ReactNode }) => {
+  onDismiss,
+}: { title: string; description: string; time: string; appIcon?: React.ReactNode; onDismiss: () => void }) => {
   return (
-    <div className="bg-white/90 backdrop-blur-md border border-white/20 shadow-lg rounded-md p-4 w-full">
+    <div className="w-full">
       <div className="flex justify-between items-start">
         <div className="text-base font-semibold">{title}</div>
         {appIcon && <div className="ml-2 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8">{appIcon}</div>}
@@ -30,7 +31,7 @@ const NotificationToast = ({
         <div className="text-sm text-muted-foreground mb-2">{description}</div>
       </div>
       <div className="flex justify-end">
-        <Button aria-haspopup="true" variant="outline" size="sm">
+        <Button aria-haspopup="true" variant="outline" size="sm" onClick={onDismiss}>
           Dismiss
         </Button>
       </div>
@@ -47,24 +48,37 @@ function Notifications() {
   // Effect to show toast when a new notification appears
   useEffect(() => {
     if (lastNotification) {
-      const { title, description, appId } = lastNotification
+      const { title, description, appId, id } = lastNotification
       const appIcon = appId ? uiState$.icons.get()[appId] : null
       const currentTime = new Date().toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
       })
 
-      toast(
-        <NotificationToast title={title} description={description} time={currentTime} appIcon={appIcon ? muifyHtml(appIcon) : undefined} />,
+      const toastId = toast(title, {
+        duration: 5000,
+        dismissible: true,
+        style: {
+          display: 'flex',
+          flexDirection: 'column',
+        },
+        classNames: {
+          content: 'w-full',
+          toast: 'bg-white/90 backdrop-blur-md border border-white/20 shadow-lg rounded-md p-4',
+        },
+      })
+      toast.custom(
+        (toastId: number | string) => (
+          <NotificationToast
+            title={title}
+            description={description}
+            time={currentTime}
+            appIcon={appIcon ? muifyHtml(appIcon) : undefined}
+            onDismiss={() => toast.dismiss(toastId)}
+          />
+        ),
         {
-          duration: 5000,
-          dismissible: true,
-          style: {
-            padding: '0',
-          },
-          classNames: {
-            content: 'w-full',
-          },
+          id: toastId,
         }
       )
     }
