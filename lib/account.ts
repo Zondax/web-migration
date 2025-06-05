@@ -14,16 +14,19 @@ import type {
 } from '@polkadot/types/interfaces'
 import type { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
 import { hexToU8a } from '@polkadot/util'
+import { createKeyMulti, encodeAddress } from '@polkadot/util-crypto'
 import type { AppConfig } from 'config/apps'
 import { createKeyMulti, encodeAddress } from '@polkadot/util-crypto'
 import { AppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
+import { getMultisigInfo } from 'lib/subscan'
 import {
   type Address,
   type AddressBalance,
   BalanceType,
   type Collection,
+  type MultisigAddress,
   type Native,
   type Nft,
   type NftsInfo,
@@ -32,8 +35,6 @@ import {
   type TransactionDetails,
   TransactionStatus,
 } from 'state/types/ledger'
-
-import { ledgerService } from '@/lib/ledger/ledgerService'
 
 // Get API and Provider
 export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
@@ -1140,7 +1141,7 @@ export async function createApproveAsMulti(
   api: ApiPromise,
   appConfig: AppConfig,
   path: string
-): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
+): Promise<SubmittableExtrinsic<'promise', ISubmittableResult> | undefined> {
   // Define the call we want to execute through multisig
   const transferAmount = 1000000000 // 0.001 KSM
   const balanceTransfer = api.tx.balances.transferKeepAlive(RECIPIENT_ADDRESS, transferAmount)
@@ -1189,29 +1190,29 @@ export async function createApproveAsMulti(
   const chainId = appConfig.token.symbol.toLowerCase()
 
   // Sign transaction with Ledger
-  const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
-  if (!signature) {
-    throw new Error('Failed to sign transaction')
-  }
+  // const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
+  // if (!signature) {
+  //   throw new Error('Failed to sign transaction')
+  // }
 
-  // Create signed extrinsic
-  const signedExtrinsic = createSignedExtrinsic(
-    api,
-    typedTransfer,
-    address,
-    signature,
-    payload,
-    nonce,
-    metadataHash
-  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
+  // // Create signed extrinsic
+  // const signedExtrinsic = createSignedExtrinsic(
+  //   api,
+  //   typedTransfer,
+  //   address,
+  //   signature,
+  //   payload,
+  //   nonce,
+  //   metadataHash
+  // ) as SubmittableExtrinsic<'promise', ISubmittableResult>
 
-  // Show pending call in the multisig
-  // At this point its also visible on polkadot js the multisig call pendidng approval
-  // Check if there's an existing multisig for this call
-  const multisigscheck = await api.query.multisig.multisigs.entries(multisigAddress)
-  console.log('multisigscheck', multisigscheck)
+  // // Show pending call in the multisig
+  // // At this point its also visible on polkadot js the multisig call pendidng approval
+  // // Check if there's an existing multisig for this call
+  // const multisigscheck = await api.query.multisig.multisigs.entries(multisigAddress)
+  // console.log('multisigscheck', multisigscheck)
 
-  return signedExtrinsic
+  // return signedExtrinsic
 }
 
 /**
@@ -1228,7 +1229,7 @@ export async function createAsMulti(
   appConfig: AppConfig,
   path: string,
   callData?: string
-): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
+): Promise<SubmittableExtrinsic<'promise', ISubmittableResult> | undefined> {
   // Reconstruct the original call (same as in createApproveAsMulti)
   const transferAmount = 1000000000 // 0.001 KSM
   const balanceTransfer = api.tx.balances.transferKeepAlive(RECIPIENT_ADDRESS, transferAmount)
@@ -1283,21 +1284,70 @@ export async function createAsMulti(
   const chainId = appConfig.token.symbol.toLowerCase()
 
   // Sign transaction with Ledger
-  const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
-  if (!signature) {
-    throw new Error('Failed to sign transaction')
+  // const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
+  // if (!signature) {
+  //   throw new Error('Failed to sign transaction')
+  // }
+
+  // // Create signed extrinsic
+  // const signedExtrinsic = createSignedExtrinsic(
+  //   api,
+  //   typedTransfer,
+  //   address,
+  //   signature,
+  //   payload,
+  //   nonce,
+  //   metadataHash
+  // ) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  // return signedExtrinsic
+}
+
+/**
+ * Gets the multisig addresses for a given address
+ * @param address The address to check
+ * @param network The network name (e.g., 'kusama', 'polkadot')
+ * @returns The multisig addresses and their members if any
+ */
+export async function getMultisigAddresses(address: string, network: string): Promise<MultisigAddress[] | undefined> {
+  try {
+    console.log('address', address)
+    const multisigInfo = await getMultisigInfo(address, network)
+
+    if (!multisigInfo?.multi_account || multisigInfo.multi_account.length === 0) {
+      return undefined
+    }
+
+    // Map the multisig addresses to the required format
+    const multisigAddresses = multisigInfo.multi_account.map(account => ({
+      multisigAddress: { address: account.address, path: '', pubKey: '' },
+      threshold: multisigInfo.threshold,
+      members: {
+        addresses: multisigInfo.multi_account_member?.map(member => member.address) || [],
+      },
+    }))
+    // If multi_account_member is not available, fetch member info for each multisig address
+    if (!multisigInfo.multi_account_member) {
+      // Process each multisig address sequentially
+      for (const [index, multisigAddress] of Object.entries(multisigAddresses)) {
+        try {
+          // Get member info for this specific multisig address
+          const memberInfo = await getMultisigInfo(multisigAddress.multisigAddress.address, network)
+
+          if (memberInfo?.multi_account_member) {
+            multisigAddresses[Number(index)].members = {
+              addresses: memberInfo.multi_account_member.map(member => member.address),
+            }
+          }
+        } catch (err) {
+        }
+      }
+    }
+
+    console.log('multisigAddresses', multisigAddresses)
+    return multisigAddresses
+  } catch (error) {
+    // console.error('Error getting multisig addresses:', error)
+    return undefined
   }
-
-  // Create signed extrinsic
-  const signedExtrinsic = createSignedExtrinsic(
-    api,
-    typedTransfer,
-    address,
-    signature,
-    payload,
-    nonce,
-    metadataHash
-  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
-
-  return signedExtrinsic
 }

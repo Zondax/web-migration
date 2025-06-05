@@ -4,12 +4,12 @@ import { ChevronDown } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { type App, ledgerState$ } from 'state/ledger'
 import { BalanceType } from 'state/types/ledger'
-import { uiState$ } from 'state/ui'
 
 import { isNativeBalance } from '@/lib/utils/balance'
 import { formatBalance } from '@/lib/utils/format'
 import { muifyHtml } from '@/lib/utils/html'
 
+import { useTokenLogo } from '@/components/hooks/useTokenLogo'
 import AccountsTable from './accounts-table'
 import { BalanceTypeFlag } from './balance-detail-card'
 
@@ -21,7 +21,7 @@ function SynchronizedApp({ app, failedSync }: { app: Observable<App>; failedSync
 
   const [isExpanded, setIsExpanded] = useState(true)
 
-  const icon = uiState$.icons.get()[id]
+  const icon = useTokenLogo(id)
   const polkadotAddresses = useMemo(() => ledgerState$.polkadotAddresses[id].get(), [id])
   const isAccountsNotEmpty = useMemo(() => Boolean(accounts && accounts.length !== 0), [accounts])
 
@@ -66,7 +66,7 @@ function SynchronizedApp({ app, failedSync }: { app: Observable<App>; failedSync
         <div className="flex items-center gap-4">
           <div className="max-h-8 w-8 h-8 overflow-hidden flex items-center justify-center">
             {/* Icon */}
-            {muifyHtml(icon)}
+            {icon ? muifyHtml(icon) : null}
           </div>
           <div className="flex flex-col">
             {/* Name */}

@@ -1,5 +1,5 @@
 import { observer } from '@legendapp/state/react'
-import { AlertCircle, BanknoteArrowDown, Info, KeyRound, LockOpen, Route, Trash2, TriangleAlert, User } from 'lucide-react'
+import { AlertCircle, BanknoteArrowDown, Group, Info, KeyRound, LockOpen, Route, Trash2, TriangleAlert, User } from 'lucide-react'
 import { useState } from 'react'
 import type { Collections } from 'state/ledger'
 import type { Address, AddressBalance } from 'state/types/ledger'
@@ -162,6 +162,23 @@ const SynchronizedAccountRow = observer(
       </div>
     )
 
+    const tooltipMultisig = (): React.ReactNode => {
+      return (
+        <div className="p-2 min-w-[240px]">
+          <TooltipBody
+            items={
+              account.memberMultisigAddresses?.map(address => ({
+                label: 'Multisig member of',
+                value: address,
+                icon: User,
+                hasCopyButton: true,
+              })) ?? []
+            }
+          />
+        </div>
+      )
+    }
+
     const tooltipIdentity = (): React.ReactNode => {
       if (!account.registration?.identity) return null
       return (
@@ -209,6 +226,11 @@ const SynchronizedAccountRow = observer(
               <CustomTooltip tooltipBody={tooltipAddres()}>
                 <Info className="h-4 w-4 text-muted-foreground" />
               </CustomTooltip>
+              {account.memberMultisigAddresses && account.memberMultisigAddresses.length > 0 ? (
+                <CustomTooltip tooltipBody={tooltipMultisig()}>
+                  <Group className="h-4 w-4 text-polkadot-pink" />
+                </CustomTooltip>
+              ) : null}
             </div>
           </TableCell>
         )}

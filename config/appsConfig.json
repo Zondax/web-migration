@@ -162,7 +162,8 @@
     "explorer": {
       "id": "subscan",
       "network": "kusama"
-    }
+    },
+    "subscanId": "kusama"
   },
   {
     "id": "nodle",
@@ -248,7 +249,8 @@
     "explorer": {
       "id": "subscan",
       "network": "assethub-kusama"
-    }
+    },
+    "subscanId": "assethub-kusama"
   },
   {
     "id": "unique",

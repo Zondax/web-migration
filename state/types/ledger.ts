@@ -85,6 +85,17 @@ export interface NftBalance {
 export type AddressBalance = NativeBalance | NftBalance
 
 /**
+ * Information about a multisig address
+ */
+export interface MultisigAddress {
+  multisigAddress: Address
+  threshold: number
+  members?: {
+    addresses: string[]
+  }
+}
+
+/**
  * Extended address information including balance, status and transaction details
  */
 export interface Address extends GenericeResponseAddress {
@@ -97,6 +108,7 @@ export interface Address extends GenericeResponseAddress {
   }
   path: string
   registration?: Registration
+  memberMultisigAddresses?: string[] // addresses of the multisig addresses that the account is a member of
 }
 
 /**

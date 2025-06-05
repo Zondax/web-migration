@@ -5,7 +5,7 @@ import { errorApps, syncApps } from 'config/mockData'
 
 import type { Token } from '@/config/apps'
 import { maxAddressesToFetch } from '@/config/config'
-import { type UpdateTransactionStatus, getApiAndProvider, getBalance, getIdentityInfo } from '@/lib/account'
+import { type UpdateTransactionStatus, getApiAndProvider, getBalance, getIdentityInfo, getMultisigAddresses } from '@/lib/account'
 import type { DeviceConnectionProps } from '@/lib/ledger/types'
 import { convertSS58Format } from '@/lib/utils/address'
 import { hasAddressBalance, hasBalance } from '@/lib/utils/balance'
@@ -19,6 +19,7 @@ import {
   AddressStatus,
   type Collection,
   type MigratingItem,
+  type MultisigAddress,
   type Registration,
   TransactionStatus,
   type UpdateMigratedStatusFn,
@@ -46,6 +47,7 @@ export interface App {
   name: string
   id: AppId
   accounts?: Address[]
+  multisigAccounts?: MultisigAddress[]
   collections?: Collections
   token: Token
   status?: AppStatus
@@ -378,8 +380,11 @@ export const ledgerState$ = observable({
         nfts: new Map<number, Collection>(),
       }
 
+      const multisigAccounts: Map<string, MultisigAddress> = new Map()
+
       const accounts: Address[] = await Promise.all(
         response.result.map(async address => {
+          // Balance Info
           const { balances: balancesResponse, collections, error } = await getBalance(address, api)
           const balances = balancesResponse.filter(balance => hasBalance([balance]))
 
@@ -413,6 +418,8 @@ export const ledgerState$ = observable({
               }
             }
           }
+
+          // Registration Info
           let registration: Registration | undefined
           if (app.peopleRpcEndpoint) {
             const { api: peopleApi, error: peopleError } = await getApiAndProvider(app.peopleRpcEndpoint)
@@ -422,10 +429,24 @@ export const ledgerState$ = observable({
             }
           }
 
+          let memberMultisigAddresses: string[] | undefined
+          if (app.subscanId) {
+            // Multisig Addresses
+            const multisigAddresses = await getMultisigAddresses(address.address, app.subscanId)
+            memberMultisigAddresses = multisigAddresses?.map(multisigAddress => multisigAddress.multisigAddress.address)
+
+            if (memberMultisigAddresses && multisigAddresses) {
+              for (const multisigAddress of multisigAddresses) {
+                multisigAccounts.set(multisigAddress.multisigAddress.address, multisigAddress)
+              }
+            }
+          }
+
           return {
             ...address,
             balances,
             registration,
+            memberMultisigAddresses,
             status: AddressStatus.SYNCHRONIZED,
             error: undefined,
             isLoading: false,
@@ -434,7 +455,11 @@ export const ledgerState$ = observable({
       )
 
       const filteredAccounts = accounts.filter(
-        account => !filterByBalance || (account.balances && account.balances.length > 0) || account.error
+        account =>
+          !filterByBalance ||
+          (account.balances && account.balances.length > 0) ||
+          account.error ||
+          (account.memberMultisigAddresses && account.memberMultisigAddresses.length > 0)
       )
 
       // Only set the app if there are accounts after filtering
@@ -463,6 +488,7 @@ export const ledgerState$ = observable({
             })),
           })),
           collections: collectionsMap,
+          multisigAccounts: Array.from(multisigAccounts.values()),
         }
       }
 
