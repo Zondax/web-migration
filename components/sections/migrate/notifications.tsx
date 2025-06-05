@@ -64,7 +64,7 @@ function Notifications() {
         },
         classNames: {
           content: 'w-full',
-          toast: 'bg-white/90 backdrop-blur-md border border-white/20 shadow-lg rounded-md p-4',
+          toast: 'bg-white/90 backdrop-blur-md border border-white/20 shadow-lg rounded-md p-4 w-sm min-w-sm max-w-sm',
         },
       })
       toast.custom(
