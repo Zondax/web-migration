@@ -11,6 +11,8 @@ import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
 import { Address, Balance, Collection, Nft, NftsInfo, TransactionStatus } from 'state/types/ledger'
 
+import { ledgerService } from './ledger/ledgerService'
+
 // Get API and Provider
 export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: ApiPromise; provider?: WsProvider; error?: string }> {
   try {
@@ -889,4 +891,68 @@ export async function getEnrichedNftMetadata(metadataUrl: string): Promise<{
     console.error('Error getting enriched NFT metadata:', error)
     return null
   }
+}
+
+export async function getProxyInfo(address: string, api: ApiPromise): Promise<void> {
+  try {
+    // Query proxies - returns a Codec, not a tuple
+    const proxiesResult = await api.query.proxy.proxies(address)
+    const proxiesData = proxiesResult.toHuman() as any
+
+    // Log the results with formatted JSON
+    console.log('Querying proxies for account:', address)
+    console.log('\nProxies:', JSON.stringify(proxiesData, null, 2))
+
+    return undefined
+  } catch (error) {
+    console.error('Error fetching proxy information:', error)
+    return undefined
+  }
+}
+
+export async function removeProxy(
+  address: string,
+  api: ApiPromise,
+  appConfig: AppConfig,
+  path: string
+): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
+  // Get the proxy info
+  const proxiesResult = await api.query.proxy.proxies(address)
+  const proxiesData = proxiesResult.toHuman() as any
+  const proxyAddress = proxiesData[0][0].delegate
+  const proxyType = proxiesData[0][0].proxyType
+  const delay = proxiesData[0][0].delay
+
+  // Get the derived identity for display info
+  const removeIdentityTx = await api.tx.proxy.removeProxy(proxyAddress, proxyType, delay)
+
+  // Prepare transaction payload
+  const preparedTx = await prepareTransactionPayload(api, address, appConfig, removeIdentityTx)
+  if (!preparedTx) {
+    throw new Error('Failed to prepare transaction')
+  }
+  const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
+  const typedTransfer = transfer as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  // Get chain ID from app config
+  const chainId = appConfig.token.symbol.toLowerCase()
+
+  // Sign transaction with Ledger
+  const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
+  if (!signature) {
+    throw new Error('Failed to sign transaction')
+  }
+
+  // Create signed extrinsic
+  const signedExtrinsic = createSignedExtrinsic(
+    api,
+    typedTransfer,
+    address,
+    signature,
+    payload,
+    nonce,
+    metadataHash
+  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  return signedExtrinsic
 }
