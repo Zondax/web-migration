@@ -175,17 +175,6 @@
     }
   },
   {
-    "id": "sora",
-    "name": "Sora",
-    "bip44Path": "m/44'/617'/0'/0'/0'",
-    "ss58Prefix": 69,
-    "rpcEndpoint": "wss://ws.parachain-collator-3.pc3.sora2.soramitsu.co.jp",
-    "token": {
-      "symbol": "XOR",
-      "decimals": 18
-    }
-  },
-  {
     "id": "kusama-asset-hub",
     "name": "Kusama Asset Hub",
     "bip44Path": "m/44'/434'/0'/0'/0'",
