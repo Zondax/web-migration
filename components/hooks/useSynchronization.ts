@@ -17,6 +17,7 @@ interface UseSynchronizationReturn {
   }
   isLedgerConnected: boolean
   isRescaning: boolean
+  isSyncCancelRequested: boolean
 
   // Computed values
   hasAccountsWithErrors: boolean
@@ -27,6 +28,7 @@ interface UseSynchronizationReturn {
   // Actions
   rescanFailedAccounts: () => Promise<void>
   restartSynchronization: () => void
+  cancelSynchronization: () => void
 }
 
 /**
@@ -36,6 +38,7 @@ export const useSynchronization = (): UseSynchronizationReturn => {
   const apps$ = ledgerState$.apps.apps
   const status = use$(ledgerState$.apps.status)
   const syncProgress = use$(ledgerState$.apps.syncProgress)
+  const isSyncCancelRequested = use$(ledgerState$.apps.isSyncCancelRequested)
   const [isRescaning, setIsRescaning] = useState<boolean>(false)
 
   // Check if Ledger is connected
@@ -67,6 +70,11 @@ export const useSynchronization = (): UseSynchronizationReturn => {
       const appsToRescan = filterAppsWithErrors(apps$.get())
 
       for (const app of appsToRescan) {
+        // Check if cancellation is requested
+        if (ledgerState$.apps.isSyncCancelRequested.get()) {
+          return
+        }
+
         // Skip apps without a valid ID
         if (!app.id) continue
 
@@ -76,6 +84,11 @@ export const useSynchronization = (): UseSynchronizationReturn => {
         } else if (app.accounts) {
           // Otherwise just rescan individual accounts with errors
           for (const account of app.accounts) {
+            // Check again for cancellation for each account
+            if (ledgerState$.apps.isSyncCancelRequested.get()) {
+              return
+            }
+
             if (account.error && app.id) {
               await ledgerState$.getAccountBalance(app.id, account)
             }
@@ -102,6 +115,7 @@ export const useSynchronization = (): UseSynchronizationReturn => {
     syncProgress,
     isLedgerConnected,
     isRescaning,
+    isSyncCancelRequested,
 
     // Computed values
     hasAccountsWithErrors: accountsWithErrors,
@@ -112,5 +126,6 @@ export const useSynchronization = (): UseSynchronizationReturn => {
     // Actions
     rescanFailedAccounts,
     restartSynchronization,
+    cancelSynchronization: ledgerState$.cancelSynchronization,
   }
 }

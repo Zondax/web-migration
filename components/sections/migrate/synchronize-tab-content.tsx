@@ -1,7 +1,7 @@
 'use client'
 
 import { observable } from '@legendapp/state'
-import { FolderSync, Info, RefreshCw } from 'lucide-react'
+import { FolderSync, Info, Loader2, RefreshCw, X } from 'lucide-react'
 import { AppStatus } from 'state/ledger'
 
 import { AddressLink } from '@/components/AddressLink'
@@ -25,6 +25,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
     status,
     syncProgress,
     isRescaning,
+    isSyncCancelRequested,
 
     // Computed values
     hasAccountsWithErrors: accountsWithErrors,
@@ -35,6 +36,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
     // Actions
     rescanFailedAccounts,
     restartSynchronization,
+    cancelSynchronization,
   } = useSynchronization()
 
   const handleMigrate = () => {
@@ -95,9 +97,21 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
               </Button>
             </CustomTooltip>
           )}
-          <Button onClick={handleMigrate} disabled={isLoading || appsWithoutErrors.length === 0} variant="purple">
-            {isLoading ? 'Synchronizing...' : 'Migrate All'}
-          </Button>
+
+          {isLoading ? (
+            <Button
+              onClick={cancelSynchronization}
+              variant="destructive"
+              className="flex items-center gap-1"
+              disabled={isSyncCancelRequested}
+            >
+              {isSyncCancelRequested ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />} Stop Synchronization
+            </Button>
+          ) : (
+            <Button onClick={handleMigrate} disabled={isLoading || appsWithoutErrors.length === 0} variant="purple">
+              Migrate All
+            </Button>
+          )}
         </div>
       </div>
       <div className="hidden md:block mb-4">{renderDestinationAddressesInfo()}</div>
