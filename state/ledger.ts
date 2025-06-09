@@ -290,18 +290,19 @@ export const ledgerState$ = observable({
     ledgerState$.polkadotAddresses.set({})
   },
 
-  // Add cancelSynchronization method before the fetchAndProcessAccountsForApp method
+  // Stop synchronization without deleting already synchronized accounts
   cancelSynchronization() {
     ledgerState$.apps.isSyncCancelRequested.set(true)
+
+    // Set status to synchronized to indicate that the process was stopped
+    ledgerState$.apps.status.set(AppStatus.SYNCHRONIZED)
+
     notifications$.push({
-      title: 'Synchronization Cancelled',
-      description: 'The synchronization process has been cancelled.',
+      title: 'Synchronization Stopped',
+      description: 'The synchronization process has been stopped. You can continue with the accounts that were already synchronized.',
       type: 'info',
       autoHideDuration: 5000,
     })
-
-    // Use clearSynchronization to properly reset all state
-    ledgerState$.clearSynchronization()
   },
 
   // Fetch and Process Accounts for a Single App

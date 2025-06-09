@@ -105,7 +105,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
               className="flex items-center gap-1"
               disabled={isSyncCancelRequested}
             >
-              {isSyncCancelRequested ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />} Cancel Synchronization
+              {isSyncCancelRequested ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />} Stop Synchronization
             </Button>
           ) : (
             <Button onClick={handleMigrate} disabled={isLoading || appsWithoutErrors.length === 0} variant="purple">
