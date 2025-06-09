@@ -137,13 +137,13 @@ describe('getStakingInfo', () => {
         {
           value: 300,
           era: 100,
-          timeRemaining: '0 days and 0 hours',
+          timeRemaining: '0 hours',
           canWithdraw: true,
         },
         {
           value: 200,
           era: 95,
-          timeRemaining: '0 days and 0 hours',
+          timeRemaining: '-6 hours',
           canWithdraw: true,
         },
       ],
