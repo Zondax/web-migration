@@ -7,19 +7,23 @@ import type { Token } from '@/config/apps'
 import { maxAddressesToFetch } from '@/config/config'
 import { type UpdateTransactionStatus, getApiAndProvider, getBalance, getIdentityInfo, getMultisigAddresses } from '@/lib/account'
 import type { DeviceConnectionProps } from '@/lib/ledger/types'
-import { convertSS58Format } from '@/lib/utils/address'
+import { convertSS58Format, isMultisigAddress } from '@/lib/utils/address'
 import { hasAddressBalance, hasBalance } from '@/lib/utils/balance'
 import { mapLedgerError } from '@/lib/utils/error'
+import { setDefaultDestinationAddress } from '@/lib/utils/ledger'
 
+import type { MultisigCallFormData } from '@/components/sections/migrate/approve-multisig-call-dialog'
 import type { LedgerClientError } from './client/base'
 import { ledgerClient } from './client/ledger'
 import { notifications$ } from './notifications'
 import {
+  AccountType,
   type Address,
   AddressStatus,
   type Collection,
   type MigratingItem,
   type MultisigAddress,
+  type PreTxInfo,
   type Registration,
   TransactionStatus,
   type UpdateMigratedStatusFn,
@@ -159,13 +163,24 @@ function updateMigrationResultCounter(type: MigrationResultKey, increment = 1) {
 }
 
 // Update Migrated Status
-const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath: string, type, status, message, txDetails) => {
+const updateMigratedStatus: UpdateMigratedStatusFn = (
+  appId: AppId,
+  accountType,
+  accountPath: string,
+  balanceType,
+  status,
+  message,
+  txDetails
+) => {
   const apps = ledgerState$.apps.apps.get()
   const appIndex = apps.findIndex(app => app.id === appId)
 
   if (appIndex !== -1) {
-    const accounts = apps[appIndex]?.accounts ? [...apps[appIndex].accounts] : []
     const app = apps[appIndex]
+    const singleAccounts = app?.accounts ? [...app.accounts] : []
+    const multisigAccounts = app?.multisigAccounts ? [...app.multisigAccounts] : []
+
+    const accounts = accountType === AccountType.MULTISIG ? multisigAccounts : singleAccounts
 
     const accountIndex = accounts.findIndex(account => account.path === accountPath)
 
@@ -174,7 +189,7 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
       accounts[accountIndex] = {
         ...accounts[accountIndex],
         balances: accounts[accountIndex].balances?.map(balance => {
-          if (balance.type === type) {
+          if (balance.type === balanceType) {
             // If the status is IS_LOADING, set the currentMigratedItem
             if (status === TransactionStatus.IS_LOADING) {
               ledgerState$.apps.currentMigratedItem.set({
@@ -184,9 +199,7 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
                 transaction: {
                   status: TransactionStatus.IS_LOADING,
                   statusMessage: message,
-                  hash: txDetails?.txHash,
-                  blockHash: txDetails?.blockHash,
-                  blockNumber: txDetails?.blockNumber,
+                  ...txDetails,
                 },
               })
             } else {
@@ -204,9 +217,7 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
                 ...balance.transaction,
                 status: status,
                 statusMessage: message,
-                hash: txDetails?.txHash,
-                blockHash: txDetails?.blockHash,
-                blockNumber: txDetails?.blockNumber,
+                ...txDetails,
               },
             }
           }
@@ -222,7 +233,11 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
         updateMigrationResultCounter('fails')
       }
 
-      ledgerState$.apps.apps[appIndex].accounts.set(accounts)
+      if (accountType === AccountType.MULTISIG) {
+        ledgerState$.apps.apps[appIndex].multisigAccounts.set(accounts as MultisigAddress[])
+      } else {
+        ledgerState$.apps.apps[appIndex].accounts.set(accounts as Address[])
+      }
     }
   }
 }
@@ -382,6 +397,29 @@ export const ledgerState$ = observable({
 
       const multisigAccounts: Map<string, MultisigAddress> = new Map()
 
+      const processCollections = (collections: {
+        uniques: Collection[]
+        nfts: Collection[]
+      }) => {
+        // Process uniques collections
+        if (collections.uniques && collections.uniques.length > 0) {
+          for (const collection of collections.uniques) {
+            if (collection.collectionId) {
+              collectionsMap.uniques.set(collection.collectionId, collection)
+            }
+          }
+        }
+
+        // Process nfts collections
+        if (collections.nfts && collections.nfts.length > 0) {
+          for (const collection of collections.nfts) {
+            if (collection.collectionId) {
+              collectionsMap.nfts.set(collection.collectionId, collection)
+            }
+          }
+        }
+      }
+
       const accounts: Address[] = await Promise.all(
         response.result.map(async address => {
           // Balance Info
@@ -400,23 +438,7 @@ export const ledgerState$ = observable({
             }
           }
           if (collections) {
-            // Process uniques collections
-            if (collections.uniques && collections.uniques.length > 0) {
-              for (const collection of collections.uniques) {
-                if (collection.collectionId) {
-                  collectionsMap.uniques.set(collection.collectionId, collection)
-                }
-              }
-            }
-
-            // Process nfts collections
-            if (collections.nfts && collections.nfts.length > 0) {
-              for (const collection of collections.nfts) {
-                if (collection.collectionId) {
-                  collectionsMap.nfts.set(collection.collectionId, collection)
-                }
-              }
-            }
+            processCollections(collections)
           }
 
           // Registration Info
@@ -429,15 +451,15 @@ export const ledgerState$ = observable({
             }
           }
 
+          // Multisig Addresses
           let memberMultisigAddresses: string[] | undefined
           if (app.subscanId) {
-            // Multisig Addresses
-            const multisigAddresses = await getMultisigAddresses(address.address, app.subscanId)
-            memberMultisigAddresses = multisigAddresses?.map(multisigAddress => multisigAddress.multisigAddress.address)
+            const multisigAddresses = await getMultisigAddresses(address.address, address.path, app.subscanId, api)
+            memberMultisigAddresses = multisigAddresses?.map(multisigAddress => multisigAddress.address)
 
             if (memberMultisigAddresses && multisigAddresses) {
               for (const multisigAddress of multisigAddresses) {
-                multisigAccounts.set(multisigAddress.multisigAddress.address, multisigAddress)
+                multisigAccounts.set(multisigAddress.address, multisigAddress)
               }
             }
           }
@@ -454,12 +476,55 @@ export const ledgerState$ = observable({
         })
       )
 
+      // Get info related to multisig accounts if they exist
+      const foundAccounts = accounts.map(account => account.address)
+
+      // Obtener el balance de cada multisigAccount dentro del map
+      await Promise.all(
+        Array.from(multisigAccounts.values()).map(async multisigAddress => {
+          const {
+            balances: multisigBalancesResponse,
+            collections: multisigCollections,
+            error: multisigError,
+          } = await getBalance(multisigAddress, api)
+          const multisigBalances = multisigBalancesResponse.filter(balance => hasBalance([balance]))
+
+          if (multisigCollections) {
+            processCollections(multisigCollections)
+          }
+
+          multisigAddress.balances = multisigBalances.map(balance => ({
+            ...balance,
+            transaction: { ...balance.transaction, signatoryAddress: multisigAddress.members[0].address },
+          }))
+          multisigAddress.status = AddressStatus.SYNCHRONIZED
+          multisigAddress.error = multisigError
+            ? {
+                source: 'balance_fetch',
+                description: 'Failed to fetch balance',
+              }
+            : undefined
+          multisigAddress.isLoading = false
+          multisigAddress.members = multisigAddress.members.map(member => {
+            if (foundAccounts.includes(member.address)) {
+              return { ...member, internal: true, path: accounts.find(account => account.address === member.address)?.path }
+            }
+            return member
+          })
+          multisigAccounts.set(multisigAddress.address, multisigAddress)
+        })
+      )
+
       const filteredAccounts = accounts.filter(
         account =>
           !filterByBalance ||
-          (account.balances && account.balances.length > 0) ||
+          (account.balances && hasBalance(account.balances)) ||
           account.error ||
           (account.memberMultisigAddresses && account.memberMultisigAddresses.length > 0)
+      )
+
+      const filteredMultisigAccounts = Array.from(multisigAccounts.values()).filter(
+        multisigAccount => multisigAccount.balances && hasBalance(multisigAccount.balances)
       )
 
       // Only set the app if there are accounts after filtering
@@ -478,17 +543,9 @@ export const ledgerState$ = observable({
           id: app.id,
           token: app.token,
           status: AppStatus.SYNCHRONIZED,
-          accounts: filteredAccounts.map(account => ({
-            ...account,
-            balances: account.balances?.map(balance => ({
-              ...balance,
-              transaction: {
-                destinationAddress: polkadotAddresses[0], // default destination address
-              },
-            })),
-          })),
+          accounts: filteredAccounts.map(account => setDefaultDestinationAddress(account, polkadotAddresses[0])),
           collections: collectionsMap,
-          multisigAccounts: Array.from(multisigAccounts.values()),
+          multisigAccounts: filteredMultisigAccounts.map(account => setDefaultDestinationAddress(account, polkadotAddresses[0])),
         }
       }
 
@@ -867,22 +924,10 @@ export const ledgerState$ = observable({
   },
 
   // Migrate Single Account
-  async migrateAccount(
-    appId: AppId,
-    accountIndex: number
-  ): Promise<
-    | {
-        txPromises: Promise<void>[] | undefined
-      }
-    | undefined
-  > {
-    const apps = ledgerState$.apps.apps.get()
-    const app = apps.find(app => app.id === appId)
-    const account = app?.accounts?.[accountIndex]
+  async migrateAccount(appId: AppId, account: Address | MultisigAddress): Promise<{ txPromises: Promise<void>[] | undefined } | undefined> {
+    console.debug(`Starting migration for account ${account.address} in app ${appId}`)
 
-    console.debug(`Starting migration for account at index ${accountIndex} in app ${appId}`)
     if (!account) {
-      console.warn(`Account at index ${accountIndex} not found in app ${appId} for migration.`)
       return undefined
     }
 
@@ -893,7 +938,7 @@ export const ledgerState$ = observable({
       let hasFailures = false
 
       for (const balanceIndex in account.balances) {
-        const migrationResult = await ledgerState$.migrateBalance(appId, account, account.path, Number.parseInt(balanceIndex))
+        const migrationResult = await ledgerState$.migrateBalance(appId, account, Number.parseInt(balanceIndex))
 
         if (migrationResult?.txPromise) {
           migrationPromises.push(migrationResult.txPromise)
@@ -904,7 +949,7 @@ export const ledgerState$ = observable({
 
       if (migrationPromises.length > 0) {
         // At least one balance migration was successful
-        console.debug(`Account at index ${accountIndex} in app ${appId} has ${migrationPromises.length} successful balance migrations`)
+        console.debug(`Account ${account.address} in app ${appId} has ${migrationPromises.length} successful balance migrations`)
 
         // Return a promise that resolves when all migrations are complete
         return {
@@ -913,7 +958,7 @@ export const ledgerState$ = observable({
       }
       if (hasFailures) {
         // All balance migrations failed
-        console.debug(`Account at index ${accountIndex} in app ${appId} had all balance migrations fail`)
+        console.debug(`Account ${account.address} in app ${appId} had all balance migrations fail`)
         return undefined
       }
     }
@@ -922,37 +967,44 @@ export const ledgerState$ = observable({
   // Migrate Balance for a specific account
   async migrateBalance(
     appId: AppId,
-    account: Address,
-    path: string,
+    account: Address | MultisigAddress,
     balanceIndex: number
-  ): Promise<
-    | {
-        txPromise: Promise<void> | undefined
-      }
-    | undefined
-  > {
+  ): Promise<{ txPromise: Promise<void> | undefined } | undefined> {
+    const isMultisig = isMultisigAddress(account)
+    const accountType = isMultisig ? AccountType.MULTISIG : AccountType.ACCOUNT
     const balance = account.balances?.[balanceIndex]
     if (!balance) {
-      console.warn(`Balance at index ${balanceIndex} not found for account ${account.address} in app ${appId}`)
+      console.warn(
+        `Balance at index ${balanceIndex} not found for ${isMultisig ? 'multisig ' : ''}account ${account.address} in app ${appId}`
+      )
       return undefined
     }
 
-    console.debug(`[${balance.type}] Starting balance migration for account ${account.address} in app ${appId}`)
+    console.debug(
+      `[${balance.type}] Starting balance migration for ${isMultisig ? 'multisig ' : ''}account ${account.address} in app ${appId}`
+    )
 
     if (!balance.transaction?.destinationAddress) {
-      console.warn(`[${balance.type}] No destination address set for account ${account.address}`)
+      console.warn(`[${balance.type}] No destination address set for ${isMultisig ? 'multisig ' : ''}account ${account.address}`)
       return undefined
     }
 
-    updateMigratedStatus(appId, path, balance.type, TransactionStatus.IS_LOADING)
+    updateMigratedStatus(appId, accountType, account.path, balance.type, TransactionStatus.IS_LOADING)
 
     updateMigrationResultCounter('total')
 
     try {
-      const response = await ledgerClient.migrateAccount(appId, account, path, updateMigratedStatus, balanceIndex)
+      const response = await ledgerClient.migrateAccount(appId, account, updateMigratedStatus, balanceIndex)
 
       if (!response?.txPromise) {
-        updateMigratedStatus(appId, path, balance.type, TransactionStatus.ERROR, errorDetails.migration_error.description)
+        updateMigratedStatus(
+          appId,
+          accountType,
+          account.path,
+          balance.type,
+          TransactionStatus.ERROR,
+          errorDetails.migration_error.description
+        )
 
         // Increment fails counter
         updateMigrationResultCounter('fails')
@@ -965,7 +1017,7 @@ export const ledgerState$ = observable({
       }
 
       // The transaction has been signed and sent, but has not yet been finalized
-      updateMigratedStatus(appId, path, balance.type, TransactionStatus.PENDING)
+      updateMigratedStatus(appId, accountType, account.path, balance.type, TransactionStatus.PENDING)
 
       console.debug(`[${balance.type}] Balance migration for account ${account.address} in app ${appId} transaction submitted`)
 
@@ -973,7 +1025,7 @@ export const ledgerState$ = observable({
       return { txPromise: response.txPromise }
     } catch (error) {
       const statusMessage = (error as LedgerClientError).message || errorDetails.migration_error.description
-      updateMigratedStatus(appId, path, balance.type, TransactionStatus.ERROR, statusMessage)
+      updateMigratedStatus(appId, accountType, account.path, balance.type, TransactionStatus.ERROR, statusMessage)
 
       // Increment fails counter
       updateMigrationResultCounter('fails')
@@ -994,13 +1046,12 @@ export const ledgerState$ = observable({
 
       // Process apps to start their transactions
       for (const app of apps) {
-        if (!app.accounts || app.accounts.length === 0) continue
+        if ((!app.accounts || app.accounts.length === 0) && (!app.multisigAccounts || app.multisigAccounts.length === 0)) continue
 
         // Get accounts that need migration
-        const accountsToMigrate = app.accounts
-          .map((account, index) => ({ account, index }))
+        const accountsToMigrate: (Address | MultisigAddress)[] = [...(app.accounts || []), ...(app.multisigAccounts || [])]
           // Skip accounts that are already migrated or have no balance
-          .filter(({ account }) => account.status !== 'migrated' && hasAddressBalance(account))
+          .filter(account => account.status !== 'migrated' && hasAddressBalance(account))
 
         if (accountsToMigrate.length === 0) continue
 
@@ -1008,8 +1059,8 @@ export const ledgerState$ = observable({
         updateApp(app.id, { status: AppStatus.LOADING })
 
         // Start transactions for each account in the app
-        for (const { index } of accountsToMigrate) {
-          const migrationResult = await ledgerState$.migrateAccount(app.id, index)
+        for (const account of accountsToMigrate) {
+          const migrationResult = await ledgerState$.migrateAccount(app.id, account)
           if (migrationResult?.txPromises) {
             allTransactionPromises.push(...migrationResult.txPromises)
           }
@@ -1029,6 +1080,21 @@ export const ledgerState$ = observable({
     } catch (error) {
       handleLedgerError(error as LedgerClientError, InternalErrors.MIGRATION_ERROR)
       ledgerState$.apps.error.set('Failed to complete migration')
+    }
+  },
+
+  async getMigrationTxInfo(appId: AppId, address: Address | MultisigAddress, balanceIndex: number): Promise<PreTxInfo | undefined> {
+    const appConfig = appsConfigs.get(appId)
+    if (!appConfig) {
+      console.error(`App with id ${appId} not found.`)
+      return
+    }
+
+    try {
+      const txInfo = await ledgerClient.getMigrationTxInfo(appId, address, balanceIndex)
+      return txInfo
+    } catch (error) {
+      return undefined
     }
   },
 
@@ -1105,6 +1171,20 @@ export const ledgerState$ = observable({
       return await ledgerClient.getRemoveIdentityFee(appId, address)
     } catch (error) {
       return undefined
+    }
+  },
+
+  async approveMultisigCall(
+    appId: AppId,
+    account: Address | MultisigAddress,
+    formBody: MultisigCallFormData,
+    updateTxStatus: UpdateTransactionStatus
+  ) {
+    try {
+      await ledgerClient.approveMultisigCall(appId, account, formBody, updateTxStatus)
+    } catch (error) {
+      const errorDetail = (error as LedgerClientError).message || errorDetails.approve_multisig_call_error.description
+      updateTxStatus(TransactionStatus.ERROR, errorDetail)
     }
   },
 })

@@ -46,6 +46,7 @@ const CustomTooltip = ({
 
 const TooltipBodyItem = ({ item }: { item: TooltipItem }) => {
   const { label, value, icon: IconComponent, href, hasCopyButton } = item
+  const hasValue = value !== undefined && value !== ''
   return (
     <div className="flex items-start gap-2">
       {IconComponent ? (
@@ -56,15 +57,15 @@ const TooltipBodyItem = ({ item }: { item: TooltipItem }) => {
       <div className="flex flex-col">
         <span className="text-xs text-muted-foreground capitalize">{label}</span>
         <div className={cn('flex flex-row items-center gap-1', hasCopyButton ? 'mt-0.5' : 'mt-1')}>
-          {href ? (
+          {href && hasValue ? (
             <a href={href} target="_blank" rel="noopener noreferrer" className="text-sm break-all inline-flex items-center gap-1">
               {value}
               <SquareArrowOutUpRight className="h-4 w-4 text-muted-foreground p-0.5" />
             </a>
           ) : (
-            <span className="text-sm break-all">{value}</span>
+            <span className="text-sm break-all">{hasValue ? value : '-'}</span>
           )}
-          {hasCopyButton && <CopyButton value={value} size="xs" />}
+          {hasCopyButton && hasValue && <CopyButton value={value} size="xs" />}
         </div>
       </div>
     </div>

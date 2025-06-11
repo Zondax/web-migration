@@ -3,31 +3,36 @@ import { type AppConfig, type AppId, appsConfigs } from 'config/apps'
 import { maxAddressesToFetch } from 'config/config'
 import { InternalErrors } from 'config/errors'
 
-import { MINIMUM_AMOUNT } from '@/config/mockData'
-  type UpdateTransactionStatus,
-  createApproveAsMulti,
-  createAsMulti
-} from '@/lib/account'
 import {
   type UpdateTransactionStatus,
   createSignedExtrinsic,
   getApiAndProvider,
   getTxFee,
+  prepareAsMultiTx,
   prepareRemoveIdentityTransaction,
   prepareTransaction,
   prepareTransactionPayload,
   prepareUnstakeTransaction,
   prepareWithdrawTransaction,
   submitAndHandleTransaction,
+  validateCallDataMatchesHash,
 } from '@/lib/account'
 import { ledgerService } from '@/lib/ledger/ledgerService'
 import type { ConnectionResponse } from '@/lib/ledger/types'
-import { hasBalance } from '@/lib/utils'
 import { getBip44Path } from '@/lib/utils/address'
-import { isNativeBalance, isNftBalance } from '@/lib/utils/balance'
+import { getTransferableAndNfts } from '@/lib/utils/balance'
 
-import { type Address, BalanceType, type Nft, type TransactionStatus, type UpdateMigratedStatusFn } from '../types/ledger'
+import type { MultisigCallFormData } from '@/components/sections/migrate/approve-multisig-call-dialog'
+import {
+  type Address,
+  type MultisigAddress,
+  type PreTxInfo,
+  type TransactionDetails,
+  TransactionStatus,
+  type UpdateMigratedStatusFn,
+} from '../types/ledger'
 import { withErrorHandling } from './base'
+import { validateApproveMultisigCallParams, validateMigrationParams } from './helpers'
 
 export const ledgerClient = {
   // Device operations
@@ -65,56 +70,26 @@ export const ledgerClient = {
     }, InternalErrors.SYNC_ERROR)
   },
 
-async migrateAccount(
+  async migrateAccount(
     appId: AppId,
-    account: Address,
-    path: string,
+    account: Address | MultisigAddress,
     updateStatus: UpdateMigratedStatusFn,
     balanceIndex: number
   ): Promise<{ txPromise?: Promise<void> } | undefined> {
-    const balance = account.balances?.[balanceIndex]
-    if (!balance) {
-      console.warn(`Balance at index ${balanceIndex} not found for account ${account.address} in app ${appId}`)
+    const validation = validateMigrationParams(appId, account, balanceIndex)
+    if (!validation.isValid) {
       return undefined
     }
 
-    const senderAddress = account.address
-    const receiverAddress = balance.transaction?.destinationAddress
-    const hasAvailableBalance = hasBalance([balance])
-    const appConfig = appsConfigs.get(appId)
-
-    if (!appConfig) {
-      throw InternalErrors.APP_CONFIG_NOT_FOUND
-    }
-    if (!appConfig.rpcEndpoint) {
-      throw InternalErrors.APP_CONFIG_NOT_FOUND
-    }
-
     return withErrorHandling(async () => {
+      const { balance, senderAddress, senderPath, receiverAddress, appConfig, multisigInfo, accountType } = validation
       const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint ?? '')
       if (error || !api) {
         throw new Error(error ?? 'Failed to connect to the blockchain.')
       }
 
       // Determine which type of balance we're dealing with
-      let nftsToTransfer: Nft[] = []
-      let nativeAmount = undefined
-      let transferableAmount = 0
-
-      if (isNativeBalance(balance)) {
-        // For native balance, use the balance amount
-        nativeAmount = balance.balance.transferable
-        transferableAmount = balance.balance.transferable
-      } else if (isNftBalance(balance)) {
-        // For NFT balances, add them to the transfer list
-        nftsToTransfer = balance.balance
-        transferableAmount = account.balances?.find(b => b.type === BalanceType.NATIVE)?.balance.transferable ?? 0
-      }
-
-      // Use minimum amount for development if needed
-      if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && MINIMUM_AMOUNT && isNativeBalance(balance)) {
-        nativeAmount = MINIMUM_AMOUNT
-      }
+      const { nftsToTransfer, nativeAmount, transferableAmount } = getTransferableAndNfts(balance, account)
 
       // Prepare transaction with the specific asset type
       const preparedTx = await prepareTransaction(
@@ -124,40 +99,40 @@ async migrateAccount(
         transferableAmount,
         nftsToTransfer,
         appConfig,
-        nativeAmount
+        nativeAmount,
+        multisigInfo
       )
       if (!preparedTx) {
         throw new Error('Prepare transaction failed')
       }
+      const { transfer, payload, metadataHash, nonce, proof1, payloadBytes, callData } = preparedTx
 
-      // Create the final asMulti transaction
-      const second_address = 'FZZMnXGjS3AAWVtuyq34MuZ4vuNRSbk96ErDV4q25S9p7tn'
-      const finalMultisigTx = await createAsMulti(second_address, api2, appConfig, account.path)
-      console.log('Final multisig transaction created:', finalMultisigTx)
+      // Get chain ID from app config
+      const chainId = appConfig.token.symbol.toLowerCase()
 
-      const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
-
-      if (signature) {
-        createSignedExtrinsic(api, transfer, senderAddress, signature, payload, nonce, metadataHash)
-
-        const updateMigratedStatus = (
-          status: TransactionStatus,
-          message?: string,
-          txDetails?: {
-            txHash?: string
-            blockHash?: string
-            blockNumber?: string
-          }
-        ) => {
-          updateStatus(appConfig.id, path, balance.type, status, message, txDetails)
-        }
-
-        // Create transaction promise but don't await it
-        const txPromise = submitAndHandleTransaction(transfer, updateMigratedStatus, api)
-
-        return { txPromise }
+      // Sign transaction with Ledger
+      const { signature } = await ledgerService.signTransaction(senderPath, payloadBytes, chainId, proof1)
+      if (!signature) {
+        throw new Error('Failed to sign transaction')
       }
-      return
+
+      // Create signed extrinsic
+      createSignedExtrinsic(api, transfer, senderAddress, signature, payload, nonce, metadataHash)
+
+      const updateTransactionStatus = (status: TransactionStatus, message?: string, txDetails?: TransactionDetails) => {
+        updateStatus(appConfig.id, accountType, account.path, balance.type, status, message, txDetails)
+      }
+
+      if (callData) {
+        updateTransactionStatus(TransactionStatus.IS_LOADING, 'Transaction is loading', {
+          callData,
+        }) // TODO: should we add another internal status?
+      }
+
+      const txPromise = submitAndHandleTransaction(transfer, updateTransactionStatus, api)
+
+      // Create and wait for transaction to be submitted
+      return { txPromise }
     }, InternalErrors.UNKNOWN_ERROR)
   },
 
@@ -261,7 +236,6 @@ async migrateAccount(
 
       // Create and wait for transaction to be submitted
       await submitAndHandleTransaction(transfer, updateTxStatus, api)
-      // await simulateAndHandleTransaction(updateTxStatus)
     }, InternalErrors.UNKNOWN_ERROR)
   },
 
@@ -344,6 +318,121 @@ async migrateAccount(
       const estimatedFee = await getTxFee(removeIdentityTx, address)
 
       return estimatedFee
+    }, InternalErrors.UNKNOWN_ERROR)
+  },
+
+  async getMigrationTxInfo(appId: AppId, account: Address, balanceIndex: number): Promise<PreTxInfo | undefined> {
+    const validation = validateMigrationParams(appId, account, balanceIndex)
+    if (!validation.isValid) {
+      return undefined
+    }
+
+    const { balance, senderAddress, receiverAddress, appConfig } = validation
+
+    return withErrorHandling(async () => {
+      const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint ?? '')
+      if (error || !api) {
+        throw new Error(error ?? 'Failed to connect to the blockchain.')
+      }
+
+      // Determine which type of balance we're dealing with
+      const { nftsToTransfer, nativeAmount, transferableAmount } = getTransferableAndNfts(balance, account)
+
+      // Prepare transaction with the specific asset type
+      const preparedTx = await prepareTransaction(
+        api,
+        senderAddress,
+        receiverAddress,
+        transferableAmount,
+        nftsToTransfer,
+        appConfig,
+        nativeAmount
+      )
+      if (!preparedTx) {
+        throw new Error('Prepare transaction failed')
+      }
+
+      const { transfer } = preparedTx
+
+      // Get the estimated fee
+      const estimatedFee = await getTxFee(transfer, senderAddress)
+
+      // Get the call hash
+      const callHash = transfer.method.hash.toHex()
+
+      return {
+        fee: estimatedFee,
+        callHash,
+      }
+    }, InternalErrors.UNKNOWN_ERROR)
+  },
+
+  async approveMultisigCall(
+    appId: AppId,
+    account: Address | MultisigAddress,
+    formBody: MultisigCallFormData,
+    updateTxStatus: UpdateTransactionStatus
+  ) {
+    const validation = validateApproveMultisigCallParams(appId, account, formBody)
+
+    if (!validation.isValid || !validation.multisigInfo) {
+      return undefined
+    }
+
+    const { appConfig, multisigInfo, callHash, callData, signer, signerPath } = validation
+
+    return withErrorHandling(async () => {
+      const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint ?? '')
+      if (error || !api) {
+        throw new Error(error ?? 'Failed to connect to the blockchain.')
+      }
+
+      const multiTx = await prepareAsMultiTx(
+        signer,
+        multisigInfo.address,
+        callHash,
+        callData,
+        multisigInfo.members,
+        multisigInfo.threshold,
+        api
+      )
+
+      // Prepare transaction payload
+      const preparedTx = await prepareTransactionPayload(api, signer, appConfig, multiTx)
+      if (!preparedTx) {
+        throw new Error('Failed to prepare transaction')
+      }
+      const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
+
+      // Get chain ID from app config
+      const chainId = appConfig.token.symbol.toLowerCase()
+
+      // Sign transaction with Ledger
+      const { signature } = await ledgerService.signTransaction(signerPath, payloadBytes, chainId, proof1)
+      if (!signature) {
+        throw new Error('Failed to sign transaction')
+      }
+
+      // Create signed extrinsic
+      createSignedExtrinsic(api, transfer, signer, signature, payload, nonce, metadataHash)
+
+      // Create and wait for transaction to be submitted
+      await submitAndHandleTransaction(transfer, updateTxStatus, api)
+    }, InternalErrors.UNKNOWN_ERROR)
+  },
+
+  async validateCallDataMatchesHash(appId: AppId, callData: string, expectedCallHash: string): Promise<boolean> {
+    const appConfig = appsConfigs.get(appId)
+    if (!appConfig?.rpcEndpoint) {
+      throw InternalErrors.APP_CONFIG_NOT_FOUND
+    }
+
+    return withErrorHandling(async () => {
+      const { api, error } = await getApiAndProvider(appConfig.rpcEndpoint ?? '')
+      if (error || !api) {
+        throw new Error(error ?? 'Failed to connect to the blockchain.')
+      }
+      return validateCallDataMatchesHash(api, callData, expectedCallHash)
     }, InternalErrors.UNKNOWN_ERROR)
   },
 

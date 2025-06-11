@@ -28,19 +28,18 @@ export enum TransactionStatus {
 /**
  * Details of a blockchain transaction
  */
-export interface Transaction {
+export interface Transaction extends TransactionDetails {
   status?: TransactionStatus
   statusMessage?: string
-  hash?: string
-  blockHash?: string
-  blockNumber?: string
   destinationAddress?: string
+  signatoryAddress?: string // Used in multisig transactions - address of the signatory address that will be used to sign the transaction
 }
 
 export interface TransactionDetails {
   txHash?: string
   blockHash?: string
   blockNumber?: string
+  callData?: string // Used in multisig transactions - call data of the transaction
 }
 
 /**
@@ -52,10 +51,16 @@ export enum BalanceType {
   NFT = 'nft',
 }
 
+export enum AccountType {
+  MULTISIG = 'multisig',
+  ACCOUNT = 'account',
+}
+
 export type UpdateMigratedStatusFn = (
   appId: AppId,
+  accountType: AccountType,
   accountPath: string,
-  type: BalanceType,
+  balanceType: BalanceType,
   status: TransactionStatus,
   message?: string,
   txDetails?: TransactionDetails
@@ -84,15 +89,27 @@ export interface NftBalance {
  */
 export type AddressBalance = NativeBalance | NftBalance
 
+export interface MultisigMember {
+  address: string
+  path?: string
+  internal: boolean // true if the address was synchronised from the same device
+}
+
+export interface MultisigCall {
+  callHash: string
+  deposit: number
+  depositor: string
+  signatories: string[]
+}
+
 /**
  * Information about a multisig address
  */
-export interface MultisigAddress {
-  multisigAddress: Address
+export interface MultisigAddress extends Address {
   threshold: number
-  members?: {
-    addresses: string[]
-  }
+  members: MultisigMember[]
+  memberMultisigAddresses: undefined // if an account is a multisig account, it will not be a member of any multisig address
+  pendingMultisigCalls: MultisigCall[]
 }
 
 /**
@@ -216,4 +233,9 @@ export interface MigratingItem {
   appName: string
   account: Address
   transaction?: Transaction
+}
+
+export interface PreTxInfo {
+  fee: string
+  callHash: string
 }

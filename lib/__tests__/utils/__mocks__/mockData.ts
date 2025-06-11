@@ -1,7 +1,7 @@
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { ISubmittableResult } from '@polkadot/types/types'
 import { type App, AppStatus } from 'state/ledger'
-import { type Address, BalanceType, type Collection, type Native, type Nft, type Staking } from 'state/types/ledger'
+import { type Address, BalanceType, type Collection, type MultisigAddress, type Native, type Nft, type Staking } from 'state/types/ledger'
 import { vi } from 'vitest'
 
 import type { AppConfig } from '@/config/apps'
@@ -302,6 +302,94 @@ export const mockAddressPartialBalance: Address = {
   ],
 }
 
+export const mockMultisigAddress1: MultisigAddress = {
+  path: "m/44'/354'/0'/0'",
+  pubKey: '0x123',
+  address: TEST_ADDRESSES.ADDRESS2,
+  members: [
+    {
+      address: TEST_ADDRESSES.ADDRESS1,
+      internal: false,
+    },
+  ],
+  threshold: 2,
+  memberMultisigAddresses: undefined,
+  pendingMultisigCalls: [],
+  balances: [
+    {
+      type: BalanceType.NATIVE,
+      balance: mockFreeNativeBalance,
+    },
+  ],
+}
+
+export const mockMultisigAddressWithError: MultisigAddress = {
+  path: "m/44'/354'/0'/1'",
+  pubKey: '0x456',
+  address: TEST_ADDRESSES.ADDRESS3,
+  members: [
+    {
+      address: TEST_ADDRESSES.ADDRESS1,
+      internal: true,
+      path: "m/44'/354'/0'/0'",
+    },
+    {
+      address: TEST_ADDRESSES.ADDRESS2,
+      internal: false,
+    },
+  ],
+  threshold: 2,
+  memberMultisigAddresses: undefined,
+  pendingMultisigCalls: [],
+  error: {
+    source: 'balance_fetch',
+    description: 'Failed to sync multisig account',
+  },
+  balances: undefined,
+}
+
+export const mockMultisigAddressWithMigrationError: MultisigAddress = {
+  path: "m/44'/354'/0'/2'",
+  pubKey: '0x789',
+  address: TEST_ADDRESSES.ADDRESS4,
+  members: [
+    {
+      address: TEST_ADDRESSES.ADDRESS1,
+      internal: true,
+      path: "m/44'/354'/0'/0'",
+    },
+  ],
+  threshold: 1,
+  memberMultisigAddresses: undefined,
+  pendingMultisigCalls: [],
+  error: {
+    source: 'migration',
+    description: 'Migration failed for multisig account',
+  },
+  balances: undefined,
+}
+
+export const mockMultisigAddressNoBalance: MultisigAddress = {
+  path: "m/44'/354'/0'/3'",
+  pubKey: '0xabc',
+  address: TEST_ADDRESSES.ADDRESS5,
+  members: [
+    {
+      address: TEST_ADDRESSES.ADDRESS1,
+      internal: false,
+    },
+  ],
+  threshold: 1,
+  memberMultisigAddresses: undefined,
+  pendingMultisigCalls: [],
+  balances: [
+    {
+      type: BalanceType.NATIVE,
+      balance: mockEmptyNativeBalance,
+    },
+  ],
+}
+
 // =========== Mock Apps ===========
 export const mockApp1: App = {
   name: 'App 1',
@@ -377,6 +465,50 @@ export const mockAppNoAccounts: App = {
   },
   status: AppStatus.SYNCHRONIZED,
   accounts: [],
+}
+
+export const mockAppWithMultisigAccounts: App = {
+  ...mockApp1,
+  multisigAccounts: [mockMultisigAddress1],
+}
+
+export const mockAppOnlyMultisigAccounts: App = {
+  name: 'App Only Multisig',
+  id: 'app-multisig-only',
+  token: {
+    symbol: 'MULTI',
+    decimals: 10,
+    logoId: 'multisig',
+  },
+  status: AppStatus.SYNCHRONIZED,
+  accounts: [],
+  multisigAccounts: [mockMultisigAddress1, mockMultisigAddressNoBalance],
+}
+
+export const mockAppWithMultisigErrors: App = {
+  name: 'App Multisig Errors',
+  id: 'app-multisig-errors',
+  token: {
+    symbol: 'ERR',
+    decimals: 10,
+    logoId: 'error',
+  },
+  status: AppStatus.SYNCHRONIZED,
+  accounts: [mockAddress1],
+  multisigAccounts: [mockMultisigAddressWithError, mockMultisigAddressWithMigrationError],
+}
+
+export const mockAppMixedMultisigErrors: App = {
+  name: 'App Mixed Multisig Errors',
+  id: 'app-mixed-multisig',
+  token: {
+    symbol: 'MIX',
+    decimals: 10,
+    logoId: 'mixed',
+  },
+  status: AppStatus.SYNCHRONIZED,
+  accounts: [mockAddress1, mockAddressWithError],
+  multisigAccounts: [mockMultisigAddress1, mockMultisigAddressWithError, mockMultisigAddressWithMigrationError],
 }
 
 // =========== Grouped Mock Data ===========

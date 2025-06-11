@@ -18,3 +18,30 @@ export const maxAddressesToFetch =
  * @description Default number of decimals to display for balances.
  */
 export const defaultDecimals = 8
+
+/**
+ * @constant MULTISIG_WEIGHT_BUFFER
+ * @description Buffer multiplier to add for multisig overhead when estimating weight (e.g., 1.2 = 20% more).
+ */
+export const MULTISIG_WEIGHT_BUFFER = 1.2
+
+/**
+ * @constant defaultWeights
+ * @description Default weights for common operations.
+ */
+export const defaultWeights: Record<string, number> = {
+  'balances.transfer': 200_000_000,
+  'balances.transferKeepAlive': 200_000_000,
+  'balances.transferAll': 300_000_000,
+  'assets.transfer': 300_000_000,
+  'nfts.transfer': 500_000_000,
+  'uniques.transfer': 500_000_000,
+  'utility.batchAll': 1_000_000_000, // Higher for batch operations
+  'proxy.proxy': 400_000_000,
+  'staking.bond': 800_000_000,
+  'staking.unbond': 600_000_000,
+  'identity.setIdentity': 1_500_000_000,
+  'multisig.approveAsMulti': 800_000_000,
+  'multisig.asMulti': 1_200_000_000,
+  'multisig.cancelAsMulti': 600_000_000,
+}

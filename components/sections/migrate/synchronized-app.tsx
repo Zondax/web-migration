@@ -1,4 +1,3 @@
-import type { Observable } from '@legendapp/state'
 import { observer, use$ } from '@legendapp/state/react'
 import { ChevronDown } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -9,14 +8,25 @@ import { isNativeBalance } from '@/lib/utils/balance'
 import { formatBalance } from '@/lib/utils/format'
 import { muifyHtml } from '@/lib/utils/html'
 
+import type { UpdateTransaction } from '@/components/hooks/useSynchronization'
 import { useTokenLogo } from '@/components/hooks/useTokenLogo'
-import AccountsTable from './accounts-table'
 import { BalanceTypeFlag } from './balance-detail-card'
+import SynchronizedAccountsTable from './synchronized-accounts-table'
 
-function SynchronizedApp({ app, failedSync }: { app: Observable<App>; failedSync?: boolean }) {
+function SynchronizedApp({
+  app,
+  failedSync,
+  isMultisig,
+  updateTransaction,
+}: {
+  app: App
+  failedSync?: boolean
+  isMultisig?: boolean
+  updateTransaction: UpdateTransaction
+}) {
   const name = use$(app.name)
   const id = use$(app.id)
-  const accounts = use$(app.accounts)
+  const accounts = use$(isMultisig ? app.multisigAccounts : app.accounts)
   const collections = use$(app.collections)
 
   const [isExpanded, setIsExpanded] = useState(true)
@@ -37,7 +47,7 @@ function SynchronizedApp({ app, failedSync }: { app: Observable<App>; failedSync
       return total + nativeBalance
     }, 0)
 
-    return balance !== undefined ? formatBalance(balance, app.token.get()) : '-'
+    return balance !== undefined ? formatBalance(balance, app.token) : '-'
   }, [accounts, app.token, failedSync])
 
   const renderBalance = () =>
@@ -57,6 +67,7 @@ function SynchronizedApp({ app, failedSync }: { app: Observable<App>; failedSync
 
   return (
     <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-200 mb-4">
+      {/* Overview */}
       <div
         className={`flex flex-row items-center justify-between gap-4 px-4 py-3 cursor-pointer select-none transition-colors rounded-lg ${accounts?.length !== 0 ? 'hover:bg-gray-50' : ''}`}
         onClick={isAccountsNotEmpty ? toggleExpand : undefined}
@@ -70,7 +81,10 @@ function SynchronizedApp({ app, failedSync }: { app: Observable<App>; failedSync
           </div>
           <div className="flex flex-col">
             {/* Name */}
-            <div className="font-bold text-lg leading-tight">{name}</div>
+            <div className="font-bold text-lg leading-tight">
+              {name}
+              {isMultisig ? ' Multisig' : ''}
+            </div>
             {/* Address count */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-gray-500 text-sm">
               <span>
@@ -80,26 +94,30 @@ function SynchronizedApp({ app, failedSync }: { app: Observable<App>; failedSync
             <div className="flex items-center gap-2 sm:hidden">{renderBalance()}</div>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          {/* Balance */}
-          <div className="flex flex-col items-end min-w-[120px] hidden sm:flex">{renderBalance()}</div>
-          {/* Expand/Collapse Icon */}
-          {isAccountsNotEmpty && (
-            <div className="flex items-center ml-2">
-              <ChevronDown className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-            </div>
-          )}
-        </div>
+        {!isMultisig && (
+          <div className="flex items-center gap-4">
+            {/* Balance */}
+            <div className="flex flex-col items-end min-w-[120px] hidden sm:flex">{renderBalance()}</div>
+            {/* Expand/Collapse Icon */}
+            {isAccountsNotEmpty && (
+              <div className="flex items-center ml-2">
+                <ChevronDown className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+              </div>
+            )}
+          </div>
+        )}
       </div>
       {/* Accounts Table (expandable) */}
       {isExpanded && isAccountsNotEmpty ? (
         <div className="overflow-hidden">
-          <AccountsTable
-            accounts={app.accounts}
-            token={app.token.get()}
+          <SynchronizedAccountsTable
+            accounts={isMultisig ? app.multisigAccounts : app.accounts}
+            token={app.token}
             polkadotAddresses={polkadotAddresses ?? []}
             collections={collections}
             appId={id}
+            updateTransaction={updateTransaction}
+            isMultisig={isMultisig}
           />
         </div>
       ) : null}

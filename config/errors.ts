@@ -26,6 +26,11 @@ export enum InternalErrors {
   UNSTAKE_ERROR = 'unstake_error',
   WITHDRAW_ERROR = 'withdraw_error',
   REMOVE_IDENTITY_ERROR = 'remove_identity_error',
+  NO_MULTISIG_MEMBERS = 'no_multisig_members',
+  NO_MULTISIG_THRESHOLD = 'no_multisig_threshold',
+  NO_SIGNATORY_ADDRESS = 'no_signatory_address',
+  NO_MULTISIG_ADDRESS = 'no_multisig_address',
+  APPROVE_MULTISIG_CALL_ERROR = 'approve_multisig_call_error',
 }
 
 export enum LedgerErrors {
@@ -167,6 +172,31 @@ export const errorDetails: ErrorDetailsMap = {
   remove_identity_error: {
     title: 'Remove Identity Error',
     description: 'Failed to remove identity.',
+    content: 'Please try again later or contact support if the issue persists.',
+  },
+  no_multisig_members: {
+    title: 'No Multisig Members',
+    description: 'No multisig members found.',
+    content: 'Please ensure the multisig account has members.',
+  },
+  no_multisig_threshold: {
+    title: 'No Multisig Threshold',
+    description: 'No multisig threshold found.',
+    content: 'Please ensure the multisig account has a threshold.',
+  },
+  no_signatory_address: {
+    title: 'No Signatory Address',
+    description: 'No signatory address found.',
+    content: 'Please ensure the multisig account has a signatory address.',
+  },
+  no_multisig_address: {
+    title: 'No Multisig Address',
+    description: 'No multisig address found.',
+    content: 'Please ensure the multisig account has an address.',
+  },
+  approve_multisig_call_error: {
+    title: 'Approve Multisig Call Error',
+    description: 'Failed to approve multisig call.',
     content: 'Please try again later or contact support if the issue persists.',
   },
 }

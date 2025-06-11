@@ -64,17 +64,17 @@ async function subscanPost<T extends SubscanBaseResponse>(network: string, endpo
  * @throws Error if the API call fails
  */
 export async function getMultisigInfo(address: string, network: string): Promise<SubscanMultisig | undefined> {
-    const response = await subscanPost<SubscanSearchResponse>(network, '/subscan/search', { key: address })
+  const response = await subscanPost<SubscanSearchResponse>(network, '/subscan/search', { key: address })
 
-    // If there's multisig data and it has multi_account array, return it
-    if (response.data.account?.multisig) {
-      return {
-        multi_account: response.data.account.multisig.multi_account,
-        multi_account_member: response.data.account.multisig.multi_account_member,
-        threshold: response.data.account.multisig.threshold,
-      }
+  // If there's multisig data and it has multi_account array, return it
+  if (response.data.account?.multisig) {
+    return {
+      multi_account: response.data.account.multisig.multi_account,
+      multi_account_member: response.data.account.multisig.multi_account_member,
+      threshold: response.data.account.multisig.threshold,
     }
+  }
 
-    // If no multisig data found, return undefined
-    return undefined
+  // If no multisig data found, return undefined
+  return undefined
 }

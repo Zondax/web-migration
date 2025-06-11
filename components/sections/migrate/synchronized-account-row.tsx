@@ -1,20 +1,36 @@
 import { observer } from '@legendapp/state/react'
-import { AlertCircle, BanknoteArrowDown, Group, Info, KeyRound, LockOpen, Route, Trash2, TriangleAlert, User } from 'lucide-react'
+import {
+  AlertCircle,
+  BanknoteArrowDown,
+  Group,
+  Info,
+  KeyRound,
+  LockOpen,
+  Route,
+  Shield,
+  Trash2,
+  TriangleAlert,
+  User,
+  Users,
+} from 'lucide-react'
 import { useState } from 'react'
 import type { Collections } from 'state/ledger'
-import type { Address, AddressBalance } from 'state/types/ledger'
+import type { Address, AddressBalance, MultisigAddress, MultisigMember } from 'state/types/ledger'
 
-import { CustomTooltip, TooltipBody } from '@/components/CustomTooltip'
+import { CustomTooltip, TooltipBody, type TooltipItem } from '@/components/CustomTooltip'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { TableCell, TableRow } from '@/components/ui/table'
 import type { AppId, Token } from '@/config/apps'
-import { formatBalance } from '@/lib/utils'
+import { formatBalance, isMultisigAddress as isMultisigAddressFunction } from '@/lib/utils'
 import { canUnstake, hasNonTransferableBalance, hasStakedBalance, isNativeBalance } from '@/lib/utils/balance'
 
 import { ExplorerLink } from '@/components/ExplorerLink'
+import type { UpdateTransaction } from '@/components/hooks/useSynchronization'
 import { Spinner } from '@/components/icons'
 import { Button, type ButtonVariant } from '@/components/ui/button'
 import { ExplorerItemType } from '@/config/explorers'
 import { getIdentityItems } from '@/lib/utils/ui'
+import ApproveMultisigCallDialog from './approve-multisig-call-dialog'
 import { BalanceHoverCard, LockedBalanceHoverCard } from './balance-hover-card'
 import DestinationAddressSelect from './destination-address-select'
 import RemoveIdentityDialog from './remove-identity-dialog'
@@ -23,7 +39,7 @@ import WithdrawDialog from './withdraw-dialog'
 
 // Component for rendering a single synchronized account row
 interface AccountBalanceRowProps {
-  account: Address
+  account: MultisigAddress | Address
   accountIndex: number
   balance?: AddressBalance
   balanceIndex?: number
@@ -31,7 +47,7 @@ interface AccountBalanceRowProps {
   collections?: Collections
   token: Token
   polkadotAddresses: string[]
-  handleDestinationChange: (value: string, accountIndex: number, balanceIndex: number) => void
+  updateTransaction: UpdateTransaction
   appId: AppId
 }
 
@@ -54,12 +70,13 @@ const SynchronizedAccountRow = observer(
     collections,
     token,
     polkadotAddresses,
-    handleDestinationChange,
+    updateTransaction,
     appId,
   }: AccountBalanceRowProps) => {
     const [unstakeOpen, setUnstakeOpen] = useState<boolean>(false)
     const [withdrawOpen, setWithdrawOpen] = useState<boolean>(false)
     const [removeIdentityOpen, setRemoveIdentityOpen] = useState<boolean>(false)
+    const [approveMultisigCallOpen, setApproveMultisigCallOpen] = useState<boolean>(false)
     const isNoBalance: boolean = balance === undefined
     const isFirst: boolean = balanceIndex === 0 || isNoBalance
     const isNative = isNativeBalance(balance)
@@ -68,6 +85,15 @@ const SynchronizedAccountRow = observer(
     const maxUnstake: number = stakingActive ?? 0
     const isUnstakeAvailable: boolean = isNative ? canUnstake(balance) : false
     const totalBalance: number = isNative ? (balance?.balance.total ?? 0) : 0
+    const isMultisigMember: boolean = (account.memberMultisigAddresses && account.memberMultisigAddresses.length > 0) ?? false
+    const isMultisigAddress: boolean = isMultisigAddressFunction(account)
+    const internalMultisigMembers: MultisigMember[] = (account as MultisigAddress).members?.filter(member => member.internal) ?? []
+    const signatoryAddress: string = balance?.transaction?.signatoryAddress ?? ''
+
+    if (isMultisigAddress && internalMultisigMembers.length === 0) {
+      // it shouldn't happen, but if it does, we don't want to render the row
+      return null
+    }
 
     const actions: Action[] = []
     if (hasStaked) {
@@ -103,6 +129,16 @@ const SynchronizedAccountRow = observer(
           icon: <Trash2 className="h-4 w-4" />,
         })
       }
+    }
+
+    if (isMultisigAddress && (account as MultisigAddress).pendingMultisigCalls.length > 0) {
+      actions.push({
+        label: 'Multisig Call',
+        tooltip: 'Approve multisig pending calls',
+        onClick: () => setApproveMultisigCallOpen(true),
+        disabled: false,
+        icon: <Users className="h-4 w-4" />,
+      })
     }
 
     const renderStatusIcon = (account: Address): React.ReactNode | null => {
@@ -150,31 +186,37 @@ const SynchronizedAccountRow = observer(
       )
     }
 
-    const tooltipAddres = (): React.ReactNode => (
-      <div className="p-2 min-w-[320px]">
-        <TooltipBody
-          items={[
-            { label: 'Source Address', value: account.address, icon: User, hasCopyButton: true },
-            { label: 'Derivation Path', value: account.path, icon: Route },
-            { label: 'Public Key', value: account.pubKey, icon: KeyRound, hasCopyButton: true },
-          ]}
-        />
-      </div>
-    )
+    const tooltipAddres = (): React.ReactNode => {
+      const items: TooltipItem[] = [{ label: 'Source Address', value: account.address, icon: User, hasCopyButton: true }]
+
+      if (!isMultisigAddress) {
+        items.push(
+          { label: 'Derivation Path', value: account.path, icon: Route },
+          { label: 'Public Key', value: account.pubKey, icon: KeyRound, hasCopyButton: true }
+        )
+      }
+      return (
+        <div className="p-2 min-w-[320px]">
+          <TooltipBody items={items} />
+        </div>
+      )
+    }
 
     const tooltipMultisig = (): React.ReactNode => {
+      const items: TooltipItem[] = []
+      if (isMultisigMember) {
+        items.push({ label: 'Multisig member of', value: account.memberMultisigAddresses?.[0] ?? '-', icon: User, hasCopyButton: true })
+      }
+      if (isMultisigAddress) {
+        items.push(
+          { label: 'Multisig address', value: account.address, icon: User, hasCopyButton: true },
+          { label: 'Threshold', value: (account as MultisigAddress).threshold?.toString() ?? '-', icon: Shield },
+          { label: 'Members', value: (account as MultisigAddress).members?.length.toString() ?? '-', icon: Users }
+        )
+      }
       return (
         <div className="p-2 min-w-[240px]">
-          <TooltipBody
-            items={
-              account.memberMultisigAddresses?.map(address => ({
-                label: 'Multisig member of',
-                value: address,
-                icon: User,
-                hasCopyButton: true,
-              })) ?? []
-            }
-          />
+          <TooltipBody items={items} />
         </div>
       )
     }
@@ -187,6 +229,35 @@ const SynchronizedAccountRow = observer(
         </div>
       )
     }
+
+    const renderMultisigSignatoryAddress = () => {
+      if (internalMultisigMembers.length === 1 && signatoryAddress) {
+        // Single internal member - just show the address
+        return <AddressLink value={signatoryAddress} disableTooltip className="break-all" />
+      }
+
+      // Multiple internal members - show a select dropdown
+      return (
+        <Select
+          value={signatoryAddress}
+          onValueChange={value =>
+            balanceIndex !== undefined ? updateTransaction({ signatoryAddress: value }, appId, accountIndex, balanceIndex, true) : undefined
+          }
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select signatory address" />
+          </SelectTrigger>
+          <SelectContent>
+            {internalMultisigMembers.map(member => (
+              <SelectItem key={member.address} value={member.address}>
+                <AddressLink value={member.address} disableTooltip className="break-all" hasCopyButton={false} />
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )
+    }
+
     const renderAction = (action: Action): React.ReactNode => {
       const button = (
         <Button key={action.label} variant={action.variant ?? 'secondary'} size="sm" onClick={action.onClick} disabled={action.disabled}>
@@ -226,7 +297,7 @@ const SynchronizedAccountRow = observer(
               <CustomTooltip tooltipBody={tooltipAddres()}>
                 <Info className="h-4 w-4 text-muted-foreground" />
               </CustomTooltip>
-              {account.memberMultisigAddresses && account.memberMultisigAddresses.length > 0 ? (
+              {isMultisigMember || isMultisigAddress ? (
                 <CustomTooltip tooltipBody={tooltipMultisig()}>
                   <Group className="h-4 w-4 text-polkadot-pink" />
                 </CustomTooltip>
@@ -242,12 +313,18 @@ const SynchronizedAccountRow = observer(
               balance={balance}
               index={balanceIndex}
               polkadotAddresses={polkadotAddresses}
-              onDestinationChange={value => handleDestinationChange(value, accountIndex, balanceIndex)}
+              onDestinationChange={value =>
+                updateTransaction({ destinationAddress: value }, appId, accountIndex, balanceIndex, isMultisigAddress)
+              }
             />
           ) : (
             '-'
           )}
         </TableCell>
+        {/* Multisig Signatory Address */}
+        {isMultisigAddress && internalMultisigMembers.length > 0 && (
+          <TableCell className="py-2 text-sm">{renderMultisigSignatoryAddress()}</TableCell>
+        )}
         {/* Total Balance */}
         <TableCell className="py-2 text-sm text-right w-1/4 font-mono">
           {balance !== undefined ? formatBalance(totalBalance, token) : '-'}
@@ -274,6 +351,13 @@ const SynchronizedAccountRow = observer(
         <UnstakeDialog open={unstakeOpen} setOpen={setUnstakeOpen} maxUnstake={maxUnstake} token={token} account={account} appId={appId} />
         <WithdrawDialog open={withdrawOpen} setOpen={setWithdrawOpen} token={token} account={account} appId={appId} />
         <RemoveIdentityDialog open={removeIdentityOpen} setOpen={setRemoveIdentityOpen} token={token} account={account} appId={appId} />
+        <ApproveMultisigCallDialog
+          open={approveMultisigCallOpen}
+          setOpen={setApproveMultisigCallOpen}
+          token={token}
+          account={account as MultisigAddress}
+          appId={appId}
+        />
       </TableRow>
     )
   }

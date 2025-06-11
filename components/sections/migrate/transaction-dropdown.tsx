@@ -1,7 +1,8 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Info } from 'lucide-react'
 import type { Transaction } from 'state/types/ledger'
 
 import { ExplorerLink } from '@/components/ExplorerLink'
+import { CustomTooltip } from '@/components/CustomTooltip'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import type { AppId } from '@/config/apps'
 import { ExplorerItemType } from '@/config/explorers'
@@ -12,7 +13,7 @@ interface TransactionDropdownProps {
 }
 
 function TransactionDropdown({ transaction, appId }: TransactionDropdownProps) {
-  if (!transaction?.hash) {
+  if (!transaction?.txHash) {
     return null
   }
 
@@ -23,14 +24,26 @@ function TransactionDropdown({ transaction, appId }: TransactionDropdownProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="min-w-[300px]">
         {/* Transaction Details */}
-        {transaction.hash && (
+        {transaction.callData && (
+          <DropdownMenuItem className="gap-2">
+            Call Data:
+            <AddressLink value={transaction.callData ?? ''} tooltipBody={transaction.callData} className="break-all" />
+            <CustomTooltip
+              tooltipBody="The full call data that can be supplied to a final call to multi approvals."
+              className="!normal-case font-normal"
+            >
+              <Info className="h-4 w-4 inline-block ml-1 text-gray-400" />
+            </CustomTooltip>
+          </DropdownMenuItem>
+        )}
+        {transaction.txHash && (
           <DropdownMenuItem className="gap-2">
             Transaction Hash:
             <ExplorerLink
-              value={transaction.hash}
+              value={transaction.txHash}
               appId={appId}
               explorerLinkType={ExplorerItemType.Transaction}
-              tooltipBody={`View transaction ${transaction.hash} on explorer`}
+              tooltipBody={`View transaction ${transaction.txHash} on explorer`}
               className="break-all"
             />
           </DropdownMenuItem>

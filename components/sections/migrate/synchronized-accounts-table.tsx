@@ -1,33 +1,25 @@
-import type { Observable } from '@legendapp/state'
 import { observer } from '@legendapp/state/react'
 import { motion } from 'framer-motion'
-import { useCallback } from 'react'
 import type { Collections } from 'state/ledger'
-import type { Address, AddressBalance } from 'state/types/ledger'
+import type { Address, AddressBalance, MultisigAddress } from 'state/types/ledger'
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { AppId, Token } from '@/config/apps'
 
+import type { UpdateTransaction } from '@/components/hooks/useSynchronization'
 import SynchronizedAccountRow from './synchronized-account-row'
 
 interface AccountsTableProps {
-  accounts: Observable<Address[] | undefined>
+  accounts: Address[] | MultisigAddress[] | undefined
   token: Token
   polkadotAddresses: string[]
   collections?: Collections
   appId: AppId
+  updateTransaction: UpdateTransaction
+  isMultisig?: boolean
 }
 
-function AccountsTable({ accounts, token, polkadotAddresses, collections, appId }: AccountsTableProps) {
-  const accountsList = accounts.get() ?? []
-
-  const handleDestinationChange = useCallback(
-    (value: string, accountIndex: number, balanceIndex: number) => {
-      accounts[accountIndex].balances[balanceIndex].transaction.destinationAddress.set(value)
-    },
-    [accounts]
-  )
-
+function AccountsTable({ accounts, token, polkadotAddresses, collections, appId, updateTransaction, isMultisig }: AccountsTableProps) {
   return (
     <motion.div
       initial={{ opacity: 0, height: 0 }}
@@ -40,6 +32,7 @@ function AccountsTable({ accounts, token, polkadotAddresses, collections, appId 
           <TableRow>
             <TableHead className="text-left">Source Address</TableHead>
             <TableHead className="text-left">Destination Address</TableHead>
+            {isMultisig && <TableHead className="text-left">Signatory Address</TableHead>}
             <TableHead className="text-right">Total Balance</TableHead>
             <TableHead className="text-right">Transferable</TableHead>
             <TableHead className="text-right">Locked</TableHead>
@@ -47,8 +40,8 @@ function AccountsTable({ accounts, token, polkadotAddresses, collections, appId 
           </TableRow>
         </TableHeader>
         <TableBody>
-          {accountsList.length > 0 ? (
-            accountsList.map((account, accountIndex) => {
+          {accounts && accounts.length > 0 ? (
+            accounts.map((account, accountIndex) => {
               const balances = account.balances ?? []
 
               if (balances.length === 0 && account.error) {
@@ -61,7 +54,7 @@ function AccountsTable({ accounts, token, polkadotAddresses, collections, appId 
                     collections={collections}
                     token={token}
                     polkadotAddresses={polkadotAddresses}
-                    handleDestinationChange={handleDestinationChange}
+                    updateTransaction={updateTransaction}
                     appId={appId}
                   />
                 )
@@ -78,7 +71,7 @@ function AccountsTable({ accounts, token, polkadotAddresses, collections, appId 
                   collections={collections}
                   token={token}
                   polkadotAddresses={polkadotAddresses}
-                  handleDestinationChange={handleDestinationChange}
+                  updateTransaction={updateTransaction}
                   appId={appId}
                 />
               ))

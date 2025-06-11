@@ -2,11 +2,11 @@ import { merkleizeMetadata } from '@polkadot-api/merkleize-metadata'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { GenericExtrinsicPayload } from '@polkadot/types'
-import type { Option, Vec, u32 } from '@polkadot/types-codec'
+import type { Option, u32, Vec } from '@polkadot/types-codec'
 import type {
   AccountId32,
   Balance,
-  Hash,
+  Multisig,
   OpaqueMetadata,
   Registration as PolkadotRegistration,
   RuntimeDispatchInfo,
@@ -16,8 +16,7 @@ import type { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/
 import { hexToU8a } from '@polkadot/util'
 import { createKeyMulti, encodeAddress } from '@polkadot/util-crypto'
 import type { AppConfig } from 'config/apps'
-import { createKeyMulti, encodeAddress } from '@polkadot/util-crypto'
-import { AppConfig } from 'config/apps'
+import { defaultWeights, MULTISIG_WEIGHT_BUFFER } from 'config/config'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
 import { getMultisigInfo } from 'lib/subscan'
@@ -27,6 +26,7 @@ import {
   BalanceType,
   type Collection,
   type MultisigAddress,
+  type MultisigCall,
   type Native,
   type Nft,
   type NftsInfo,
@@ -206,12 +206,21 @@ export type UpdateTransactionStatus = (status: TransactionStatus, message?: stri
  * @param transfer - The transfer extrinsic.
  * @returns The prepared transaction data for signing.
  */
+interface PreparedTransactionPayload {
+  transfer: SubmittableExtrinsic<'promise', ISubmittableResult>
+  payload: GenericExtrinsicPayload
+  metadataHash: Uint8Array
+  nonce: number
+  proof1: Uint8Array
+  payloadBytes: Uint8Array
+}
+
 export async function prepareTransactionPayload(
   api: ApiPromise,
   senderAddress: string,
   appConfig: AppConfig,
   transfer: SubmittableExtrinsic<'promise', ISubmittableResult>
-) {
+): Promise<PreparedTransactionPayload | undefined> {
   const nonceResp = await api.query.system.account(senderAddress)
   const { nonce } = nonceResp.toHuman() as any
 
@@ -228,11 +237,12 @@ export async function prepareTransactionPayload(
   })
 
   const metadataHash = merkleizedMetadata.digest()
+  const nonceNumber = nonce as unknown as number
 
   // Create the payload for signing
   const payload = api.createType('ExtrinsicPayload', {
     method: transfer.method.toHex(),
-    nonce: nonce as unknown as number,
+    nonce: nonceNumber,
     genesisHash: api.genesisHash,
     blockHash: api.genesisHash,
     transactionVersion: api.runtimeVersion.transactionVersion,
@@ -252,7 +262,13 @@ export async function prepareTransactionPayload(
 
   const proof1: Uint8Array = metadata.getProofForExtrinsicPayload(payloadBytes)
 
-  return { transfer, payload, metadataHash, nonce, proof1, payloadBytes }
+  return { transfer, payload, metadataHash, nonce: nonceNumber, proof1, payloadBytes }
+}
+
+export type MultisigInfo = {
+  members: string[]
+  threshold: number
+  address: string
 }
 
 /**
@@ -272,7 +288,8 @@ export async function prepareTransaction(
   transferableBalance: number,
   nfts: Array<Nft>,
   appConfig: AppConfig,
-  nativeAmount?: number
+  nativeAmount?: number,
+  multisigInfo?: MultisigInfo
 ) {
   // Validate all NFTs
   for (const item of nfts) {
@@ -315,7 +332,7 @@ export async function prepareTransaction(
     }
   }
 
-  const transfer: SubmittableExtrinsic<'promise', ISubmittableResult> = calls.length > 1 ? api.tx.utility.batchAll(calls) : calls[0]
+  let transfer: SubmittableExtrinsic<'promise', ISubmittableResult> = calls.length > 1 ? api.tx.utility.batchAll(calls) : calls[0]
 
   if (!nativeAmount) {
     // No nativeAmount sent, only NFTs or other assets
@@ -326,7 +343,24 @@ export async function prepareTransaction(
     }
   }
 
-  return prepareTransactionPayload(api, senderAddress, appConfig, transfer)
+  let callData: string | undefined
+  if (multisigInfo) {
+    const { members, threshold, address: multisigAddress } = multisigInfo
+    // Get call hash
+    const callHash = transfer.method.hash.toHex()
+    // Get call data: it's necessary for the final call to multi approvals.
+    callData = transfer.method.toHex()
+
+    transfer = await prepareApproveAsMultiTx(senderAddress, multisigAddress, members, threshold, callHash, api)
+  }
+
+  const transferInfo = await prepareTransactionPayload(api, senderAddress, appConfig, transfer)
+
+  if (!transferInfo) {
+    return undefined
+  }
+
+  return { ...transferInfo, callData }
 }
 
 export async function prepareUnstakeTransaction(
@@ -407,7 +441,7 @@ export async function submitAndHandleTransaction(
         if (status.isInBlock) {
           blockHash = status.status.asInBlock.toHex()
           txHash = status.txHash.toHex()
-          blockNumber = 'blockNumber' in status ? (status.blockNumber as Hash)?.toHex() : undefined
+          blockNumber = 'blockNumber' in status ? Number(status.blockNumber).toString() : undefined
           updateStatus(TransactionStatus.IN_BLOCK, `In block: ${blockHash}`, {
             txHash,
             blockHash,
@@ -418,7 +452,7 @@ export async function submitAndHandleTransaction(
           clearTimeout(timeoutId)
           blockHash = status.status.asFinalized.toHex()
           txHash = status.txHash.toHex()
-          blockNumber = 'blockNumber' in status ? (status.blockNumber as Hash)?.toHex() : undefined
+          blockNumber = 'blockNumber' in status ? Number(status.blockNumber).toString() : undefined
 
           console.debug(`Transaction finalized in block: ${blockHash}`)
           updateStatus(TransactionStatus.FINALIZED, 'Transaction is finalized. Waiting the result...', {
@@ -478,7 +512,7 @@ export async function submitAndHandleTransaction(
         } else if (status.isCompleted) {
           console.debug('Transaction is completed')
           txHash = status.txHash.toHex()
-          blockNumber = 'blockNumber' in status ? (status.blockNumber as Hash)?.toHex() : undefined
+          blockNumber = 'blockNumber' in status ? Number(status.blockNumber).toString() : undefined
           updateStatus(TransactionStatus.COMPLETED, 'Transaction is completed. Waiting confirmation...', {
             txHash,
             blockNumber,
@@ -1117,201 +1151,21 @@ export function computeMultisigAddress(addresses: string[], threshold: number, s
   return Ss58Address
 }
 
-// Multisig signature flow
-// For the multisig transaction to go through, the one creating the transaction needs to have
-// Deposit = depositBase + threshold * depositFactor
-// Where depositBase and depositFactor are chain constants set in the runtime code.
-// This amount will appear as reserved until the multisig signatures are completed.
-const MULTISIG_ADDRESS = 'DsKSWHcVgsutSLAcMWH3u41prkXtMmKWQ5r7DWFXHWxFLyb'
-const SIGNER1_ADDRESS = 'F4aqRHwLaCk2EoEewPWKpJBGdrvkssQAtrBmQ5LdNSweUfV'
-const SIGNER2_ADDRESS = 'FZZMnXGjS3AAWVtuyq34MuZ4vuNRSbk96ErDV4q25S9p7tn'
-const THRESHOLD = 2
-const RECIPIENT_ADDRESS = SIGNER1_ADDRESS // Multisig sends to Signer 1
-const WEIGHT = 0 // For simplicity, using 0 weight. In production, estimate correct weight.
-
-/**
- * Creates an approveAsMulti transaction for multisig workflow
- * @param address The address of the signer
- * @param api The API instance
- * @param appConfig The app configuration
- * @param path The derivation path for signing
- */
-export async function createApproveAsMulti(
-  address: string,
-  api: ApiPromise,
-  appConfig: AppConfig,
-  path: string
-): Promise<SubmittableExtrinsic<'promise', ISubmittableResult> | undefined> {
-  // Define the call we want to execute through multisig
-  const transferAmount = 1000000000 // 0.001 KSM
-  const balanceTransfer = api.tx.balances.transferKeepAlive(RECIPIENT_ADDRESS, transferAmount)
-
-  // Get the call hash
-  const callHash = balanceTransfer.method.hash.toHex()
-
-  // Sort the other signatories (excluding the current signer)
-  const allSignatories = [SIGNER1_ADDRESS, SIGNER2_ADDRESS].sort()
-  const otherSignatories = allSignatories.filter(addr => addr !== address)
-
-  // Compute the multisig address dynamically
-  const multisigAddress = computeMultisigAddress(allSignatories, THRESHOLD, appConfig.ss58Prefix)
-  console.log('Computed multisig address:', multisigAddress)
-
-  // Check if there's an existing multisig for this call
-  const multisigs = await api.query.multisig.multisigs(multisigAddress, callHash)
-
-  let maybeTimepoint = null
-  if (multisigs && !(multisigs as any).isNone) {
-    const multisigInfo = (multisigs as any).unwrap()
-    maybeTimepoint = {
-      height: multisigInfo.when.height.toNumber(),
-      index: multisigInfo.when.index.toNumber(),
-    }
-    console.log('Found existing timepoint:', maybeTimepoint)
-  } else {
-    console.log('No existing multisig found, this will be the first approval')
-  }
-
-  // Create the approveAsMulti transaction
-  const multisigTx = api.tx.multisig.approveAsMulti(THRESHOLD, otherSignatories, maybeTimepoint, callHash, WEIGHT) as SubmittableExtrinsic<
-    'promise',
-    ISubmittableResult
-  >
-
-  // Prepare transaction payload
-  const preparedTx = await prepareTransactionPayload(api, address, appConfig, multisigTx)
-  if (!preparedTx) {
-    throw new Error('Failed to prepare transaction')
-  }
-  const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
-  const typedTransfer = transfer as SubmittableExtrinsic<'promise', ISubmittableResult>
-
-  // Get chain ID from app config
-  const chainId = appConfig.token.symbol.toLowerCase()
-
-  // Sign transaction with Ledger
-  // const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
-  // if (!signature) {
-  //   throw new Error('Failed to sign transaction')
-  // }
-
-  // // Create signed extrinsic
-  // const signedExtrinsic = createSignedExtrinsic(
-  //   api,
-  //   typedTransfer,
-  //   address,
-  //   signature,
-  //   payload,
-  //   nonce,
-  //   metadataHash
-  // ) as SubmittableExtrinsic<'promise', ISubmittableResult>
-
-  // // Show pending call in the multisig
-  // // At this point its also visible on polkadot js the multisig call pendidng approval
-  // // Check if there's an existing multisig for this call
-  // const multisigscheck = await api.query.multisig.multisigs.entries(multisigAddress)
-  // console.log('multisigscheck', multisigscheck)
-
-  // return signedExtrinsic
-}
-
-/**
- * Creates the final asMulti transaction to complete the multisig workflow
- * @param address The address of the final signer
- * @param api The API instance
- * @param appConfig The app configuration
- * @param path The derivation path for signing
- * @param callData The original call data (optional, will be reconstructed if not provided)
- */
-export async function createAsMulti(
-  address: string,
-  api: ApiPromise,
-  appConfig: AppConfig,
-  path: string,
-  callData?: string
-): Promise<SubmittableExtrinsic<'promise', ISubmittableResult> | undefined> {
-  // Reconstruct the original call (same as in createApproveAsMulti)
-  const transferAmount = 1000000000 // 0.001 KSM
-  const balanceTransfer = api.tx.balances.transferKeepAlive(RECIPIENT_ADDRESS, transferAmount)
-
-  // Get the call hash
-  const callHash = balanceTransfer.method.hash.toHex()
-
-  // Sort the other signatories (excluding the current signer)
-  const allSignatories = [SIGNER1_ADDRESS, SIGNER2_ADDRESS, address].sort()
-  const otherSignatories = allSignatories.filter(addr => addr !== address)
-
-  // Compute the multisig address dynamically
-  const multisigAddress = computeMultisigAddress(allSignatories, THRESHOLD, appConfig.ss58Prefix)
-  console.log('Computed multisig address for asMulti:', multisigAddress)
-
-  // Get the existing multisig timepoint (this should exist from the previous approveAsMulti)
-  const multisigs = await api.query.multisig.multisigs(multisigAddress, callHash)
-
-  if (!multisigs || (multisigs as any).isNone) {
-    throw new Error('No existing multisig found. Make sure approveAsMulti was called first.')
-  }
-
-  const multisigInfo = (multisigs as any).unwrap()
-  const timepoint = {
-    height: multisigInfo.when.height.toNumber(),
-    index: multisigInfo.when.index.toNumber(),
-  }
-
-  console.log('Found existing timepoint for final signature:', timepoint)
-  console.log('Existing approvals:', multisigInfo.approvals.length)
-
-  // Create the final asMulti transaction with the actual call
-  const finalMultisigTx = api.tx.multisig.asMulti(
-    THRESHOLD,
-    otherSignatories,
-    timepoint,
-    balanceTransfer, // Pass the actual call, not just the hash
-    WEIGHT
-  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
-
-  console.log('Final asMulti transaction created')
-
-  // Prepare transaction payload
-  const preparedTx = await prepareTransactionPayload(api, address, appConfig, finalMultisigTx)
-  if (!preparedTx) {
-    throw new Error('Failed to prepare transaction')
-  }
-  const { transfer, payload, metadataHash, nonce, proof1, payloadBytes } = preparedTx
-  const typedTransfer = transfer as SubmittableExtrinsic<'promise', ISubmittableResult>
-
-  // Get chain ID from app config
-  const chainId = appConfig.token.symbol.toLowerCase()
-
-  // Sign transaction with Ledger
-  // const { signature } = await ledgerService.signTransaction(path, payloadBytes, chainId, proof1)
-  // if (!signature) {
-  //   throw new Error('Failed to sign transaction')
-  // }
-
-  // // Create signed extrinsic
-  // const signedExtrinsic = createSignedExtrinsic(
-  //   api,
-  //   typedTransfer,
-  //   address,
-  //   signature,
-  //   payload,
-  //   nonce,
-  //   metadataHash
-  // ) as SubmittableExtrinsic<'promise', ISubmittableResult>
-
-  // return signedExtrinsic
-}
-
 /**
  * Gets the multisig addresses for a given address
  * @param address The address to check
+ * @param path The derivation path or identifier for the address
  * @param network The network name (e.g., 'kusama', 'polkadot')
+ * @param api The ApiPromise instance for the network
  * @returns The multisig addresses and their members if any
  */
-export async function getMultisigAddresses(address: string, network: string): Promise<MultisigAddress[] | undefined> {
+export async function getMultisigAddresses(
+  address: string,
+  path: string,
+  network: string,
+  api: ApiPromise
+): Promise<MultisigAddress[] | undefined> {
   try {
-    console.log('address', address)
     const multisigInfo = await getMultisigInfo(address, network)
 
     if (!multisigInfo?.multi_account || multisigInfo.multi_account.length === 0) {
@@ -1319,35 +1173,371 @@ export async function getMultisigAddresses(address: string, network: string): Pr
     }
 
     // Map the multisig addresses to the required format
-    const multisigAddresses = multisigInfo.multi_account.map(account => ({
-      multisigAddress: { address: account.address, path: '', pubKey: '' },
+    const multisigAddresses: MultisigAddress[] = multisigInfo.multi_account.map(account => ({
+      address: account.address,
+      path: '', // it's not an internal address, so the information is not available
+      pubKey: '', // it's not an internal address, so the information is not available
       threshold: multisigInfo.threshold,
-      members: {
-        addresses: multisigInfo.multi_account_member?.map(member => member.address) || [],
-      },
+      members:
+        multisigInfo.multi_account_member?.map(member => ({
+          address: member.address,
+          internal: member.address === address,
+          path: member.address === address ? path : undefined,
+        })) || [],
+      memberMultisigAddresses: undefined,
+      pendingMultisigCalls: [],
     }))
+
     // If multi_account_member is not available, fetch member info for each multisig address
     if (!multisigInfo.multi_account_member) {
       // Process each multisig address sequentially
       for (const [index, multisigAddress] of Object.entries(multisigAddresses)) {
         try {
           // Get member info for this specific multisig address
-          const memberInfo = await getMultisigInfo(multisigAddress.multisigAddress.address, network)
+          const memberInfo = await getMultisigInfo(multisigAddress.address, network)
 
           if (memberInfo?.multi_account_member) {
-            multisigAddresses[Number(index)].members = {
-              addresses: memberInfo.multi_account_member.map(member => member.address),
-            }
+            multisigAddresses[Number(index)].members = memberInfo.multi_account_member.map(member => ({
+              address: member.address,
+              internal: member.address === address,
+              path: member.address === address ? path : undefined,
+            }))
           }
-        } catch (err) {
-        }
+          if (memberInfo?.threshold) {
+            multisigAddresses[Number(index)].threshold = memberInfo.threshold
+          }
+
+          // Check if there's an existing multisig for this call
+          const pendingMultisigCalls: MultisigCall[] = []
+          const multisigscheck = await api.query.multisig.multisigs.entries(multisigAddress.address)
+
+          if (multisigscheck.length !== 0) {
+            console.debug(`Found ${multisigscheck.length} pending multisig call(s).`)
+
+            multisigscheck.forEach(([key, value], index) => {
+              // Extract call hash from the storage key
+              const keyArgs = key.args
+              const multisigAccount = keyArgs[0].toString()
+
+              if (multisigAccount !== multisigAddress.address) {
+                return
+              }
+
+              // Parse the multisig value if it exists
+              const optionValue = value as Option<Multisig>
+              if (optionValue.isSome) {
+                const multisigInfo = optionValue.unwrap()
+
+                const multisigCall: MultisigCall = {
+                  callHash: key.args[1].toHex(),
+                  deposit: multisigInfo.deposit.toNumber(),
+                  depositor: multisigInfo.depositor.toString(),
+                  signatories: multisigInfo.approvals.map(approval => approval.toString()),
+                }
+
+                pendingMultisigCalls.push(multisigCall)
+              }
+            })
+          }
+          multisigAddresses[Number(index)].pendingMultisigCalls = pendingMultisigCalls
+        } catch (err) {}
       }
     }
 
-    console.log('multisigAddresses', multisigAddresses)
     return multisigAddresses
   } catch (error) {
-    // console.error('Error getting multisig addresses:', error)
     return undefined
+  }
+}
+
+export const prepareApproveAsMultiTx = async (
+  senderAddress: string,
+  multisigAddress: string,
+  members: string[],
+  threshold: number,
+  callHash: string,
+  api: ApiPromise
+) => {
+  // Sort the other signatories (excluding the current signer)
+  const allSignatories = members.sort()
+  const otherSignatories = allSignatories.filter(addr => addr !== senderAddress)
+
+  // Check if there's an existing multisig for this call
+  const multisigs = (await api.query.multisig.multisigs(multisigAddress, callHash)) as Option<Multisig>
+
+  let maybeTimepoint = null
+  // Found existing timepoint. If not, it will be the first approval
+  if (multisigs?.isSome) {
+    const multisigInfo = multisigs.unwrap()
+
+    maybeTimepoint = {
+      height: multisigInfo.when.height.toNumber(),
+      index: multisigInfo.when.index.toNumber(),
+    }
+  }
+  // Estimate the weight for this approveAsMulti operation
+  const estimatedWeight = estimateMultisigWeight(undefined, threshold, otherSignatories, maybeTimepoint)
+
+  // Create the approveAsMulti transaction with estimated weight
+  const multisigTx = api.tx.multisig.approveAsMulti(
+    threshold,
+    otherSignatories,
+    maybeTimepoint,
+    callHash,
+    estimatedWeight
+  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  const multisigTxCallHash = multisigTx.method.hash.toHex()
+
+  return multisigTx
+}
+
+/**
+ * Creates the final asMulti transaction to complete the multisig workflow
+ * @param signer The address of the final signer
+ * @param multisigAddress The multisig address
+ * @param callHash The hash of the original call
+ * @param callData The actual call data (hex string)
+ * @param members Array of multisig member addresses
+ * @param threshold The multisig threshold
+ * @param api The API instance
+ */
+export async function prepareAsMultiTx(
+  signer: string,
+  multisigAddress: string,
+  callHash: string,
+  callData: string,
+  members: string[],
+  threshold: number,
+  api: ApiPromise
+): Promise<SubmittableExtrinsic<'promise', ISubmittableResult>> {
+  // Get the existing multisig timepoint (this should exist from the previous approveAsMulti)
+  const multisigs = (await api.query.multisig.multisigs(multisigAddress, callHash)) as Option<Multisig>
+
+  if (!multisigs || multisigs.isNone) {
+    throw new Error('No existing multisig found. Make sure approveAsMulti was called first.')
+  }
+
+  const multisigInfo = multisigs.unwrap()
+  const timepoint = {
+    height: multisigInfo.when.height.toNumber(),
+    index: multisigInfo.when.index.toNumber(),
+  }
+
+  // Sort the other signatories (excluding the current signer)
+  const allSignatories = members.sort()
+  const otherSignatories = allSignatories.filter(addr => addr !== signer)
+
+  // Decode the call data to get the actual call
+  const call = api.createType('Call', callData)
+
+  // Create a temporary extrinsic to estimate weight
+  const tempExtrinsic = api.createType('Call', call) as any
+
+  // Estimate the weight for this asMulti operation
+  const estimatedWeight = estimateMultisigWeight(tempExtrinsic, threshold, otherSignatories)
+
+  // Create the final asMulti transaction with the actual call and estimated weight
+  const finalMultisigTx = api.tx.multisig.asMulti(
+    threshold,
+    otherSignatories,
+    timepoint,
+    call, // Pass the actual call, not the hash
+    estimatedWeight
+  ) as SubmittableExtrinsic<'promise', ISubmittableResult>
+
+  return finalMultisigTx
+}
+
+/**
+ * Estimates the weight of a call by analyzing its type and parameters
+ * @param call - The extrinsic call to estimate weight for
+ * @returns Estimated weight in nanoseconds
+ */
+export function estimateCallWeight(call: SubmittableExtrinsic<'promise', ISubmittableResult>): number {
+  const method = call.method
+
+  // Extract the pallet and method name
+  const palletName = method.section
+  const methodName = method.method
+  const key = `${palletName}.${methodName}`
+
+  // Check if we have a predefined weight for this call
+  if (defaultWeights[key]) {
+    return defaultWeights[key]
+  }
+
+  // Handle batch calls - sum up all individual call weights
+  if (palletName === 'utility' && methodName === 'batchAll') {
+    // For batch calls, use a higher default weight that accounts for multiple operations
+    let totalWeight = defaultWeights['utility.batchAll'] || 1_000_000_000
+
+    try {
+      const calls = method.args[0]
+      // Estimate based on the encoded length as a proxy for complexity
+      const encodedLength = calls.toString().length
+      // Add weight based on the size/complexity of the batch
+      totalWeight += Math.min(encodedLength * 1000, 2_000_000_000) // Cap at 2 seconds
+    } catch (error) {
+      // If we can't analyze the batch, use a conservative estimate
+      totalWeight = 2_000_000_000 // 2 seconds for complex batch
+    }
+
+    return totalWeight
+  }
+
+  // Handle specific call types with variable weights
+  switch (key) {
+    case 'nfts.transfer':
+    case 'uniques.transfer':
+      return defaultWeights[key] || 500_000_000
+
+    case 'balances.transfer':
+    case 'balances.transferKeepAlive':
+      return defaultWeights[key] || 200_000_000
+
+    case 'assets.transfer':
+      return defaultWeights[key] || 300_000_000
+
+    default:
+      // Default weight for unknown calls
+      return 500_000_000
+  }
+}
+
+/**
+ * Estimates the weight for approveAsMulti operation
+ * @param callHash - The hash of the call being approved
+ * @param threshold - The multisig threshold
+ * @param otherSignatories - Array of other signatory addresses
+ * @param maybeTimepoint - Optional timepoint for existing multisig
+ * @returns Estimated weight in nanoseconds
+ */
+export function estimateApproveAsMultiWeight(
+  callHash: string,
+  threshold: number,
+  otherSignatories: string[],
+  maybeTimepoint?: { height: number; index: number } | null
+): number {
+  // Base weight for approveAsMulti operation
+  const baseWeight = 500_000_000 // 500ms in nanoseconds
+
+  // Add weight based on number of signatories
+  // Each signatory adds computational overhead
+  const signatoriesWeight = otherSignatories.length * 50_000_000 // 50ms per signatory
+
+  // Add weight based on threshold (more signatures = more validation)
+  const thresholdWeight = threshold * 25_000_000 // 25ms per threshold unit
+
+  // If timepoint exists, add weight for existing multisig lookup and update
+  const timepointWeight = maybeTimepoint ? 100_000_000 : 50_000_000 // 100ms for existing, 50ms for new
+
+  // Storage operations weight
+  const storageWeight = 150_000_000 // 150ms for storage read/write operations
+
+  const totalWeight = baseWeight + signatoriesWeight + thresholdWeight + timepointWeight + storageWeight
+
+  // Apply buffer for safety
+  return Math.floor(totalWeight * MULTISIG_WEIGHT_BUFFER)
+}
+
+/**
+ * Estimates the weight for asMulti operation (final execution)
+ * @param call - The actual call to be executed
+ * @param threshold - The multisig threshold
+ * @param otherSignatories - Array of other signatory addresses
+ * @returns Estimated weight in nanoseconds
+ */
+export function estimateAsMultiWeight(
+  call: SubmittableExtrinsic<'promise', ISubmittableResult>,
+  threshold: number,
+  otherSignatories: string[]
+): number {
+  // Get the weight of the underlying call
+  const underlyingCallWeight = estimateCallWeight(call)
+
+  // Base weight for asMulti operation (similar to approveAsMulti but with execution)
+  const multisigOverhead = 600_000_000 // 600ms base overhead for final execution
+
+  // Add weight based on number of signatories
+  const signatoriesWeight = otherSignatories.length * 75_000_000 // 75ms per signatory (more than approve)
+
+  // Add weight based on threshold
+  const thresholdWeight = threshold * 50_000_000 // 50ms per threshold unit
+
+  // Storage cleanup weight (removing multisig entry)
+  const cleanupWeight = 200_000_000 // 200ms for storage cleanup
+
+  // Total multisig overhead
+  const totalOverhead = multisigOverhead + signatoriesWeight + thresholdWeight + cleanupWeight
+
+  // Final weight is underlying call + multisig overhead
+  const totalWeight = underlyingCallWeight + totalOverhead
+
+  // Apply buffer for safety
+  return Math.floor(totalWeight * MULTISIG_WEIGHT_BUFFER)
+}
+
+/**
+ * Converts weight (in nanoseconds) to the Polkadot weight format
+ * @param weightNs - Weight in nanoseconds
+ * @returns Weight object with refTime and proofSize
+ */
+export function convertToPolkadotWeight(weightNs: number): { refTime: number; proofSize: number } {
+  return {
+    refTime: weightNs,
+    proofSize: 65536, // Default proof size (64KB)
+  }
+}
+
+/**
+ * Estimates the appropriate max_weight parameter for multisig operations
+ * @param call - The call to be executed (for asMulti) or undefined (for approveAsMulti)
+ * @param threshold - The multisig threshold
+ * @param otherSignatories - Array of other signatory addresses
+ * @param maybeTimepoint - Optional timepoint for existing multisig (approveAsMulti only)
+ * @returns Weight object suitable for max_weight parameter
+ */
+export function estimateMultisigWeight(
+  call: SubmittableExtrinsic<'promise', ISubmittableResult> | undefined,
+  threshold: number,
+  otherSignatories: string[],
+  maybeTimepoint?: { height: number; index: number } | null
+): { refTime: number; proofSize: number } {
+  let estimatedWeight: number
+
+  if (call) {
+    // This is for asMulti (final execution)
+    estimatedWeight = estimateAsMultiWeight(call, threshold, otherSignatories)
+  } else {
+    // This is for approveAsMulti
+    estimatedWeight = estimateApproveAsMultiWeight('', threshold, otherSignatories, maybeTimepoint)
+  }
+
+  return convertToPolkadotWeight(estimatedWeight)
+}
+
+/**
+ * Validates that the provided call data, when decoded as a Substrate Call, matches the expected call hash.
+ *
+ * @param api - The ApiPromise instance used to decode the call data.
+ * @param callData - The hex-encoded call data to validate.
+ * @param expectedCallHash - The expected call hash (as hex string) to compare against.
+ * @returns True if the decoded call's hash matches the expected hash, false otherwise.
+ */
+export function validateCallDataMatchesHash(api: ApiPromise, callData: string, expectedCallHash: string): boolean {
+  try {
+    // Decode the call from the hex data
+    const call = api.createType('Call', callData)
+
+    // Get the hash of the decoded call
+    const computedHash = call.hash.toHex()
+
+    // Compare with the expected hash
+    const matches = computedHash.toLowerCase() === expectedCallHash.toLowerCase()
+
+    return matches
+  } catch (error) {
+    return false
   }
 }

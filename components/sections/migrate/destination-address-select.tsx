@@ -6,6 +6,7 @@ import { ExplorerLink } from '@/components/ExplorerLink'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { AppId } from '@/config/apps'
 import { ExplorerItemType } from '@/config/explorers'
+import { SelectWithCustom } from '@/components/SelectWithCustom'
 import { hasBalance } from '@/lib/utils'
 
 interface DestinationAddressSelectProps {
@@ -22,36 +23,30 @@ function DestinationAddressSelect({ appId, balance, index, polkadotAddresses, on
     return !hasBalance([balance]) || !polkadotAddresses || polkadotAddresses.length === 0
   }, [balance, polkadotAddresses])
 
+  const renderOption = (option: { value: string; label: string }, index: number) => {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="font-semibold">Polkadot {index + 1}:</span>
+        <AddressLink value={option.value} disableTooltip className="break-all" hasCopyButton={false} />
+      </div>
+    )
+  }
+
   return (
-    <Select value={destinationAddress || ''} onValueChange={value => onDestinationChange(value, index)} disabled={isDisabled}>
-      <SelectTrigger className="w-full">
-        <SelectValue>
-          <ExplorerLink
-            value={destinationAddress || ''}
-            tooltipBody={destinationAddress || ''}
-            className="break-all"
-            hasCopyButton={false}
-          />
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {polkadotAddresses?.map((polkadotAddress, addrIndex) => (
-          <SelectItem key={polkadotAddress} value={polkadotAddress}>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">Polkadot {addrIndex + 1}:</span>
-              <ExplorerLink
-                value={polkadotAddress}
-                appId={appId}
-                explorerLinkType={ExplorerItemType.Address}
-                disableTooltip
-                className="break-all"
-                hasCopyButton={false}
-              />
-            </div>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <SelectWithCustom
+      options={
+        polkadotAddresses?.map(address => ({
+          value: address,
+          label: address,
+        })) ?? []
+      }
+      placeholder="Select a Polkadot address..."
+      customPlaceholder="Enter custom Polkadot address"
+      onValueChange={value => onDestinationChange(value, index)}
+      renderOption={renderOption}
+      selectedValue={destinationAddress}
+      disabled={isDisabled}
+    />
   )
 }
 
