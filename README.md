@@ -199,6 +199,48 @@ Each chain configuration contains these key parameters:
 
 For detailed examples of how to structure your chain configuration, refer to the existing entries in the appsConfig.json file.
 
+## Adding New Explorers
+
+This project allows you to easily add or customize blockchain explorers for use throughout the application:
+
+1. Add your explorer configuration to the `config/explorersConfig.json` file with the following structure:
+
+   ```json
+   {
+     "id": "your-explorer-id",
+     "name": "Your Explorer Name",
+     "baseUrl": "https://{network}.your-explorer.com",
+     "txPath": "/tx/{value}",
+     "addressPath": "/account/{value}",
+     "blockPath": "/block/{value}"
+   }
+   ```
+
+Each explorer configuration contains these key parameters:
+
+- `id`: Unique identifier for the explorer (referenced in chain configs)
+- `name`: Display name of the explorer
+- `baseUrl`: Base URL for the explorer, use `{network}` as a placeholder for the network name (e.g., `polkadot`, `kusama`)
+- `txPath`: Path template for transaction details, use `{value}` as a placeholder for the transaction hash
+- `addressPath`: Path template for account details, use `{value}` as a placeholder for the account address
+- `blockPath`: Path template for block details, use `{value}` as a placeholder for the block hash or number
+
+To associate an explorer with a chain, add or update the `explorer` field in the corresponding entry in `config/appsConfig.json`:
+
+```json
+{
+  "id": "your-chain-id",
+  ...
+  "explorer": {
+    "id": "your-explorer-id",
+    "network": "your-network-name"
+  }
+}
+```
+
+- `id`: The explorer ID you defined in `explorersConfig.json`
+- `network`: The network name to substitute in the explorer's `baseUrl` (e.g., `polkadot`, `kusama`)
+
 ## License
 
 This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
