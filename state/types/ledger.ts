@@ -198,3 +198,14 @@ export interface Registration {
   subIdentities?: SubIdentities // review the type
   canRemove: boolean
 }
+
+export interface MigratingItem {
+  appId: AppId
+  appName: string
+  account: Address
+  status?: TransactionStatus
+  statusMessage?: string
+  hash?: string
+  blockHash?: string
+  blockNumber?: string
+}

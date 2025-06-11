@@ -100,16 +100,16 @@ export const ledgerClient = {
       // Determine which type of balance we're dealing with
       let nftsToTransfer: Nft[] = []
       let nativeAmount = undefined
-      let transferebleAmount = 0
+      let transferableAmount = 0
 
       if (isNativeBalance(balance)) {
         // For native balance, use the balance amount
         nativeAmount = balance.balance.transferable
-        transferebleAmount = balance.balance.transferable
+        transferableAmount = balance.balance.transferable
       } else if (isNftBalance(balance)) {
         // For NFT balances, add them to the transfer list
         nftsToTransfer = balance.balance
-        transferebleAmount = account.balances?.find(b => b.type === BalanceType.NATIVE)?.balance.transferable ?? 0
+        transferableAmount = account.balances?.find(b => b.type === BalanceType.NATIVE)?.balance.transferable ?? 0
       }
 
       // Use minimum amount for development if needed
@@ -122,7 +122,7 @@ export const ledgerClient = {
         api,
         senderAddress,
         receiverAddress,
-        transferebleAmount,
+        transferableAmount,
         nftsToTransfer,
         appConfig,
         nativeAmount

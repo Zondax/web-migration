@@ -1,10 +1,10 @@
 import type { Address, TransactionDetails, TransactionStatus } from 'state/types/ledger'
 
 import { AddressLink } from '@/components/AddressLink'
+import TokenIcon from '@/components/TokenIcon'
 import { useTokenLogo } from '@/components/hooks/useTokenLogo'
 import { useTransactionStatus } from '@/components/hooks/useTransactionStatus'
 import { Spinner } from '@/components/icons'
-import TokenIcon from '@/components/TokenIcon'
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { type AppId, type Token, getChainName } from '@/config/apps'
 import { formatBalance } from '@/lib/utils/format'

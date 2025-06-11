@@ -1,7 +1,9 @@
+import type { MigratingItem } from '@/state/types/ledger'
 import { observable } from '@legendapp/state'
 import { use$ } from '@legendapp/state/react'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { type App, ledgerState$ } from 'state/ledger'
+import { uiState$ } from 'state/ui'
 
 import type { AppId } from '@/config/apps'
 import { filterAppsWithoutErrors } from '@/lib/utils'
@@ -22,6 +24,7 @@ interface UseMigrationReturn {
     total: number
   }
   destinationAddressesByApp: Record<AppId, AddressWithVerificationStatus[]>
+  migratingItem: MigratingItem | undefined
 
   // Verification related
   allVerified: boolean
@@ -93,6 +96,14 @@ export const useMigration = (): UseMigrationReturn => {
   const destinationAddressesStatus = use$(() => destinationAddressesStatus$.get())
   // Get the verification in progress state
   const isVerifying = use$(() => isVerifying$.get())
+
+  // Get the current migrating item from the observable state
+  const migratingItem = use$(() => {
+    const currentItem = ledgerState$.apps.currentMigratedItem.get()
+    if (!currentItem) return undefined
+
+    return currentItem
+  })
 
   // Initialize or update the observable with the latest data from destinationAddressesByApp
   useEffect(() => {
@@ -212,6 +223,7 @@ export const useMigration = (): UseMigrationReturn => {
       total: totalMigration,
     },
     destinationAddressesByApp: destinationAddressesStatus,
+    migratingItem,
 
     // Verification related
     allVerified,

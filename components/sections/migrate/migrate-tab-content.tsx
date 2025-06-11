@@ -3,7 +3,7 @@
 import { observer, use$ } from '@legendapp/state/react'
 import { Info, ShieldCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { App } from 'state/ledger'
 import type { Address } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
@@ -19,6 +19,7 @@ import { getTransactionStatus } from '@/lib/utils/ui'
 
 import { AddressVerificationDialog } from './address-verification-dialog'
 import { BalanceHoverCard } from './balance-hover-card'
+import { MigrationProgressDialog } from './migration-progress-dialog'
 import { SuccessDialog } from './success-dialog'
 import TransactionDropdown from './transaction-dropdown'
 
@@ -91,9 +92,28 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
   const router = useRouter()
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [showVerificationDialog, setShowVerificationDialog] = useState(false)
+  const [showMigrationProgressDialog, setShowMigrationProgressDialog] = useState(false)
   const [migrationStatus, setMigrationStatus] = useState<undefined | 'loading' | 'finished'>()
-  const { filteredAppsWithoutErrors, migrateAll, migrationResults, restartSynchronization, allVerified, verifyDestinationAddresses } =
-    useMigration()
+  const {
+    filteredAppsWithoutErrors,
+    migrateAll,
+    migrationResults,
+    restartSynchronization,
+    allVerified,
+    verifyDestinationAddresses,
+    migratingItem,
+  } = useMigration()
+  const userDismissedDialog = useRef(false)
+
+  useEffect(() => {
+    if (migratingItem && !userDismissedDialog.current) {
+      setShowMigrationProgressDialog(true)
+    } else if (!migratingItem) {
+      setShowMigrationProgressDialog(false)
+      // Reset the flag when there are no loading items
+      userDismissedDialog.current = false
+    }
+  }, [migratingItem])
 
   const handleMigrate = async () => {
     setMigrationStatus('loading')
@@ -116,6 +136,11 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
   const handleOpenVerificationDialog = () => {
     setShowVerificationDialog(true)
     verifyDestinationAddresses()
+  }
+
+  const handleCloseMigrationDialog = () => {
+    userDismissedDialog.current = true
+    setShowMigrationProgressDialog(false)
   }
 
   const hasAddressesToVerify = filteredAppsWithoutErrors.length > 0
@@ -213,6 +238,9 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
 
       {/* Address Verification Dialog */}
       <AddressVerificationDialog open={showVerificationDialog} onClose={() => setShowVerificationDialog(false)} />
+
+      {/* Migration Progress Dialog */}
+      <MigrationProgressDialog open={showMigrationProgressDialog} onClose={handleCloseMigrationDialog} />
     </div>
   )
 }
