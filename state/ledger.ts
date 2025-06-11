@@ -183,8 +183,12 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
                 statusMessage: message,
               })
             } else {
-              // Clear for other statuses (SUCCESS, FAILED, ERROR)
-              ledgerState$.apps.currentMigratedItem.set(undefined)
+              // Only clear if this is the currently migrating item
+              const currentItem = ledgerState$.apps.currentMigratedItem.get()
+              if (currentItem?.appId === appId && currentItem?.account.path === accountPath) {
+                // Clear for other statuses (SUCCESS, FAILED, ERROR)
+                ledgerState$.apps.currentMigratedItem.set(undefined)
+              }
             }
 
             return {
