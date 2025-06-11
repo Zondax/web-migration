@@ -107,8 +107,8 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
   const [showMigrationProgressDialog, setShowMigrationProgressDialog] = useState(false)
   const [migrationStatus, setMigrationStatus] = useState<undefined | 'loading' | 'finished'>()
   const {
-    filteredAppsWithoutErrors,
-    migrateAll,
+    appsForMigration,
+    migrateSelected,
     migrationResults,
     restartSynchronization,
     allVerified,
@@ -129,7 +129,7 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
 
   const handleMigrate = async () => {
     setMigrationStatus('loading')
-    await migrateAll()
+    await migrateSelected()
     setShowSuccessDialog(true)
     setMigrationStatus('finished')
   }
@@ -155,7 +155,7 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
     setShowMigrationProgressDialog(false)
   }
 
-  const hasAddressesToVerify = filteredAppsWithoutErrors.length > 0
+  const hasAddressesToVerify = appsForMigration.length > 0
 
   return (
     <div>
@@ -190,8 +190,8 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredAppsWithoutErrors.length > 0 ? (
-            filteredAppsWithoutErrors.map(app => <MigrateRow key={app.id?.toString()} app={app} />)
+          {appsForMigration.length > 0 ? (
+            appsForMigration.map(app => <MigrateRow key={app.id?.toString()} app={app} />)
           ) : (
             <TableRow>
               <TableCell colSpan={6} className="text-center text-muted-foreground p-4">
@@ -231,7 +231,7 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
               variant="purple"
               size="wide"
               onClick={handleMigrate}
-              disabled={filteredAppsWithoutErrors.length === 0 || !allVerified || migrationStatus === 'loading'}
+              disabled={appsForMigration.length === 0 || !allVerified || migrationStatus === 'loading'}
             >
               {migrationStatus === 'loading' ? 'Migrating...' : 'Migrate Accounts'}
             </Button>

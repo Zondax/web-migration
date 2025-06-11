@@ -955,8 +955,8 @@ export const ledgerState$ = observable({
     }
   },
 
-  // Migrate All Accounts
-  async migrateAll() {
+  // Migrate selected accounts
+  async migrateSelected(selectedOnly = true) {
     // Reset migration result
     ledgerState$.apps.migrationResult.set({ success: 0, fails: 0, total: 0 })
 
@@ -974,7 +974,8 @@ export const ledgerState$ = observable({
         const accountsToMigrate = app.accounts
           .map((account, index) => ({ account, index }))
           // Skip accounts that are already migrated or have no balance
-          .filter(({ account }) => account.status !== 'migrated' && hasAddressBalance(account))
+          // Also filter by selected status if selectedOnly is true
+          .filter(({ account }) => account.status !== 'migrated' && hasAddressBalance(account) && (!selectedOnly || account.selected))
 
         if (accountsToMigrate.length === 0) continue
 
@@ -1004,6 +1005,12 @@ export const ledgerState$ = observable({
       handleLedgerError(error as LedgerClientError, InternalErrors.MIGRATION_ERROR)
       ledgerState$.apps.error.set('Failed to complete migration')
     }
+  },
+
+  // Migrate All Accounts
+  async migrateAll() {
+    // Use migrateSelected with false to migrate all accounts
+    await ledgerState$.migrateSelected(false)
   },
 
   async unstakeBalance(appId: AppId, address: string, path: string, amount: number, updateTxStatus: UpdateTransactionStatus) {

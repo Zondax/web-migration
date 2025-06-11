@@ -2,7 +2,7 @@ import { use$, useObservable } from '@legendapp/state/react'
 import { useCallback, useState } from 'react'
 import { type App, AppStatus, ledgerState$ } from 'state/ledger'
 
-import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors } from '@/lib/utils'
+import { filterAppsWithErrors, filterAppsWithoutErrors, filterSelectedAccountsForMigration, hasAccountsWithErrors } from '@/lib/utils'
 
 interface UseSynchronizationReturn {
   // General
@@ -23,6 +23,7 @@ interface UseSynchronizationReturn {
   hasAccountsWithErrors: boolean
   filteredAppsWithoutErrors: App[]
   filteredAppsWithErrors: App[]
+  selectedApps: App[]
   polkadotAddresses: string[]
 
   // Actions
@@ -51,6 +52,7 @@ export const useSynchronization = (): UseSynchronizationReturn => {
   const accountsWithErrors = use$(() => hasAccountsWithErrors(apps))
   const appsWithoutErrors = use$(() => filterAppsWithoutErrors(apps))
   const appsWithErrors = use$(() => filterAppsWithErrors(apps))
+  const selectedApps = use$(() => filterSelectedAccountsForMigration(appsWithoutErrors))
 
   // Extract Polkadot addresses
   const polkadotAddresses$ = useObservable(() => {
@@ -121,6 +123,7 @@ export const useSynchronization = (): UseSynchronizationReturn => {
     hasAccountsWithErrors: accountsWithErrors,
     filteredAppsWithoutErrors: appsWithoutErrors,
     filteredAppsWithErrors: appsWithErrors,
+    selectedApps,
     polkadotAddresses: polkadotAddresses,
 
     // Actions

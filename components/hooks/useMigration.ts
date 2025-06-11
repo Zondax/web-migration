@@ -6,7 +6,7 @@ import { type App, ledgerState$ } from 'state/ledger'
 import { uiState$ } from 'state/ui'
 
 import type { AppId } from '@/config/apps'
-import { filterAppsWithoutErrors } from '@/lib/utils'
+import { filterAppsWithoutErrors, filterSelectedAccountsForMigration } from '@/lib/utils'
 
 export type VerificationStatus = 'pending' | 'verifying' | 'verified' | 'failed'
 
@@ -19,6 +19,7 @@ export interface AddressWithVerificationStatus {
 interface UseMigrationReturn {
   // Computed values
   filteredAppsWithoutErrors: App[]
+  appsForMigration: App[]
   migrationResults: {
     success: number
     total: number
@@ -35,7 +36,12 @@ interface UseMigrationReturn {
 
   // Migration actions
   migrateAll: () => Promise<void>
+  migrateSelected: () => Promise<void>
   restartSynchronization: () => void
+
+  // Selection actions
+  toggleAccountSelection: (appIndex: number, accountIndex: number) => void
+  toggleAllAccounts: (checked: boolean) => void
 }
 
 // Create the observable outside of the hook to ensure it persists across renders
@@ -58,6 +64,8 @@ export const useMigration = (): UseMigrationReturn => {
 
   // Compute derived values from apps
   const appsWithoutErrors = use$(() => filterAppsWithoutErrors(apps))
+
+  const appsForMigration = use$(() => filterSelectedAccountsForMigration(appsWithoutErrors))
 
   // Get destination addresses used for each app
   const destinationAddressesByApp = use$(() =>
@@ -118,6 +126,43 @@ export const useMigration = (): UseMigrationReturn => {
       }
     }
   }, [destinationAddressesByApp])
+
+  // ---- Account selection functions ----
+
+  /**
+   * Toggle selection state of a specific account
+   */
+  const toggleAccountSelection = useCallback(
+    (appIndex: number, accountIndex: number) => {
+      const app = apps$.get()[appIndex]
+
+      if (app?.accounts?.[accountIndex]) {
+        const currentValue = app.accounts[accountIndex].selected || false
+        apps$[appIndex].accounts[accountIndex].selected.set(!currentValue)
+      }
+    },
+    [apps$]
+  )
+
+  /**
+   * Set selection state for all accounts
+   */
+  const toggleAllAccounts = useCallback(
+    (checked: boolean) => {
+      const currentApps = apps$.get()
+
+      for (let i = 0; i < currentApps.length; i++) {
+        const app = currentApps[i]
+
+        if (app.accounts && !app.error) {
+          for (let j = 0; j < app.accounts.length; j++) {
+            apps$[i].accounts[j].selected.set(checked)
+          }
+        }
+      }
+    },
+    [apps$]
+  )
 
   // ---- Verification related functions ----
 
@@ -203,6 +248,13 @@ export const useMigration = (): UseMigrationReturn => {
   }, [])
 
   /**
+   * Migrate only selected accounts
+   */
+  const migrateSelected = useCallback(async () => {
+    await ledgerState$.migrateSelected(true)
+  }, [])
+
+  /**
    * Clear synchronization data and restart the synchronization process
    */
   const restartSynchronization = useCallback(() => {
@@ -218,6 +270,7 @@ export const useMigration = (): UseMigrationReturn => {
   return {
     // Computed values
     filteredAppsWithoutErrors: appsWithoutErrors,
+    appsForMigration,
     migrationResults: {
       success: successMigration,
       total: totalMigration,
@@ -234,6 +287,11 @@ export const useMigration = (): UseMigrationReturn => {
 
     // Migration actions
     migrateAll,
+    migrateSelected,
     restartSynchronization,
+
+    // Selection actions
+    toggleAccountSelection,
+    toggleAllAccounts,
   }
 }

@@ -16,9 +16,10 @@ interface AccountsTableProps {
   polkadotAddresses: string[]
   collections?: Collections
   appId: AppId
+  appIndex: number
 }
 
-function AccountsTable({ accounts, token, polkadotAddresses, collections, appId }: AccountsTableProps) {
+function AccountsTable({ accounts, token, polkadotAddresses, collections, appId, appIndex }: AccountsTableProps) {
   const accountsList = accounts.get() ?? []
 
   const handleDestinationChange = useCallback(
@@ -57,6 +58,7 @@ function AccountsTable({ accounts, token, polkadotAddresses, collections, appId 
                     key={`${account.address ?? accountIndex}`}
                     account={account}
                     accountIndex={accountIndex}
+                    appIndex={appIndex}
                     rowSpan={balances.length}
                     collections={collections}
                     token={token}
@@ -72,6 +74,7 @@ function AccountsTable({ accounts, token, polkadotAddresses, collections, appId 
                   key={`${account.address ?? accountIndex}-${balance.type}`}
                   account={account}
                   accountIndex={accountIndex}
+                  appIndex={appIndex}
                   balance={balance}
                   balanceIndex={balanceIndex}
                   rowSpan={balances.length}
