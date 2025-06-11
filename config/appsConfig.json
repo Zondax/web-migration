@@ -98,6 +98,10 @@
     "token": {
       "symbol": "EDG",
       "decimals": 18
+    },
+    "explorer": {
+      "id": "edgeware-edgscan",
+      "network": ""
     }
   },
   {
@@ -109,6 +113,10 @@
     "token": {
       "symbol": "HDX",
       "decimals": 12
+    },
+    "explorer": {
+      "id": "hydradx-subscan",
+      "network": ""
     }
   },
   {
@@ -220,6 +228,10 @@
     "token": {
       "symbol": "PDEX",
       "decimals": 12
+    },
+    "explorer": {
+      "id": "polkadex-subscan",
+      "network": ""
     }
   },
   {
@@ -261,6 +273,10 @@
     "token": {
       "symbol": "XX",
       "decimals": 9
+    },
+    "explorer": {
+      "id": "xxnetwork-explorer",
+      "network": ""
     }
   }
 ]

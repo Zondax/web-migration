@@ -6,5 +6,37 @@
     "txPath": "/extrinsic/{value}",
     "addressPath": "/account/{value}",
     "blockPath": "/block/{value}"
+  },
+  {
+    "id": "edgeware-edgscan",
+    "name": "Edgscan (Edgeware)",
+    "baseUrl": "https://edgscan.ink",
+    "txPath": "/extrinsics/{value}",
+    "addressPath": "/accounts/{value}",
+    "blockPath": "/blocks/{value}"
+  },
+  {
+    "id": "hydradx-subscan",
+    "name": "Subscan (HydraDX Staging)",
+    "baseUrl": "https://hydradx.stg.subscan.io",
+    "txPath": "/extrinsic/{value}",
+    "addressPath": "/account/{value}",
+    "blockPath": "/block/{value}"
+  },
+  {
+    "id": "polkadex-subscan",
+    "name": "Subscan (Polkadex Staging)",
+    "baseUrl": "https://polkadex.stg.subscan.io",
+    "txPath": "/extrinsic/{value}",
+    "addressPath": "/account/{value}",
+    "blockPath": "/block/{value}"
+  },
+  {
+    "id": "xxnetwork-explorer",
+    "name": "XX Network Explorer",
+    "baseUrl": "https://explorer.xx.network",
+    "txPath": "/extrinsics/{value}",
+    "addressPath": "/accounts/{value}",
+    "blockPath": "/blocks/{value}"
   }
 ]
