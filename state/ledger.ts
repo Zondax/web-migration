@@ -179,8 +179,13 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
                 appId,
                 appName: app.name || app.id,
                 account: accounts[accountIndex],
-                status,
-                statusMessage: message,
+                transaction: {
+                  status: TransactionStatus.IS_LOADING,
+                  statusMessage: message,
+                  hash: txDetails?.txHash,
+                  blockHash: txDetails?.blockHash,
+                  blockNumber: txDetails?.blockNumber,
+                },
               })
             } else {
               // Only clear if this is the currently migrating item

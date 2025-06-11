@@ -199,8 +199,9 @@ export interface Registration {
   canRemove: boolean
 }
 
-export interface MigratingItem extends Transaction {
+export interface MigratingItem {
   appId: AppId
   appName: string
   account: Address
+  transaction?: Transaction
 }
