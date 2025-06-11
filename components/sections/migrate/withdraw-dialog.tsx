@@ -1,12 +1,13 @@
 import type { Address, TransactionDetails, TransactionStatus } from 'state/types/ledger'
 
-import { AddressLink } from '@/components/AddressLink'
+import { ExplorerLink } from '@/components/ExplorerLink'
 import TokenIcon from '@/components/TokenIcon'
 import { useTokenLogo } from '@/components/hooks/useTokenLogo'
 import { useTransactionStatus } from '@/components/hooks/useTransactionStatus'
 import { Spinner } from '@/components/icons'
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { type AppId, type Token, getChainName } from '@/config/apps'
+import { ExplorerItemType } from '@/config/explorers'
 import { formatBalance } from '@/lib/utils/format'
 import { ledgerState$ } from '@/state/ledger'
 import { useEffect, useMemo } from 'react'
@@ -37,7 +38,7 @@ function WithdrawForm({ token, account, appId, estimatedFee, estimatedFeeLoading
       {/* Sending account */}
       <div className="text-sm">
         <div className="text-xs text-muted-foreground mb-1">Source Address</div>
-        <AddressLink value={account.address} />
+        <ExplorerLink value={account.address} appId={appId} explorerLinkType={ExplorerItemType.Address} />
       </div>
       {/* Network */}
       <div>
@@ -118,7 +119,7 @@ export default function WithdrawDialog({ open, setOpen, token, account, appId }:
         </DialogHeader>
         <DialogBody>
           {txStatus ? (
-            <TransactionStatusBody {...txStatus} />
+            <TransactionStatusBody {...txStatus} appId={appId} />
           ) : (
             <WithdrawForm
               token={token}

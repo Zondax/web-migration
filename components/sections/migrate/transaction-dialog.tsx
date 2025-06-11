@@ -1,5 +1,7 @@
-import { AddressLink } from '@/components/AddressLink'
+import { ExplorerLink } from '@/components/ExplorerLink'
 import { Button } from '@/components/ui/button'
+import type { AppId } from '@/config/apps'
+import { ExplorerItemType } from '@/config/explorers'
 import { getTransactionStatus } from '@/lib/utils/ui'
 import { type Transaction, TransactionStatus } from '@/state/types/ledger'
 
@@ -9,15 +11,22 @@ import { type Transaction, TransactionStatus } from '@/state/types/ledger'
  * Displays the status of a blockchain transaction, including a status icon, a message,
  * and optional transaction details such as transaction hash, block hash, and block number.
  */
-function TransactionStatusBody({ status, statusMessage: txStatusMessage, hash, blockHash, blockNumber }: Transaction) {
+function TransactionStatusBody({
+  status,
+  statusMessage: txStatusMessage,
+  hash,
+  blockHash,
+  blockNumber,
+  appId,
+}: Transaction & { appId?: AppId }) {
   if (!status) return null
 
   // Collect transaction details only if they exist, and filter out undefined values for cleaner display
-  const details: { label: string; value: string }[] = [
-    { label: 'Transaction Hash', value: hash },
-    { label: 'Block Hash', value: blockHash },
-    { label: 'Block Number', value: blockNumber },
-  ].filter((item): item is { label: string; value: string } => Boolean(item.value))
+  const details: { label: string; value: string; type?: ExplorerItemType }[] = [
+    { label: 'Transaction Hash', value: hash, type: ExplorerItemType.Transaction },
+    { label: 'Block Hash', value: blockHash, type: ExplorerItemType.BlockHash },
+    { label: 'Block Number', value: blockNumber, type: ExplorerItemType.BlockNumber },
+  ].filter((item): item is { label: string; value: string; type: ExplorerItemType } => Boolean(item.value))
 
   // Common transaction details section to display hash, blockHash and blockNumber if they exist
   const renderTransactionDetails = () => {
@@ -28,7 +37,11 @@ function TransactionStatusBody({ status, statusMessage: txStatusMessage, hash, b
             item.value && (
               <div key={item.label} className="flex justify-between items-center gap-1">
                 <div className="text-xs text-muted-foreground mb-1">{item.label}</div>
-                <AddressLink value={item.value} />
+                {appId && item.type ? (
+                  <ExplorerLink value={item.value} appId={appId} explorerLinkType={item.type} className="break-all" hasCopyButton={false} />
+                ) : (
+                  <ExplorerLink value={item.value} hasCopyButton={false} />
+                )}
               </div>
             )
         )}

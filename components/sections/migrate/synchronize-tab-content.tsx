@@ -4,13 +4,12 @@ import { observable } from '@legendapp/state'
 import { FolderSync, Info, Loader2, RefreshCw, X } from 'lucide-react'
 import { AppStatus } from 'state/ledger'
 
-import { AddressLink } from '@/components/AddressLink'
 import { CustomTooltip } from '@/components/CustomTooltip'
-import { useSynchronization } from '@/components/hooks/useSynchronization'
+import { ExplorerLink } from '@/components/ExplorerLink'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { cn } from '@/lib/utils'
 
+import { useSynchronization } from '@/components/hooks/useSynchronization'
 import AppScanningGrid from './app-scanning-grid'
 import EmptyStateRow from './empty-state-row'
 import AppRow from './synchronized-app'
@@ -59,7 +58,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
                     <li key={address} className="flex items-center gap-2">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold">Polkadot {index + 1}:</span>
-                        <AddressLink value={address} disableTooltip className="break-all" hasCopyButton />
+                        <ExplorerLink value={address} disableTooltip className="break-all" hasCopyButton />
                       </div>
                     </li>
                   ))}

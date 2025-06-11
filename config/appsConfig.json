@@ -8,6 +8,10 @@
     "token": {
       "symbol": "ACA",
       "decimals": 12
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "acala"
     }
   },
   {
@@ -19,6 +23,10 @@
     "token": {
       "symbol": "AJUN",
       "decimals": 12
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "ajuna"
     }
   },
   {
@@ -30,6 +38,10 @@
     "token": {
       "symbol": "ASTR",
       "decimals": 18
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "astar"
     }
   },
   {
@@ -41,6 +53,10 @@
     "token": {
       "symbol": "BNC",
       "decimals": 12
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "bifrost"
     }
   },
   {
@@ -52,6 +68,10 @@
     "token": {
       "symbol": "CFG",
       "decimals": 18
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "bifrost"
     }
   },
   {
@@ -63,6 +83,10 @@
     "token": {
       "symbol": "RING",
       "decimals": 9
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "darwinia"
     }
   },
   {
@@ -96,6 +120,10 @@
     "token": {
       "symbol": "KAR",
       "decimals": 12
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "karura"
     }
   },
   {
@@ -106,6 +134,10 @@
     "token": {
       "symbol": "KHA",
       "decimals": 12
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "khala"
     }
   },
   {
@@ -118,7 +150,11 @@
       "symbol": "KSM",
       "decimals": 12
     },
-    "peopleRpcEndpoint": "wss://people-kusama.api.onfinality.io/public-ws"
+    "peopleRpcEndpoint": "wss://people-kusama.api.onfinality.io/public-ws",
+    "explorer": {
+      "id": "subscan",
+      "network": "kusama"
+    }
   },
   {
     "id": "nodle",
@@ -129,6 +165,10 @@
     "token": {
       "symbol": "NODL",
       "decimals": 11
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "nodle"
     }
   },
   {
@@ -150,6 +190,10 @@
     "token": {
       "symbol": "PEN",
       "decimals": 12
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "pendulum"
     }
   },
   {
@@ -161,6 +205,10 @@
     "token": {
       "symbol": "PHA",
       "decimals": 12
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "pendulum"
     }
   },
   {
@@ -184,6 +232,10 @@
       "symbol": "KSM",
       "decimals": 12,
       "logoId": "kusama"
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "assethub-kusama"
     }
   },
   {
@@ -194,6 +246,10 @@
     "token": {
       "symbol": "UNQ",
       "decimals": 18
+    },
+    "explorer": {
+      "id": "subscan",
+      "network": "unique"
     }
   },
   {

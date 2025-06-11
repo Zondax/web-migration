@@ -5,12 +5,13 @@ import { use$ } from '@legendapp/state/react'
 import { AlertCircle, CheckCircle, Clock } from 'lucide-react'
 import { useEffect } from 'react'
 
-import { AddressLink } from '@/components/AddressLink'
+import { ExplorerLink } from '@/components/ExplorerLink'
 import { type VerificationStatus, useMigration } from '@/components/hooks/useMigration'
 import { Spinner } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { type AppId, appsConfigs } from '@/config/apps'
+import { ExplorerItemType } from '@/config/explorers'
 import { muifyHtml } from '@/lib/utils'
 
 interface AddressVerificationDialogProps {
@@ -86,7 +87,12 @@ export function AddressVerificationDialog({ open, onClose }: AddressVerification
                     {addresses.map((item, index) => (
                       <div key={item.address} className="flex flex-row items-center justify-between">
                         <div className="text-xs font-mono text-gray-500">
-                          <AddressLink value={item.address} disableTooltip />
+                          <ExplorerLink
+                            value={item.address}
+                            appId={appId as AppId}
+                            explorerLinkType={ExplorerItemType.Address}
+                            disableTooltip
+                          />
                         </div>
                         <div className="flex items-center">{renderStatusIcon(item.status)}</div>
                       </div>

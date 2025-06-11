@@ -1,14 +1,17 @@
 import { ChevronDown } from 'lucide-react'
 import type { Transaction } from 'state/types/ledger'
 
-import { AddressLink } from '@/components/AddressLink'
+import { ExplorerLink } from '@/components/ExplorerLink'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import type { AppId } from '@/config/apps'
+import { ExplorerItemType } from '@/config/explorers'
 
 interface TransactionDropdownProps {
   transaction: Transaction | undefined
+  appId: AppId
 }
 
-function TransactionDropdown({ transaction }: TransactionDropdownProps) {
+function TransactionDropdown({ transaction, appId }: TransactionDropdownProps) {
   if (!transaction?.hash) {
     return null
   }
@@ -23,19 +26,37 @@ function TransactionDropdown({ transaction }: TransactionDropdownProps) {
         {transaction.hash && (
           <DropdownMenuItem className="gap-2">
             Transaction Hash:
-            <AddressLink value={transaction.hash ?? ''} tooltipBody={transaction.hash} className="break-all" />
+            <ExplorerLink
+              value={transaction.hash}
+              appId={appId}
+              explorerLinkType={ExplorerItemType.Transaction}
+              tooltipBody={`View transaction ${transaction.hash} on explorer`}
+              className="break-all"
+            />
           </DropdownMenuItem>
         )}
         {transaction.blockHash && (
           <DropdownMenuItem className="gap-2">
             Block Hash:
-            <AddressLink value={transaction.blockHash ?? ''} tooltipBody={transaction.blockHash} className="break-all" />
+            <ExplorerLink
+              value={transaction.blockHash}
+              appId={appId}
+              explorerLinkType={ExplorerItemType.BlockHash}
+              tooltipBody={`View block ${transaction.blockHash} on explorer`}
+              className="break-all"
+            />
           </DropdownMenuItem>
         )}
         {transaction.blockNumber && (
           <DropdownMenuItem className="gap-2">
             Block Number:
-            <AddressLink value={transaction.blockNumber ?? ''} tooltipBody={transaction.blockNumber} className="break-all" />
+            <ExplorerLink
+              value={transaction.blockNumber ?? ''}
+              appId={appId}
+              explorerLinkType={ExplorerItemType.BlockNumber}
+              tooltipBody={transaction.blockNumber}
+              className="break-all"
+            />
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

@@ -1,28 +1,107 @@
-import appsConfigData from './appsConfig.json'
+import type { ExplorerId } from './explorers'
 
+// Import the JSON data directly
+const appsConfigData: AppConfigJSON[] = require('./appsConfig.json')
+
+/**
+ * Token configuration
+ */
 export interface Token {
+  /**
+   * Token symbol (e.g., "DOT", "KSM")
+   */
   symbol: string
+  /**
+   * Token decimal places
+   */
   decimals: number
+  /**
+   * Optional custom logo ID, defaults to app ID
+   */
   logoId?: string
 }
 
-// Extract app IDs dynamically from the JSON data
-export type AppId = (typeof appsConfigData)[number]['id'] | 'polkadot'
+/**
+ * Explorer configuration in app config
+ */
+export interface AppExplorerConfig {
+  /**
+   * Explorer identifier
+   */
+  id: ExplorerId
+  /**
+   * Custom base URL (overrides the default)
+   */
+  baseUrl?: string
+  /**
+   * Network identifier used in URL templates
+   */
+  network?: string
+}
 
-export interface AppConfig {
-  id: AppId
+/**
+ * JSON structure of app config
+ */
+interface AppConfigJSON {
+  id: string
   name: string
   bip44Path: string
   ss58Prefix: number
   rpcEndpoint?: string
   peopleRpcEndpoint?: string
   token: Token
+  explorer?: AppExplorerConfig
 }
 
-// Polkadot app config
+/**
+ * Available app IDs
+ */
+export type AppId = (typeof appsConfigData)[number]['id'] | 'polkadot'
+
+/**
+ * App/chain configuration interface
+ */
+export interface AppConfig {
+  /**
+   * Unique identifier for the app/chain
+   */
+  id: AppId
+  /**
+   * Display name
+   */
+  name: string
+  /**
+   * BIP44 derivation path
+   */
+  bip44Path: string
+  /**
+   * SS58 address format prefix
+   */
+  ss58Prefix: number
+  /**
+   * RPC endpoint for the chain
+   */
+  rpcEndpoint?: string
+  /**
+   * People's RPC endpoint for the chain
+   */
+  peopleRpcEndpoint?: string
+  /**
+   * Token configuration
+   */
+  token: Token
+  /**
+   * Explorer configuration
+   */
+  explorer: AppExplorerConfig
+}
+
+/**
+ * Polkadot app config
+ */
 export const polkadotAppConfig: AppConfig = {
   name: 'Polkadot',
-  id: 'polkadot' as AppId,
+  id: 'polkadot',
   bip44Path: "m/44'/354'/0'/0'/0'", // 354 = 0x80000162
   ss58Prefix: 0,
   rpcEndpoint: 'wss://rpc.polkadot.io',
@@ -31,52 +110,78 @@ export const polkadotAppConfig: AppConfig = {
     decimals: 10,
     logoId: 'polkadot',
   },
+  explorer: {
+    id: 'subscan',
+    network: 'polkadot',
+  },
 }
 
 /**
- * Load app configurations from JSON data
- * @returns A Map with app configurations indexed by AppId
+ * Typed app configurations with default explorer configuration
  */
-export function loadAppConfigs(): Map<AppId, AppConfig> {
-  const appsConfigs = new Map<AppId, AppConfig>()
+export const apps: AppConfig[] = [
+  ...appsConfigData.map(app => ({
+    ...app,
+    // Add default subscan explorer config if not specified
+    explorer: app.explorer || {
+      id: 'subscan' as ExplorerId,
+      network: app.id,
+    },
+  })),
+  polkadotAppConfig,
+]
 
-  // Convert JSON data to AppConfig objects and add to the map
-  for (const config of appsConfigData) {
-    appsConfigs.set(config.id as AppId, {
-      ...config,
-      id: config.id as AppId,
-      // Add token field for compatibility
-      token: {
-        symbol: config.token.symbol,
-        decimals: config.token.decimals,
-        logoId: config.token.logoId || config.id,
-      },
-    })
-  }
+/**
+ * For compatibility with existing code - Map of app configs
+ */
+export const appsConfigs = new Map<AppId, AppConfig>(apps.map(app => [app.id, app]))
 
-  return appsConfigs
-}
-
-// Create the Map with app configs
-export const appsConfigs = loadAppConfigs()
-
-// Helper object to help with type inference
+/**
+ * For compatibility with existing code - Object of app configs
+ */
 export const appsConfigsObj = Object.fromEntries(appsConfigs)
 
-// Helper function to get BIP44 path for a chain
+/**
+ * Get an app configuration by ID
+ * @param id App ID
+ * @returns App configuration or undefined if not found
+ */
+export function getAppConfig(id: AppId): AppConfig | undefined {
+  return apps.find(app => app.id === id)
+}
+
+/**
+ * Get the display name of a chain by ID
+ * @param id Chain ID
+ * @returns Chain display name or the ID if not found
+ */
+export function getChainName(id: AppId): string {
+  const app = getAppConfig(id)
+  return app?.name || id
+}
+
+/**
+ * Get the RPC endpoint for a chain
+ * @param id Chain ID
+ * @returns RPC endpoint or undefined if not available
+ */
+export function getRpcEndpoint(id: AppId): string | undefined {
+  const app = getAppConfig(id)
+  return app?.rpcEndpoint
+}
+
+/**
+ * Helper function to get BIP44 path for a chain (compatibility)
+ */
 export const getChainPath = (appId: AppId): string | undefined => {
   const appConfig = appsConfigs.get(appId)
   return appConfig ? appConfig.bip44Path : undefined
 }
 
-// Helper function to get SS58 prefix for a chain
+/**
+ * Helper function to get SS58 prefix for a chain (compatibility)
+ */
 export const getChainPrefix = (appId: AppId): number | undefined => {
   const appConfig = appsConfigs.get(appId)
   return appConfig ? appConfig.ss58Prefix : undefined
-}
-
-// Helper function to get SS58 prefix for a chain
-export const getChainName = (appId: AppId): string | undefined => {
-  const appConfig = appsConfigs.get(appId)
-  return appConfig ? appConfig.name : undefined
 }
