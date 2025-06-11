@@ -1,5 +1,6 @@
 import * as appsConfigModule from '@/config/apps'
 import * as explorersConfigModule from '@/config/explorers'
+import { ExplorerItemType } from '@/config/explorers'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getAddressExplorerUrl, getBlockExplorerUrl, getTransactionExplorerUrl } from '../explorers'
 
@@ -10,13 +11,19 @@ vi.mock('@/config/apps', () => ({
 
 vi.mock('@/config/explorers', () => ({
   buildExplorerUrl: vi.fn(),
+  ExplorerItemType: {
+    Transaction: 'transaction',
+    Address: 'address',
+    BlockHash: 'blockHash',
+    BlockNumber: 'blockNumber',
+  },
   explorers: {
     subscan: {
       name: 'Subscan',
       baseUrl: 'https://{network}.subscan.io',
-      txPath: '/extrinsic/{hash}',
-      addressPath: '/account/{address}',
-      blockPath: '/block/{hash}',
+      txPath: '/extrinsic/{value}',
+      addressPath: '/account/{value}',
+      blockPath: '/block/{value}',
     },
   },
 }))
@@ -42,7 +49,7 @@ describe('Explorer URL Utilities', () => {
 
       const url = getTransactionExplorerUrl('polkadot', '0x123')
       expect(url).toBe('https://polkadot.subscan.io/extrinsic/0x123')
-      expect(explorersConfigModule.buildExplorerUrl).toHaveBeenCalledWith('subscan', 'polkadot', 'transaction', '0x123')
+      expect(explorersConfigModule.buildExplorerUrl).toHaveBeenCalledWith('subscan', 'polkadot', ExplorerItemType.Transaction, '0x123')
     })
 
     it('should return empty string when app has no explorer config', () => {
@@ -74,7 +81,7 @@ describe('Explorer URL Utilities', () => {
 
       const url = getAddressExplorerUrl('kusama', '5ABC')
       expect(url).toBe('https://kusama.subscan.io/account/5ABC')
-      expect(explorersConfigModule.buildExplorerUrl).toHaveBeenCalledWith('subscan', 'kusama', 'address', '5ABC')
+      expect(explorersConfigModule.buildExplorerUrl).toHaveBeenCalledWith('subscan', 'kusama', ExplorerItemType.Address, '5ABC')
     })
 
     it('should handle empty explorer config gracefully', () => {
@@ -106,7 +113,7 @@ describe('Explorer URL Utilities', () => {
 
       const url = getBlockExplorerUrl('astar', '123456')
       expect(url).toBe('https://astar.subscan.io/block/123456')
-      expect(explorersConfigModule.buildExplorerUrl).toHaveBeenCalledWith('subscan', 'astar', 'block', '123456')
+      expect(explorersConfigModule.buildExplorerUrl).toHaveBeenCalledWith('subscan', 'astar', ExplorerItemType.BlockHash, '123456')
     })
 
     it('should return empty string for app without explorer config', () => {
