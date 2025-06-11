@@ -112,7 +112,7 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
     migrationResults,
     restartSynchronization,
     allVerified,
-    verifyDestinationAddresses,
+    verifySelectedAppsAddresses,
     migratingItem,
   } = useMigration()
   const userDismissedDialog = useRef(false)
@@ -147,7 +147,7 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
 
   const handleOpenVerificationDialog = () => {
     setShowVerificationDialog(true)
-    verifyDestinationAddresses()
+    verifySelectedAppsAddresses()
   }
 
   const handleCloseMigrationDialog = () => {

@@ -32,6 +32,7 @@ interface UseMigrationReturn {
   anyFailed: boolean
   isVerifying: boolean
   verifyDestinationAddresses: () => Promise<void>
+  verifySelectedAppsAddresses: () => Promise<void>
   verifyFailedAddresses: () => Promise<void>
 
   // Migration actions
@@ -67,7 +68,7 @@ export const useMigration = (): UseMigrationReturn => {
 
   const appsForMigration = use$(() => filterSelectedAccountsForMigration(appsWithoutErrors))
 
-  // Get destination addresses used for each app
+  // Get destination addresses used for each app (only selected accounts)
   const destinationAddressesByApp = use$(() =>
     appsWithoutErrors.reduce((acc: Record<AppId, AddressWithVerificationStatus[]>, app) => {
       if (app.accounts && app.accounts.length > 0) {
@@ -76,6 +77,9 @@ export const useMigration = (): UseMigrationReturn => {
 
         // Process each account and only keep unique destination addresses
         for (const account of app.accounts) {
+          // Skip accounts that are not selected
+          if (!account.selected) continue
+
           if (account.balances && account.balances.length > 0) {
             for (const balance of account.balances) {
               if (balance.transaction?.destinationAddress && !addressMap.has(balance.transaction.destinationAddress)) {
@@ -202,6 +206,33 @@ export const useMigration = (): UseMigrationReturn => {
   }, [verifyAddress])
 
   /**
+   * Verify only destination addresses from selected apps
+   */
+  const verifySelectedAppsAddresses = useCallback(async () => {
+    isVerifying$.set(true)
+
+    try {
+      // Get the current selected apps
+      const selectedApps = filterSelectedAccountsForMigration(appsWithoutErrors)
+      const selectedAppIds = new Set(selectedApps.map(app => app.id as AppId))
+
+      // Iterate through each app and verify only addresses from selected apps
+      for (const appId of Object.keys(destinationAddressesStatus$.peek())) {
+        // Skip apps that are not selected
+        if (!selectedAppIds.has(appId as AppId)) continue
+
+        const addresses = destinationAddressesStatus$[appId as AppId].peek() || []
+
+        for (let i = 0; i < addresses.length; i++) {
+          await verifyAddress(appId as AppId, i)
+        }
+      }
+    } finally {
+      isVerifying$.set(false)
+    }
+  }, [verifyAddress, appsWithoutErrors])
+
+  /**
    * Verify only the addresses that have failed verification
    */
   const verifyFailedAddresses = useCallback(async () => {
@@ -283,6 +314,7 @@ export const useMigration = (): UseMigrationReturn => {
     anyFailed,
     isVerifying,
     verifyDestinationAddresses,
+    verifySelectedAppsAddresses,
     verifyFailedAddresses,
 
     // Migration actions

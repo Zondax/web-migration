@@ -71,7 +71,7 @@ export const filterSelectedAccountsForMigration = (apps: App[]): App[] => {
   return apps
     .map(app => ({
       ...app,
-      accounts: app.accounts?.filter(account => account.selected && account.status !== 'migrated') || [],
+      accounts: app.accounts?.filter(account => account.selected) || [],
     }))
     .filter(app => app.accounts.length > 0)
 }

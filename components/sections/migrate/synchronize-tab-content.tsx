@@ -52,9 +52,9 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
 
   // Check if all apps are selected
   const areAllAppsSelected = useMemo(() => {
-    if (selectedApps.length === 0) return false
-    return selectedApps.every(app => app.accounts?.every(account => account.selected))
-  }, [selectedApps])
+    if (appsWithoutErrors.length === 0) return false
+    return appsWithoutErrors.every(app => app.accounts?.every(account => account.selected))
+  }, [appsWithoutErrors])
 
   // Handle "Select All" checkbox change
   const handleSelectAllChange = useCallback(
