@@ -18,6 +18,7 @@ import {
   type Address,
   AddressStatus,
   type Collection,
+  type MigratingItem,
   type Registration,
   TransactionStatus,
   type UpdateMigratedStatusFn,
@@ -76,6 +77,7 @@ interface LedgerState {
     migrationResult: {
       [key in MigrationResultKey]: number
     }
+    currentMigratedItem?: MigratingItem
   }
   polkadotAddresses: Partial<Record<AppId, string[]>>
 }
@@ -102,6 +104,7 @@ const initialLedgerState: LedgerState = {
       fails: 0,
       total: 0,
     },
+    currentMigratedItem: undefined,
   },
   polkadotAddresses: {},
 }
@@ -160,6 +163,7 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
 
   if (appIndex !== -1) {
     const accounts = apps[appIndex]?.accounts ? [...apps[appIndex].accounts] : []
+    const app = apps[appIndex]
 
     const accountIndex = accounts.findIndex(account => account.path === accountPath)
 
@@ -169,6 +173,29 @@ const updateMigratedStatus: UpdateMigratedStatusFn = (appId: AppId, accountPath:
         ...accounts[accountIndex],
         balances: accounts[accountIndex].balances?.map(balance => {
           if (balance.type === type) {
+            // If the status is IS_LOADING, set the currentMigratedItem
+            if (status === TransactionStatus.IS_LOADING) {
+              ledgerState$.apps.currentMigratedItem.set({
+                appId,
+                appName: app.name || app.id,
+                account: accounts[accountIndex],
+                transaction: {
+                  status: TransactionStatus.IS_LOADING,
+                  statusMessage: message,
+                  hash: txDetails?.txHash,
+                  blockHash: txDetails?.blockHash,
+                  blockNumber: txDetails?.blockNumber,
+                },
+              })
+            } else {
+              // Only clear if this is the currently migrating item
+              const currentItem = ledgerState$.apps.currentMigratedItem.get()
+              if (currentItem?.appId === appId && currentItem?.account.path === accountPath) {
+                // Clear for other statuses (SUCCESS, FAILED, ERROR)
+                ledgerState$.apps.currentMigratedItem.set(undefined)
+              }
+            }
+
             return {
               ...balance,
               transaction: {
@@ -286,6 +313,7 @@ export const ledgerState$ = observable({
         fails: 0,
         total: 0,
       },
+      currentMigratedItem: undefined,
     })
     ledgerState$.polkadotAddresses.set({})
   },

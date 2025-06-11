@@ -2,7 +2,7 @@ import { merkleizeMetadata } from '@polkadot-api/merkleize-metadata'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import type { SubmittableExtrinsic } from '@polkadot/api/types'
 import type { GenericExtrinsicPayload } from '@polkadot/types'
-import type { Option, u32, Vec } from '@polkadot/types-codec'
+import type { Option, Vec, u32 } from '@polkadot/types-codec'
 import type {
   AccountId32,
   Balance,
