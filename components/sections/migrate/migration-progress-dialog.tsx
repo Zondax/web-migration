@@ -1,11 +1,11 @@
 import { AddressLink } from '@/components/AddressLink'
+import TokenIcon from '@/components/TokenIcon'
+import { useTokenLogo } from '@/components/hooks/useTokenLogo'
 import { TransactionStatusBody } from '@/components/sections/migrate/transaction-dialog'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { AppId } from '@/config/apps'
 import { muifyHtml } from '@/lib/utils/html'
-import { uiState$ } from '@/state/ui'
-import { use$ } from '@legendapp/state/react'
 import { observer } from '@legendapp/state/react'
 
 interface MigrationProgressDialogProps {
@@ -19,7 +19,7 @@ export const MigrationProgressDialog = observer(function MigrationProgressDialog
   onClose,
   migratingItem,
 }: MigrationProgressDialogProps) {
-  const icons = use$(uiState$.icons.get())
+  const icon = useTokenLogo(migratingItem?.appId)
 
   // Only show dialog if there is a migrating item, regardless of the open prop
   const shouldShowDialog = open && !!migratingItem
@@ -31,11 +31,7 @@ export const MigrationProgressDialog = observer(function MigrationProgressDialog
           <DialogTitle>Transaction Approval Needed</DialogTitle>
           {migratingItem && (
             <DialogDescription className="flex items-center gap-2">
-              {migratingItem.appId && icons[migratingItem.appId as AppId] && (
-                <div className="max-h-5 overflow-hidden [&_svg]:max-h-5 [&_svg]:w-5 flex items-center">
-                  {muifyHtml(icons[migratingItem.appId as AppId])}
-                </div>
-              )}
+              <TokenIcon icon={icon} symbol={migratingItem.appName} size="sm" />
               <span>{migratingItem.appName}</span>
               <span className="text-xs font-mono text-gray-500">
                 <AddressLink value={migratingItem.account.address} disableTooltip />
