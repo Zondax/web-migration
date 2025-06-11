@@ -93,7 +93,7 @@ export interface AppConfig {
   /**
    * Explorer configuration
    */
-  explorer: AppExplorerConfig
+  explorer?: AppExplorerConfig
 }
 
 /**
@@ -117,15 +117,17 @@ export const polkadotAppConfig: AppConfig = {
 }
 
 /**
- * Typed app configurations with default explorer configuration
+ * Typed app configurations
  */
 export const apps: AppConfig[] = [
   ...appsConfigData.map(app => ({
     ...app,
-    // Add default subscan explorer config if not specified
-    explorer: app.explorer || {
-      id: 'subscan' as ExplorerId,
-      network: app.id,
+    id: app.id as AppId,
+    // Add token field for compatibility
+    token: {
+      symbol: app.token.symbol,
+      decimals: app.token.decimals,
+      logoId: app.token.logoId || app.id,
     },
   })),
   polkadotAppConfig,
