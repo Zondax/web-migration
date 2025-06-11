@@ -1,5 +1,4 @@
 import { AddressLink } from '@/components/AddressLink'
-import { useMigration } from '@/components/hooks/useMigration'
 import { TransactionStatusBody } from '@/components/sections/migrate/transaction-dialog'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -12,10 +11,14 @@ import { observer } from '@legendapp/state/react'
 interface MigrationProgressDialogProps {
   open: boolean
   onClose: () => void
+  migratingItem?: any // TODO: Replace 'any' with the correct type if available
 }
 
-export const MigrationProgressDialog = observer(function MigrationProgressDialog({ open, onClose }: MigrationProgressDialogProps) {
-  const { migratingItem } = useMigration()
+export const MigrationProgressDialog = observer(function MigrationProgressDialog({
+  open,
+  onClose,
+  migratingItem,
+}: MigrationProgressDialogProps) {
   const icons = use$(uiState$.icons.get())
 
   // Only show dialog if there is a migrating item, regardless of the open prop

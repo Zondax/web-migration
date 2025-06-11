@@ -240,7 +240,7 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
       <AddressVerificationDialog open={showVerificationDialog} onClose={() => setShowVerificationDialog(false)} />
 
       {/* Migration Progress Dialog */}
-      <MigrationProgressDialog open={showMigrationProgressDialog} onClose={handleCloseMigrationDialog} />
+      <MigrationProgressDialog open={showMigrationProgressDialog} onClose={handleCloseMigrationDialog} migratingItem={migratingItem} />
     </div>
   )
 }
