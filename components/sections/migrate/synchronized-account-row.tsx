@@ -113,7 +113,7 @@ const SynchronizedAccountRow = observer(
 
     const handleCheckboxChange = useCallback(
       (checked: CheckedState) => {
-        toggleAccountSelection(appIndex, accountIndex)
+        toggleAccountSelection(appIndex, accountIndex, checked === 'indeterminate' ? false : checked)
       },
       [toggleAccountSelection, appIndex, accountIndex]
     )

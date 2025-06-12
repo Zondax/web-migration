@@ -39,7 +39,7 @@ interface UseMigrationReturn {
   restartSynchronization: () => void
 
   // Selection actions
-  toggleAccountSelection: (appIndex: number, accountIndex: number) => void
+  toggleAccountSelection: (appIndex: number, accountIndex: number, checked?: boolean) => void
   toggleAllAccounts: (checked: boolean) => void
 }
 
@@ -135,12 +135,16 @@ export const useMigration = (): UseMigrationReturn => {
    * Toggle selection state of a specific account
    */
   const toggleAccountSelection = useCallback(
-    (appIndex: number, accountIndex: number) => {
+    (appIndex: number, accountIndex: number, checked?: boolean) => {
       const app = apps$.get()[appIndex]
 
       if (app?.accounts?.[accountIndex]) {
         const currentValue = app.accounts[accountIndex].selected || false
-        apps$[appIndex].accounts[accountIndex].selected.set(!currentValue)
+        if (checked) {
+          apps$[appIndex].accounts[accountIndex].selected.set(true)
+        } else {
+          apps$[appIndex].accounts[accountIndex].selected.set(!currentValue)
+        }
       }
     },
     [apps$]
