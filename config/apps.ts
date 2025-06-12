@@ -50,6 +50,7 @@ interface AppConfigJSON {
   rpcEndpoint?: string
   peopleRpcEndpoint?: string
   token: Token
+  subscanId?: string
   explorer?: AppExplorerConfig
 }
 
