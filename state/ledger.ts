@@ -1008,12 +1008,6 @@ export const ledgerState$ = observable({
     }
   },
 
-  // Migrate All Accounts
-  async migrateAll() {
-    // Use migrateSelected with false to migrate all accounts
-    await ledgerState$.migrateSelected(false)
-  },
-
   async unstakeBalance(appId: AppId, address: string, path: string, amount: number, updateTxStatus: UpdateTransactionStatus) {
     const appConfig = appsConfigs.get(appId)
     if (!appConfig) {

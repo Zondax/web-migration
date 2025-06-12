@@ -23,7 +23,6 @@ interface UseSynchronizationReturn {
   hasAccountsWithErrors: boolean
   filteredAppsWithoutErrors: App[]
   filteredAppsWithErrors: App[]
-  selectedApps: App[]
   polkadotAddresses: string[]
 
   // Actions
@@ -52,7 +51,6 @@ export const useSynchronization = (): UseSynchronizationReturn => {
   const accountsWithErrors = use$(() => hasAccountsWithErrors(apps))
   const appsWithoutErrors = use$(() => filterAppsWithoutErrors(apps))
   const appsWithErrors = use$(() => filterAppsWithErrors(apps))
-  const selectedApps = use$(() => filterSelectedAccountsForMigration(appsWithoutErrors))
 
   // Extract Polkadot addresses
   const polkadotAddresses$ = useObservable(() => {
@@ -123,7 +121,6 @@ export const useSynchronization = (): UseSynchronizationReturn => {
     hasAccountsWithErrors: accountsWithErrors,
     filteredAppsWithoutErrors: appsWithoutErrors,
     filteredAppsWithErrors: appsWithErrors,
-    selectedApps,
     polkadotAddresses: polkadotAddresses,
 
     // Actions

@@ -1,9 +1,8 @@
 import type { MigratingItem } from '@/state/types/ledger'
 import { observable } from '@legendapp/state'
 import { use$ } from '@legendapp/state/react'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect } from 'react'
 import { type App, ledgerState$ } from 'state/ledger'
-import { uiState$ } from 'state/ui'
 
 import type { AppId } from '@/config/apps'
 import { filterAppsWithoutErrors, filterSelectedAccountsForMigration } from '@/lib/utils'
@@ -36,7 +35,6 @@ interface UseMigrationReturn {
   verifyFailedAddresses: () => Promise<void>
 
   // Migration actions
-  migrateAll: () => Promise<void>
   migrateSelected: () => Promise<void>
   restartSynchronization: () => void
 
@@ -270,19 +268,11 @@ export const useMigration = (): UseMigrationReturn => {
   })
 
   // ---- Migration related functions ----
-
-  /**
-   * Migrate all accounts
-   */
-  const migrateAll = useCallback(async () => {
-    await ledgerState$.migrateAll()
-  }, [])
-
   /**
    * Migrate only selected accounts
    */
   const migrateSelected = useCallback(async () => {
-    await ledgerState$.migrateSelected(true)
+    await ledgerState$.migrateSelected()
   }, [])
 
   /**
@@ -318,7 +308,6 @@ export const useMigration = (): UseMigrationReturn => {
     verifyFailedAddresses,
 
     // Migration actions
-    migrateAll,
     migrateSelected,
     restartSynchronization,
 

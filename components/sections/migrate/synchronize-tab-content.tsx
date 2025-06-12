@@ -34,7 +34,6 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
     hasAccountsWithErrors: accountsWithErrors,
     filteredAppsWithoutErrors: appsWithoutErrors,
     filteredAppsWithErrors: appsWithErrors,
-    selectedApps,
     polkadotAddresses,
 
     // Actions
@@ -59,7 +58,7 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
   // Handle "Select All" checkbox change
   const handleSelectAllChange = useCallback(
     (checked: CheckedState) => {
-      toggleAllAccounts(!!checked)
+      toggleAllAccounts(Boolean(checked))
     },
     [toggleAllAccounts]
   )
