@@ -3,13 +3,15 @@
 import type { App } from 'state/ledger'
 import type { Address, MultisigAddress } from 'state/types/ledger'
 
-import { AddressLink } from '@/components/AddressLink'
 import { CustomTooltip } from '@/components/CustomTooltip'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { muifyHtml } from '@/lib/utils/html'
 import { getTransactionStatus } from '@/lib/utils/ui'
 
+import { ExplorerLink } from '@/components/ExplorerLink'
 import { useTokenLogo } from '@/components/hooks/useTokenLogo'
+import type { AppId } from '@/config/apps'
+import { ExplorerItemType } from '@/config/explorers'
 import { BalanceHoverCard } from './balance-hover-card'
 import TransactionDropdown from './transaction-dropdown'
 
@@ -46,12 +48,20 @@ const MigratedAccountRows = ({ app, multisigAddresses }: AccountRowsProps) => {
           </div>
         </TableCell>
         <TableCell>
-          <AddressLink value={account.address} className="font-mono" tooltipBody={`${account.address} - ${account.path}`} />
+          <ExplorerLink
+            value={account.address}
+            appId={app.id as AppId}
+            explorerLinkType={ExplorerItemType.Address}
+            tooltipBody={`${account.address} - ${account.path}`}
+            className="font-mono"
+          />
         </TableCell>
         {!multisigAddresses && (
           <TableCell>
-            <AddressLink
+            <ExplorerLink
               value={account.pubKey !== '' ? account.pubKey : '-'}
+              appId={app.id as AppId}
+              explorerLinkType={ExplorerItemType.Address}
               className="font-mono"
               hasCopyButton={account.pubKey !== ''}
               disableTooltip={account.pubKey === ''}
@@ -60,10 +70,12 @@ const MigratedAccountRows = ({ app, multisigAddresses }: AccountRowsProps) => {
         )}
         {multisigAddresses && (
           <TableCell>
-            <AddressLink
+            <ExplorerLink
               value={balance.transaction?.signatoryAddress || '-'}
+              appId={app.id as AppId}
+              explorerLinkType={ExplorerItemType.Address}
               className="font-mono"
-              hasCopyButton={!!balance.transaction?.signatoryAddress}
+              hasCopyButton={Boolean(balance.transaction?.signatoryAddress)}
               disableTooltip={!balance.transaction?.signatoryAddress}
             />
           </TableCell>
@@ -76,7 +88,12 @@ const MigratedAccountRows = ({ app, multisigAddresses }: AccountRowsProps) => {
           </TableCell>
         )}
         <TableCell>
-          <AddressLink value={balance.transaction?.destinationAddress || ''} className="font-mono" />
+          <ExplorerLink
+            value={balance.transaction?.destinationAddress || ''}
+            appId={app.id as AppId}
+            explorerLinkType={ExplorerItemType.Address}
+            className="font-mono"
+          />
         </TableCell>
         <TableCell>
           <BalanceHoverCard balances={[balance]} collections={collections} token={app.token} isMigration />
@@ -84,7 +101,7 @@ const MigratedAccountRows = ({ app, multisigAddresses }: AccountRowsProps) => {
         <TableCell>
           <div className="flex items-center space-x-2">
             {renderStatusIcon(account, balanceIndex)}
-            {balance.transaction && <TransactionDropdown transaction={balance.transaction} />}
+            {balance.transaction && <TransactionDropdown transaction={balance.transaction} appId={app.id as AppId} />}
           </div>
         </TableCell>
       </TableRow>

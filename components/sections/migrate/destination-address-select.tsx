@@ -3,10 +3,9 @@ import { useMemo } from 'react'
 import type { AddressBalance } from 'state/types/ledger'
 
 import { ExplorerLink } from '@/components/ExplorerLink'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { SelectWithCustom } from '@/components/SelectWithCustom'
 import type { AppId } from '@/config/apps'
 import { ExplorerItemType } from '@/config/explorers'
-import { SelectWithCustom } from '@/components/SelectWithCustom'
 import { hasBalance } from '@/lib/utils'
 
 interface DestinationAddressSelectProps {
@@ -27,7 +26,7 @@ function DestinationAddressSelect({ appId, balance, index, polkadotAddresses, on
     return (
       <div className="flex items-center gap-2">
         <span className="font-semibold">Polkadot {index + 1}:</span>
-        <AddressLink value={option.value} disableTooltip className="break-all" hasCopyButton={false} />
+        <ExplorerLink value={option.value} appId={appId as AppId} explorerLinkType={ExplorerItemType.Address} disableTooltip />
       </div>
     )
   }

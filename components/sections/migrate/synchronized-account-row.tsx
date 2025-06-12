@@ -233,7 +233,15 @@ const SynchronizedAccountRow = observer(
     const renderMultisigSignatoryAddress = () => {
       if (internalMultisigMembers.length === 1 && signatoryAddress) {
         // Single internal member - just show the address
-        return <AddressLink value={signatoryAddress} disableTooltip className="break-all" />
+        return (
+          <ExplorerLink
+            value={signatoryAddress}
+            appId={appId as AppId}
+            explorerLinkType={ExplorerItemType.Address}
+            disableTooltip
+            className="break-all"
+          />
+        )
       }
 
       // Multiple internal members - show a select dropdown
@@ -250,7 +258,14 @@ const SynchronizedAccountRow = observer(
           <SelectContent>
             {internalMultisigMembers.map(member => (
               <SelectItem key={member.address} value={member.address}>
-                <AddressLink value={member.address} disableTooltip className="break-all" hasCopyButton={false} />
+                <ExplorerLink
+                  value={member.address}
+                  appId={appId as AppId}
+                  explorerLinkType={ExplorerItemType.Address}
+                  disableTooltip
+                  hasCopyButton={false}
+                  className="break-all"
+                />
               </SelectItem>
             ))}
           </SelectContent>

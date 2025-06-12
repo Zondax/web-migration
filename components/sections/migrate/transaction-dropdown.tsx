@@ -1,8 +1,8 @@
 import { ChevronDown, Info } from 'lucide-react'
 import type { Transaction } from 'state/types/ledger'
 
-import { ExplorerLink } from '@/components/ExplorerLink'
 import { CustomTooltip } from '@/components/CustomTooltip'
+import { ExplorerLink } from '@/components/ExplorerLink'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import type { AppId } from '@/config/apps'
 import { ExplorerItemType } from '@/config/explorers'
@@ -27,7 +27,7 @@ function TransactionDropdown({ transaction, appId }: TransactionDropdownProps) {
         {transaction.callData && (
           <DropdownMenuItem className="gap-2">
             Call Data:
-            <AddressLink value={transaction.callData ?? ''} tooltipBody={transaction.callData} className="break-all" />
+            <ExplorerLink value={transaction.callData ?? ''} tooltipBody={transaction.callData} className="break-all" disableLink />
             <CustomTooltip
               tooltipBody="The full call data that can be supplied to a final call to multi approvals."
               className="!normal-case font-normal"

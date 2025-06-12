@@ -1,4 +1,4 @@
-import { AddressLink } from '@/components/AddressLink'
+import { ExplorerLink } from '@/components/ExplorerLink'
 import { useTokenLogo } from '@/components/hooks/useTokenLogo'
 import { useTransactionStatus } from '@/components/hooks/useTransactionStatus'
 import TokenIcon from '@/components/TokenIcon'
@@ -7,6 +7,7 @@ import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, Dia
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { type AppId, type Token, getChainName } from '@/config/apps'
+import { ExplorerItemType } from '@/config/explorers'
 import { formatBalance } from '@/lib/utils/format'
 import { validateCallData } from '@/lib/utils/multisig'
 import { ledgerState$ } from '@/state/ledger'
@@ -111,7 +112,7 @@ function MultisigCallForm({
       {/* Multisig Address */}
       <div>
         <div className="text-xs text-muted-foreground mb-1">Multisig Address</div>
-        <AddressLink value={account.address} />
+        <ExplorerLink value={account.address} appId={appId as AppId} explorerLinkType={ExplorerItemType.Address} />
       </div>
 
       {/* Call Hash Selector */}
@@ -137,7 +138,13 @@ function MultisigCallForm({
             )}
           />
         ) : (
-          <AddressLink value={selectedCall?.callHash ?? '-'} />
+          <ExplorerLink
+            value={selectedCall?.callHash ?? '-'}
+            appId={appId as AppId}
+            explorerLinkType={ExplorerItemType.Address}
+            disableTooltip
+            disableLink
+          />
         )}
       </div>
 
@@ -148,7 +155,7 @@ function MultisigCallForm({
           <div className="space-y-1">
             {existingApprovals.map(approval => (
               <div key={approval} className="flex items-center gap-1">
-                <AddressLink value={approval} />
+                <ExplorerLink value={approval} appId={appId as AppId} explorerLinkType={ExplorerItemType.Address} />
                 {approval === depositorAddress && (
                   <Badge variant="light-gray" className="text-[10px] leading-tight flex-shrink-0">
                     Depositor
@@ -191,7 +198,7 @@ function MultisigCallForm({
               <SelectContent>
                 {availableSigners.map(member => (
                   <SelectItem key={member.address} value={member.address}>
-                    <AddressLink value={member.address} disableTooltip hasCopyButton={false} />
+                    <ExplorerLink value={member.address} appId={appId as AppId} hasCopyButton={false} disableTooltip disableLink />
                   </SelectItem>
                 ))}
               </SelectContent>
