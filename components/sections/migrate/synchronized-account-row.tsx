@@ -10,9 +10,10 @@ import type { AppId, Token } from '@/config/apps'
 import { formatBalance } from '@/lib/utils'
 import { canUnstake, hasNonTransferableBalance, hasStakedBalance, isNativeBalance } from '@/lib/utils/balance'
 
-import { AddressLink } from '@/components/AddressLink'
+import { ExplorerLink } from '@/components/ExplorerLink'
 import { Spinner } from '@/components/icons'
 import { Button, type ButtonVariant } from '@/components/ui/button'
+import { ExplorerItemType } from '@/config/explorers'
 import { getIdentityItems } from '@/lib/utils/ui'
 import { BalanceHoverCard, LockedBalanceHoverCard } from './balance-hover-card'
 import DestinationAddressSelect from './destination-address-select'
@@ -191,7 +192,13 @@ const SynchronizedAccountRow = observer(
         {isFirst && (
           <TableCell className="py-2 text-sm" rowSpan={rowSpan}>
             <div className="flex items-center gap-2">
-              <AddressLink value={account.address ?? ''} disableTooltip className="break-all" />
+              <ExplorerLink
+                value={account.address ?? ''}
+                appId={appId}
+                explorerLinkType={ExplorerItemType.Address}
+                disableTooltip
+                className="break-all"
+              />
               {/* Identity Icon and Tooltip */}
               {account.registration?.identity ? (
                 <CustomTooltip tooltipBody={tooltipIdentity()}>
@@ -209,6 +216,7 @@ const SynchronizedAccountRow = observer(
         <TableCell className="py-2 text-sm">
           {balance !== undefined && balanceIndex !== undefined ? (
             <DestinationAddressSelect
+              appId={appId}
               balance={balance}
               index={balanceIndex}
               polkadotAddresses={polkadotAddresses}

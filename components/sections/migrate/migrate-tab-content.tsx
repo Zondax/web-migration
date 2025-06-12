@@ -8,8 +8,8 @@ import type { App } from 'state/ledger'
 import type { Address } from 'state/types/ledger'
 import { uiState$ } from 'state/ui'
 
-import { AddressLink } from '@/components/AddressLink'
 import { CustomTooltip } from '@/components/CustomTooltip'
+import { ExplorerLink } from '@/components/ExplorerLink'
 import { useMigration } from '@/components/hooks/useMigration'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -17,6 +17,7 @@ import { hasBalance } from '@/lib/utils'
 import { muifyHtml } from '@/lib/utils/html'
 import { getTransactionStatus } from '@/lib/utils/ui'
 
+import { ExplorerItemType } from '@/config/explorers'
 import { AddressVerificationDialog } from './address-verification-dialog'
 import { BalanceHoverCard } from './balance-hover-card'
 import { MigrationProgressDialog } from './migration-progress-dialog'
@@ -64,13 +65,24 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
                 </div>
               </TableCell>
               <TableCell>
-                <AddressLink value={account.address} className="font-mono" tooltipBody={`${account.address} - ${account.path}`} />
+                <ExplorerLink
+                  value={account.address}
+                  className="font-mono"
+                  tooltipBody={`${account.address} - ${account.path}`}
+                  appId={app.id}
+                  explorerLinkType={ExplorerItemType.Address}
+                />
               </TableCell>
               <TableCell>
-                <AddressLink value={account.pubKey} className="font-mono" />
+                <ExplorerLink value={account.pubKey} className="font-mono" />
               </TableCell>
               <TableCell>
-                <AddressLink value={balance.transaction?.destinationAddress || ''} className="font-mono" />
+                <ExplorerLink
+                  value={balance.transaction?.destinationAddress || ''}
+                  className="font-mono"
+                  appId={app.id}
+                  explorerLinkType={ExplorerItemType.Address}
+                />
               </TableCell>
               <TableCell>
                 <BalanceHoverCard balances={[balance]} collections={collections} token={app.token} isMigration />
@@ -78,7 +90,7 @@ const MigrateRow = observer(({ app }: MigrateRowProps) => {
               <TableCell>
                 <div className="flex items-center space-x-2">
                   {renderStatusIcon(account, balanceIndex)}
-                  {balance.transaction && <TransactionDropdown transaction={balance.transaction} />}
+                  {balance.transaction && <TransactionDropdown transaction={balance.transaction} appId={app.id} />}
                 </div>
               </TableCell>
             </TableRow>

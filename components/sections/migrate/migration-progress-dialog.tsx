@@ -1,17 +1,17 @@
-import { AddressLink } from '@/components/AddressLink'
+import { ExplorerLink } from '@/components/ExplorerLink'
 import TokenIcon from '@/components/TokenIcon'
 import { useTokenLogo } from '@/components/hooks/useTokenLogo'
 import { TransactionStatusBody } from '@/components/sections/migrate/transaction-dialog'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import type { AppId } from '@/config/apps'
-import { muifyHtml } from '@/lib/utils/html'
+import { ExplorerItemType } from '@/config/explorers'
+import type { MigratingItem } from '@/state/types/ledger'
 import { observer } from '@legendapp/state/react'
 
 interface MigrationProgressDialogProps {
   open: boolean
   onClose: () => void
-  migratingItem?: any // TODO: Replace 'any' with the correct type if available
+  migratingItem?: MigratingItem | undefined
 }
 
 export const MigrationProgressDialog = observer(function MigrationProgressDialog({
@@ -34,7 +34,12 @@ export const MigrationProgressDialog = observer(function MigrationProgressDialog
               <TokenIcon icon={icon} symbol={migratingItem.appName} size="sm" />
               <span>{migratingItem.appName}</span>
               <span className="text-xs font-mono text-gray-500">
-                <AddressLink value={migratingItem.account.address} disableTooltip />
+                <ExplorerLink
+                  value={migratingItem.account.address}
+                  appId={migratingItem.appId}
+                  explorerLinkType={ExplorerItemType.Address}
+                  disableTooltip
+                />
               </span>
             </DialogDescription>
           )}

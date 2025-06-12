@@ -10,13 +10,15 @@ import { Spinner } from '@/components/icons'
  * @param status - The current transaction status (optional).
  * @param txStatusMessage - An optional custom status message to display.
  * @param size - The size of the status icon ('sm', 'md', or 'lg'). Defaults to 'sm'.
- * @returns An object containing the statusIcon (ReactNode) and an optional statusMessage (string).
+ * @param txHash - Optional transaction hash for explorer links.
+ * @returns An object containing the statusIcon (ReactNode), an optional statusMessage (string), and the txHash if available.
  */
 export const getTransactionStatus = (
   status?: TransactionStatus,
   txStatusMessage?: string,
-  size: 'sm' | 'md' | 'lg' = 'sm'
-): { statusIcon: React.ReactNode; statusMessage?: string } => {
+  size: 'sm' | 'md' | 'lg' = 'sm',
+  txHash?: string
+): { statusIcon: React.ReactNode; statusMessage?: string; txHash?: string } => {
   let statusIcon: React.ReactNode | null = null
   let statusMessage = txStatusMessage
 
@@ -63,7 +65,7 @@ export const getTransactionStatus = (
         <span className="px-2 py-1 text-xs rounded-full bg-polkadot-lime text-black border border-storm-200">Ready to migrate</span>
       )
   }
-  return { statusIcon, statusMessage }
+  return { statusIcon, statusMessage, txHash }
 }
 
 /**
