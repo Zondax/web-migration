@@ -429,6 +429,7 @@ export const ledgerState$ = observable({
             status: AddressStatus.SYNCHRONIZED,
             error: undefined,
             isLoading: false,
+            selected: true,
           }
         })
       )
