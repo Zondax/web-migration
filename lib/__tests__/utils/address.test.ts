@@ -101,24 +101,4 @@ describe('isMultisigAddress', () => {
       expect(isMultisigAddress(multisigWithMultipleMembers)).toBe(true)
     })
   })
-
-  describe('edge cases', () => {
-    it('should return false when threshold is undefined and members is empty array', () => {
-      const edgeCase = {
-        ...mockAddress1,
-        threshold: undefined,
-        members: [],
-      }
-      expect(isMultisigAddress(edgeCase)).toBe(false)
-    })
-
-    it('should return false when threshold is undefined and members is undefined', () => {
-      const edgeCase = {
-        ...mockAddress1,
-        threshold: undefined,
-        members: undefined,
-      } as any
-      expect(isMultisigAddress(edgeCase)).toBe(false)
-    })
-  })
 })

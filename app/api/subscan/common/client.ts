@@ -46,7 +46,7 @@ export class SubscanClient {
     }
   }
 
-  async request<T extends SubscanBaseResponse>(endpoint: string, body: any): Promise<T> {
+  async request<T extends SubscanBaseResponse, B extends Record<string, unknown>>(endpoint: string, body: B): Promise<T> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'POST',
       headers: this.headers,
