@@ -14,7 +14,8 @@ import type {
 } from '@polkadot/types/interfaces'
 import type { ExtrinsicPayloadValue, ISubmittableResult } from '@polkadot/types/types/extrinsic'
 import { hexToU8a } from '@polkadot/util'
-import type { AppConfig } from 'config/apps'
+import type { AppConfig, AppId } from 'config/apps'
+import { appsConfigs, getEraTimeByAppId, polkadotAppConfig } from 'config/apps'
 import { errorDetails } from 'config/errors'
 import { errorAddresses, mockBalances } from 'config/mockData'
 import {
@@ -86,7 +87,8 @@ export async function getApiAndProvider(rpcEndpoint: string): Promise<{ api?: Ap
 // Get Balance
 export async function getBalance(
   address: Address,
-  api: ApiPromise
+  api: ApiPromise,
+  appId: AppId
 ): Promise<{
   balances: AddressBalance[]
   collections: { uniques: Collection[]; nfts: Collection[] }
@@ -119,7 +121,7 @@ export async function getBalance(
     }
 
     // Get native balance
-    const nativeBalance = await getNativeBalance(addressString, api)
+    const nativeBalance = await getNativeBalance(addressString, api, appId)
 
     // Get Uniques if available
     const { nfts: uniquesNfts, collections: uniquesCollections } = await getUniquesOwnedByAccount(addressString, api)
@@ -158,7 +160,7 @@ export async function getBalance(
   }
 }
 
-export async function getNativeBalance(addressString: string, api: ApiPromise): Promise<Native | undefined> {
+export async function getNativeBalance(addressString: string, api: ApiPromise, appId: AppId): Promise<Native | undefined> {
   try {
     const balance = await api?.query.system.account(addressString)
 
@@ -175,7 +177,7 @@ export async function getNativeBalance(addressString: string, api: ApiPromise): 
       }
 
       if (nativeBalance.frozen > 0) {
-        const stakingInfo = await getStakingInfo(addressString, api)
+        const stakingInfo = await getStakingInfo(addressString, api, appId)
         nativeBalance.staking = stakingInfo
       }
 
@@ -962,18 +964,25 @@ export async function getEnrichedNftMetadata(metadataUrl: string): Promise<{
  * Converts an era number to a human-readable time string
  * @param era The era number
  * @param currentEra The current era number
+ * @param eraTimeInHours The duration of one era in hours (defaults to 24 for Polkadot)
  * @returns The human-readable time string
  */
-export function eraToHumanTime(era: number, currentEra: number): string {
+export function eraToHumanTime(era: number, currentEra: number, eraTimeInHours = 24): string {
   const erasRemaining = era - currentEra
-  const hoursRemaining = erasRemaining * 6 // Each era is ~6 hours
+  const hoursRemaining = erasRemaining * eraTimeInHours
   const daysRemaining = Math.floor(hoursRemaining / 24)
   const remainingHours = hoursRemaining % 24
 
-  if (daysRemaining > 0) {
-    return `${daysRemaining} days and ${remainingHours} hours`
+  const hoursFormatted: string = remainingHours === 1 ? 'hour' : 'hours'
+  const daysFormatted: string = daysRemaining === 1 ? 'day' : 'days'
+
+  if (Math.abs(daysRemaining) > 0) {
+    if (Math.abs(remainingHours) > 0) {
+      return `${daysRemaining} ${daysFormatted} and ${Math.abs(remainingHours)} ${hoursFormatted}`
+    }
+    return `${daysRemaining} ${daysFormatted}`
   }
-  return `${remainingHours} hours`
+  return `${remainingHours} ${hoursFormatted}`
 }
 
 /**
@@ -990,9 +999,10 @@ export function isReadyToWithdraw(chunkEra: number, currentEra: number): boolean
  * Gets the staking information for an address
  * @param address The address to check
  * @param api The API instance
+ * @param appId Optional app ID to determine era time
  * @returns The staking information
  */
-export async function getStakingInfo(address: string, api: ApiPromise): Promise<Staking | undefined> {
+export async function getStakingInfo(address: string, api: ApiPromise, appId: AppId): Promise<Staking | undefined> {
   let stakingInfo: Staking | undefined
   // Get Controller and check if we can unstake or not
   const controller = (await api.query.staking.bonded(address)) as Option<AccountId32>
@@ -1018,10 +1028,13 @@ export async function getStakingInfo(address: string, api: ApiPromise): Promise<
     const currentEraOption = (await api.query.staking.currentEra()) as Option<u32>
     const currentEra = currentEraOption.isSome ? Number(currentEraOption.unwrap().toString()) : 0
 
+    // Get era time for the specified app or use default of 24 hours
+    const eraTimeInHours = getEraTimeByAppId(appId)
+
     stakingInfo.unlocking = stakingLedger.unlocking.map(chunk => ({
       value: chunk.value.toNumber(),
       era: Number(chunk.era.toString()),
-      timeRemaining: eraToHumanTime(Number(chunk.era.toString()), currentEra),
+      timeRemaining: eraToHumanTime(Number(chunk.era.toString()), currentEra, eraTimeInHours),
       canWithdraw: isReadyToWithdraw(Number(chunk.era.toString()), currentEra),
     }))
     return stakingInfo
