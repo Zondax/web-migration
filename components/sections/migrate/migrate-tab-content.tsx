@@ -18,10 +18,10 @@ import { muifyHtml } from '@/lib/utils/html'
 import { getTransactionStatus } from '@/lib/utils/ui'
 
 import { ExplorerItemType } from '@/config/explorers'
-import { AddressVerificationDialog } from './address-verification-dialog'
 import { BalanceHoverCard } from './balance-hover-card'
-import { MigrationProgressDialog } from './migration-progress-dialog'
-import { SuccessDialog } from './success-dialog'
+import { AddressVerificationDialog } from './dialogs/address-verification-dialog'
+import { MigrationProgressDialog } from './dialogs/migration-progress-dialog'
+import { SuccessDialog } from './dialogs/success-dialog'
 import TransactionDropdown from './transaction-dropdown'
 
 interface MigrateTabContentProps {

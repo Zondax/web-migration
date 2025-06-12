@@ -20,9 +20,9 @@ import { getIdentityItems } from '@/lib/utils/ui'
 import type { CheckedState } from '@radix-ui/react-checkbox'
 import { BalanceHoverCard, LockedBalanceHoverCard } from './balance-hover-card'
 import DestinationAddressSelect from './destination-address-select'
-import RemoveIdentityDialog from './remove-identity-dialog'
-import UnstakeDialog from './unstake-dialog'
-import WithdrawDialog from './withdraw-dialog'
+import RemoveIdentityDialog from './dialogs/remove-identity-dialog'
+import UnstakeDialog from './dialogs/unstake-dialog'
+import WithdrawDialog from './dialogs/withdraw-dialog'
 
 // Component for rendering a single synchronized account row
 interface AccountBalanceRowProps {
