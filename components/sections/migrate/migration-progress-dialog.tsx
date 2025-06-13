@@ -49,7 +49,7 @@ export const MigrationProgressDialog = observer(function MigrationProgressDialog
             <TransactionStatusBody
               status={migratingItem.transaction?.status}
               statusMessage={migratingItem.transaction?.statusMessage}
-              hash={migratingItem.transaction?.hash}
+              txHash={migratingItem.transaction?.txHash}
               blockHash={migratingItem.transaction?.blockHash}
               blockNumber={migratingItem.transaction?.blockNumber}
             />

@@ -14,7 +14,7 @@ import { type Transaction, TransactionStatus } from '@/state/types/ledger'
 function TransactionStatusBody({
   status,
   statusMessage: txStatusMessage,
-  hash,
+  txHash,
   blockHash,
   blockNumber,
   appId,
@@ -23,7 +23,7 @@ function TransactionStatusBody({
 
   // Collect transaction details only if they exist, and filter out undefined values for cleaner display
   const details: { label: string; value: string; type?: ExplorerItemType }[] = [
-    { label: 'Transaction Hash', value: hash, type: ExplorerItemType.Transaction },
+    { label: 'Transaction Hash', value: txHash, type: ExplorerItemType.Transaction },
     { label: 'Block Hash', value: blockHash, type: ExplorerItemType.BlockHash },
     { label: 'Block Number', value: blockNumber, type: ExplorerItemType.BlockNumber },
   ].filter((item): item is { label: string; value: string; type: ExplorerItemType } => Boolean(item.value))
@@ -71,6 +71,7 @@ interface TransactionDialogFooterProps {
   synchronizeAccount: () => void
   closeDialog: () => void
   signTransfer: () => void
+  mainButtonLabel?: string
 }
 
 function TransactionDialogFooter({
@@ -82,6 +83,7 @@ function TransactionDialogFooter({
   closeDialog,
   signTransfer,
   isSignDisabled,
+  mainButtonLabel = 'Sign Transfer',
 }: TransactionDialogFooterProps) {
   return (
     <>
@@ -90,7 +92,7 @@ function TransactionDialogFooter({
       </Button>
       {!isTxFinished ? (
         <Button className="bg-[#7916F3] hover:bg-[#6B46C1] text-white" onClick={signTransfer} disabled={isSignDisabled}>
-          Sign Transfer
+          {mainButtonLabel}
         </Button>
       ) : (
         <Button

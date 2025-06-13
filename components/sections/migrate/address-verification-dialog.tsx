@@ -6,13 +6,14 @@ import { AlertCircle, CheckCircle, Clock } from 'lucide-react'
 import { useEffect } from 'react'
 
 import { ExplorerLink } from '@/components/ExplorerLink'
-import { type VerificationStatus, useMigration } from '@/components/hooks/useMigration'
+import { useMigration } from '@/components/hooks/useMigration'
 import { Spinner } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { type AppId, appsConfigs } from '@/config/apps'
 import { ExplorerItemType } from '@/config/explorers'
 import { muifyHtml } from '@/lib/utils'
+import type { VerificationStatus } from '@/state/types/ledger'
 
 interface AddressVerificationDialogProps {
   open: boolean

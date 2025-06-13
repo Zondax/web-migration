@@ -3,6 +3,15 @@ import { useCallback, useState } from 'react'
 import { type App, AppStatus, ledgerState$ } from 'state/ledger'
 
 import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors } from '@/lib/utils'
+import type { Transaction } from '@/state/types/ledger'
+
+export type UpdateTransaction = (
+  transaction: Partial<Transaction>,
+  appId: string,
+  accountIndex: number,
+  balanceIndex: number,
+  isMultisig: boolean
+) => void
 
 interface UseSynchronizationReturn {
   // General
@@ -24,11 +33,13 @@ interface UseSynchronizationReturn {
   filteredAppsWithoutErrors: App[]
   filteredAppsWithErrors: App[]
   polkadotAddresses: string[]
+  hasMultisigAccounts: boolean
 
   // Actions
   rescanFailedAccounts: () => Promise<void>
   restartSynchronization: () => void
   cancelSynchronization: () => void
+  updateTransaction: UpdateTransaction
 }
 
 /**
@@ -51,6 +62,10 @@ export const useSynchronization = (): UseSynchronizationReturn => {
   const accountsWithErrors = use$(() => hasAccountsWithErrors(apps))
   const appsWithoutErrors = use$(() => filterAppsWithoutErrors(apps))
   const appsWithErrors = use$(() => filterAppsWithErrors(apps))
+
+  const hasMultisigAccounts = apps.some(
+    app => app.status === AppStatus.SYNCHRONIZED && app.multisigAccounts && app.multisigAccounts.length > 0
+  )
 
   // Extract Polkadot addresses
   const polkadotAddresses$ = useObservable(() => {
@@ -106,6 +121,22 @@ export const useSynchronization = (): UseSynchronizationReturn => {
     ledgerState$.synchronizeAccounts()
   }, [])
 
+  const updateTransaction = useCallback(
+    // Partial transaction update: accepts a partial transaction object and merges it into the current transaction state
+    (partial: Partial<Transaction>, appId: string, accountIndex: number, balanceIndex: number, isMultisig = false) => {
+      const appIndex = apps.findIndex(app => app.id === appId)
+      if (appIndex !== -1) {
+        const transaction =
+          ledgerState$.apps.apps[appIndex][isMultisig ? 'multisigAccounts' : 'accounts'][accountIndex].balances[balanceIndex].transaction
+        transaction.set({
+          ...transaction.get(),
+          ...partial,
+        })
+      }
+    },
+    [apps]
+  )
+
   return {
     // General
     apps,
@@ -122,10 +153,12 @@ export const useSynchronization = (): UseSynchronizationReturn => {
     filteredAppsWithoutErrors: appsWithoutErrors,
     filteredAppsWithErrors: appsWithErrors,
     polkadotAddresses: polkadotAddresses,
+    hasMultisigAccounts,
 
     // Actions
     rescanFailedAccounts,
     restartSynchronization,
     cancelSynchronization: ledgerState$.cancelSynchronization,
+    updateTransaction,
   }
 }

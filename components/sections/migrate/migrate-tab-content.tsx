@@ -1,104 +1,25 @@
 'use client'
 
-import { observer, use$ } from '@legendapp/state/react'
-import { Info, ShieldCheck } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import type { App } from 'state/ledger'
-import type { Address } from 'state/types/ledger'
-import { uiState$ } from 'state/ui'
 
 import { CustomTooltip } from '@/components/CustomTooltip'
 import { ExplorerLink } from '@/components/ExplorerLink'
 import { useMigration } from '@/components/hooks/useMigration'
 import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { hasBalance } from '@/lib/utils'
-import { muifyHtml } from '@/lib/utils/html'
-import { getTransactionStatus } from '@/lib/utils/ui'
 
 import { ExplorerItemType } from '@/config/explorers'
 import { AddressVerificationDialog } from './address-verification-dialog'
-import { BalanceHoverCard } from './balance-hover-card'
+import MigratedAccountsTable from './migrated-accounts-table'
 import { MigrationProgressDialog } from './migration-progress-dialog'
 import { SuccessDialog } from './success-dialog'
-import TransactionDropdown from './transaction-dropdown'
 
 interface MigrateTabContentProps {
   onBack: () => void
   onContinue: () => void
 }
-
-interface MigrateRowProps {
-  app: App
-}
-
-const MigrateRow = observer(({ app }: MigrateRowProps) => {
-  const icon = use$(uiState$.icons.get())[app.id]
-  const collections = use$(app.collections)
-
-  // If there are no accounts, render a placeholder row
-  if (!app.accounts || app.accounts.length === 0) {
-    return null
-  }
-
-  const renderStatusIcon = (account: Address, balanceIndex: number) => {
-    const txStatus = account.balances?.[balanceIndex].transaction?.status
-    const txStatusMessage = account.balances?.[balanceIndex].transaction?.statusMessage
-
-    const { statusIcon, statusMessage } = getTransactionStatus(txStatus, txStatusMessage)
-
-    return statusMessage ? <CustomTooltip tooltipBody={statusMessage}>{statusIcon}</CustomTooltip> : statusIcon
-  }
-
-  // Render a row for each account in the app
-  return (
-    <>
-      {app.accounts.map((account, accountIndex) => {
-        return account.balances
-          ?.filter(balance => hasBalance([balance], true) && balance.transaction?.destinationAddress)
-          .map((balance, balanceIndex) => (
-            <TableRow key={`${app.id}-${account.address}-${accountIndex}-${balanceIndex}`}>
-              <TableCell className="px-2 hidden sm:table-cell">
-                <div className="max-h-8 overflow-hidden [&_svg]:max-h-8 [&_svg]:w-8 flex justify-center items-center">
-                  {icon && muifyHtml(icon)}
-                </div>
-              </TableCell>
-              <TableCell>
-                <ExplorerLink
-                  value={account.address}
-                  className="font-mono"
-                  tooltipBody={`${account.address} - ${account.path}`}
-                  appId={app.id}
-                  explorerLinkType={ExplorerItemType.Address}
-                />
-              </TableCell>
-              <TableCell>
-                <ExplorerLink value={account.pubKey} className="font-mono" />
-              </TableCell>
-              <TableCell>
-                <ExplorerLink
-                  value={balance.transaction?.destinationAddress || ''}
-                  className="font-mono"
-                  appId={app.id}
-                  explorerLinkType={ExplorerItemType.Address}
-                />
-              </TableCell>
-              <TableCell>
-                <BalanceHoverCard balances={[balance]} collections={collections} token={app.token} isMigration />
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center space-x-2">
-                  {renderStatusIcon(account, balanceIndex)}
-                  {balance.transaction && <TransactionDropdown transaction={balance.transaction} appId={app.id} />}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))
-      })}
-    </>
-  )
-})
 
 export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
   const router = useRouter()
@@ -156,6 +77,28 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
   }
 
   const hasAddressesToVerify = filteredAppsWithoutErrors.length > 0
+  // Filter accounts and multisigAccounts that have a balance and destination address (and signatory address if multisig)
+  const validApps = filteredAppsWithoutErrors
+    .map(app => {
+      // Filter regular accounts
+      const filteredAccounts = (app.accounts || []).filter(account =>
+        (account.balances || []).some(balance => hasBalance([balance], true) && balance.transaction?.destinationAddress)
+      )
+
+      // Filter multisigAccounts (requires destinationAddress and signatoryAddress)
+      const filteredMultisigAccounts = (app.multisigAccounts || []).filter(account =>
+        (account.balances || []).some(
+          balance => hasBalance([balance], true) && balance.transaction?.destinationAddress && balance.transaction?.signatoryAddress
+        )
+      )
+
+      return {
+        ...app,
+        accounts: filteredAccounts,
+        multisigAccounts: filteredMultisigAccounts,
+      }
+    })
+    .filter(app => app.accounts.length > 0 || app.multisigAccounts?.length > 0)
 
   return (
     <div>
@@ -170,38 +113,19 @@ export function MigrateTabContent({ onBack }: MigrateTabContentProps) {
         )}
       </div>
 
-      <Table className="shadow-sm border border-gray-200">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="hidden sm:table-cell">Chain</TableHead>
-            <TableHead>Source Address</TableHead>
-            <TableHead>Public Key</TableHead>
-            <TableHead>Destination Address</TableHead>
-            <TableHead className="flex items-center">
-              Balance
-              <CustomTooltip
-                tooltipBody="Balance to be transferred. The transaction fee will be deducted from this amount."
-                className="!normal-case font-normal"
-              >
-                <Info className="h-4 w-4 inline-block ml-1 text-gray-400" />
-              </CustomTooltip>
-            </TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredAppsWithoutErrors.length > 0 ? (
-            filteredAppsWithoutErrors.map(app => <MigrateRow key={app.id?.toString()} app={app} />)
-          ) : (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground p-4">
-                There are no accounts available for migration. Please ensure your Ledger device is connected and contains accounts with a
-                balance to migrate.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+      {validApps.length > 0 ? (
+        <>
+          {validApps.some(app => app.accounts?.length > 0) && <MigratedAccountsTable apps={validApps} />}
+          {validApps.some(app => app.multisigAccounts?.length > 0) && <MigratedAccountsTable apps={validApps} multisigAddresses />}
+        </>
+      ) : (
+        <div className="border border-gray-200 rounded-lg p-8 text-center">
+          <p className="text-muted-foreground">
+            There are no accounts available for migration. Please ensure your Ledger device is connected and contains accounts with a
+            balance to migrate.
+          </p>
+        </div>
+      )}
 
       <div className="flex justify-center gap-4 mt-8">
         {migrationStatus === 'finished' ? (

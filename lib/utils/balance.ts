@@ -1,4 +1,5 @@
-import { type Address, type AddressBalance, BalanceType, type NativeBalance, type NftBalance } from '@/state/types/ledger'
+import { MINIMUM_AMOUNT } from '@/config/mockData'
+import { type Address, type AddressBalance, BalanceType, type NativeBalance, type Nft, type NftBalance } from '@/state/types/ledger'
 
 /**
  * Type guard to check if a balance is a native balance
@@ -68,6 +69,7 @@ export const canUnstake = (balance?: NativeBalance): boolean => {
 /**
  * Checks if a collection of balances contains any non-zero values
  * @param balances Array of address balances to check
+ * @param checkTransferable If true, checks if the transferable balance is greater than 0
  * @returns True if any balance exists (native currency > 0 or collections with items)
  */
 export const hasBalance = (balances: AddressBalance[], checkTransferable = false): boolean => {
@@ -88,4 +90,37 @@ export const hasBalance = (balances: AddressBalance[], checkTransferable = false
 export const hasAddressBalance = (account: Address): boolean => {
   if (!account.balances) return false
   return hasBalance(account.balances)
+}
+
+/**
+ * Determines the type of balance (native or NFT), and returns the transferable amount and NFTs to transfer.
+ * Used for preparing migration transactions.
+ *
+ * @param balance - The balance object to inspect (AddressBalance)
+ * @param account - The parent account (Address), required for NFT balances to get native transferable
+ * @returns An object with nftsToTransfer (Nft[]), nativeAmount (number | undefined), and transferableAmount (number)
+ */
+export function getTransferableAndNfts(
+  balance: AddressBalance,
+  account: Address
+): { nftsToTransfer: Nft[]; nativeAmount: number | undefined; transferableAmount: number } {
+  let nftsToTransfer: Nft[] = []
+  let nativeAmount: number | undefined = undefined
+  let transferableAmount = 0
+
+  if (isNativeBalance(balance)) {
+    nativeAmount = balance.balance.transferable
+    transferableAmount = balance.balance.transferable
+  } else if (isNftBalance(balance)) {
+    nftsToTransfer = balance.balance
+    // Find the native balance in the account to get its transferable amount
+    transferableAmount = account.balances?.find(b => isNativeBalance(b))?.balance.transferable ?? 0
+  }
+
+  // Use minimum amount for development if needed
+  if (process.env.NEXT_PUBLIC_NODE_ENV === 'development' && MINIMUM_AMOUNT && isNativeBalance(balance)) {
+    nativeAmount = MINIMUM_AMOUNT
+  }
+
+  return { nftsToTransfer, nativeAmount, transferableAmount }
 }

@@ -1,20 +1,11 @@
-import type { MigratingItem } from '@/state/types/ledger'
+import type { AddressWithVerificationStatus, MigratingItem } from '@/state/types/ledger'
 import { observable } from '@legendapp/state'
 import { use$ } from '@legendapp/state/react'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect } from 'react'
 import { type App, ledgerState$ } from 'state/ledger'
-import { uiState$ } from 'state/ui'
 
 import type { AppId } from '@/config/apps'
-import { filterAppsWithoutErrors } from '@/lib/utils'
-
-export type VerificationStatus = 'pending' | 'verifying' | 'verified' | 'failed'
-
-export interface AddressWithVerificationStatus {
-  address: string
-  path: string
-  status: VerificationStatus
-}
+import { addDestinationAddressesFromAccounts, filterAppsWithoutErrors } from '@/lib/utils'
 
 interface UseMigrationReturn {
   // Computed values
@@ -62,31 +53,20 @@ export const useMigration = (): UseMigrationReturn => {
   // Get destination addresses used for each app
   const destinationAddressesByApp = use$(() =>
     appsWithoutErrors.reduce((acc: Record<AppId, AddressWithVerificationStatus[]>, app) => {
-      if (app.accounts && app.accounts.length > 0) {
-        // Create a map to track unique addresses with their paths
-        const addressMap = new Map<string, AddressWithVerificationStatus>()
+      // Create a map to track unique addresses with their paths
+      const addressMap = new Map<string, AddressWithVerificationStatus>()
 
-        // Process each account and only keep unique destination addresses
-        for (const account of app.accounts) {
-          if (account.balances && account.balances.length > 0) {
-            for (const balance of account.balances) {
-              if (balance.transaction?.destinationAddress && !addressMap.has(balance.transaction.destinationAddress)) {
-                addressMap.set(balance.transaction.destinationAddress, {
-                  address: balance.transaction.destinationAddress,
-                  path: account.path,
-                  status: 'pending',
-                })
-              }
-            }
-          }
-        }
+      // Add destination addresses from regular accounts
+      addDestinationAddressesFromAccounts(app.accounts, addressMap)
 
-        // Convert the map values to an array
-        const uniqueDestinationAddresses = Array.from(addressMap.values())
+      // Add destination addresses from multisig accounts
+      addDestinationAddressesFromAccounts(app.multisigAccounts, addressMap)
 
-        if (uniqueDestinationAddresses.length > 0) {
-          acc[app.id] = uniqueDestinationAddresses
-        }
+      // Convert the map values to an array
+      const uniqueDestinationAddresses = Array.from(addressMap.values())
+
+      if (uniqueDestinationAddresses.length > 0) {
+        acc[app.id] = uniqueDestinationAddresses
       }
       return acc
     }, {})
