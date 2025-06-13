@@ -13,7 +13,7 @@ import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, Dia
 import { type AppId, appsConfigs } from '@/config/apps'
 import { ExplorerItemType } from '@/config/explorers'
 import { muifyHtml } from '@/lib/utils'
-import { VerificationStatus } from '@/state/types/ledger'
+import type { VerificationStatus } from '@/state/types/ledger'
 
 interface AddressVerificationDialogProps {
   open: boolean
