@@ -186,7 +186,7 @@ const SynchronizedAccountRow = observer(
       )
     }
 
-    const tooltipAddres = (): React.ReactNode => {
+    const tooltipAddress = (): React.ReactNode => {
       const items: TooltipItem[] = [{ label: 'Source Address', value: account.address, icon: User, hasCopyButton: true }]
 
       if (!isMultisigAddress) {
@@ -309,7 +309,7 @@ const SynchronizedAccountRow = observer(
                 </CustomTooltip>
               ) : null}
               {/* Address Info Icon and Tooltip */}
-              <CustomTooltip tooltipBody={tooltipAddres()}>
+              <CustomTooltip tooltipBody={tooltipAddress()}>
                 <Info className="h-4 w-4 text-muted-foreground" />
               </CustomTooltip>
               {isMultisigMember || isMultisigAddress ? (

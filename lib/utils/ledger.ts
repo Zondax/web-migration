@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { type App, AppStatus } from 'state/ledger'
-import type { Address, AddressBalance, MultisigAddress } from 'state/types/ledger'
+import type { Address, AddressBalance, AddressWithVerificationStatus, MultisigAddress } from 'state/types/ledger'
 
 /**
  * Retrieves a light icon for a given app from the Hub backend.
@@ -135,5 +135,30 @@ export function setDefaultDestinationAddress<T extends { balances?: AddressBalan
         destinationAddress: balance.transaction?.destinationAddress || defaultDestinationAddress,
       },
     })),
+  }
+}
+
+/**
+ * Adds destination addresses from a list of accounts to an address map
+ * @param accounts - The accounts to process (can be regular or multisig accounts)
+ * @param addressMap - The map to store unique addresses with their paths and status
+ */
+export function addDestinationAddressesFromAccounts(
+  accounts: { balances?: any[]; path: string }[] | undefined,
+  addressMap: Map<string, AddressWithVerificationStatus>
+): void {
+  if (!accounts) return
+  for (const account of accounts) {
+    if (account.balances && account.balances.length > 0) {
+      for (const balance of account.balances) {
+        if (balance.transaction?.destinationAddress && !addressMap.has(balance.transaction.destinationAddress)) {
+          addressMap.set(balance.transaction.destinationAddress, {
+            address: balance.transaction.destinationAddress,
+            path: account.path,
+            status: 'pending',
+          })
+        }
+      }
+    }
   }
 }

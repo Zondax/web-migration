@@ -128,6 +128,14 @@ export interface Address extends GenericeResponseAddress {
   memberMultisigAddresses?: string[] // addresses of the multisig addresses that the account is a member of
 }
 
+export type VerificationStatus = 'pending' | 'verifying' | 'verified' | 'failed'
+
+export interface AddressWithVerificationStatus {
+  address: string
+  path: string
+  status: VerificationStatus
+}
+
 /**
  * Essential NFT Information
  */

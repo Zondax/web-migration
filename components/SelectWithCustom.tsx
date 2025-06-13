@@ -39,6 +39,7 @@ export function SelectWithCustom({
   const [isAddingCustom, setIsAddingCustom] = useState(false)
   const [customInput, setCustomInput] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const customValueKey = '__add_custom__'
 
   useEffect(() => {
     if (isAddingCustom && inputRef.current) {
@@ -47,7 +48,7 @@ export function SelectWithCustom({
   }, [isAddingCustom])
 
   const handleSelectChange = (value: string) => {
-    if (value === '__add_custom__') {
+    if (value === customValueKey) {
       setIsAddingCustom(true)
       return
     }
@@ -165,7 +166,7 @@ export function SelectWithCustom({
             </SelectItem>
           ))}
           <div className="border-t my-1" />
-          <SelectItem value="__add_custom__" className="text-primary hover:text-primary-foreground hover:bg-primary">
+          <SelectItem value={customValueKey} className="text-primary hover:text-primary-foreground hover:bg-primary">
             <div className="flex items-center gap-2">
               <Plus className="h-3 w-3" />
               Add Custom Value

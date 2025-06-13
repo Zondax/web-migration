@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { type AppId, type Token, getChainName } from '@/config/apps'
 import { ExplorerItemType } from '@/config/explorers'
 import { formatBalance } from '@/lib/utils/format'
-import { validateCallData } from '@/lib/utils/multisig'
+import { callDataValidationMessages, validateCallData } from '@/lib/utils/multisig'
 import { ledgerState$ } from '@/state/ledger'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -24,8 +24,8 @@ const multisigCallFormSchema = z.object({
   signer: z.string().min(1, 'Signer is required'),
   callData: z
     .string()
-    .min(1, 'Call data is required')
-    .regex(/^0x[a-fA-F0-9]+$/, 'Call data must be a valid hex string starting with 0x'),
+    .min(1, callDataValidationMessages.isRequired)
+    .regex(/^0x[a-fA-F0-9]+$/, callDataValidationMessages.isFormatInvalid),
 })
 
 export type MultisigCallFormData = z.infer<typeof multisigCallFormSchema>
@@ -96,13 +96,13 @@ function MultisigCallForm({
 
   const renderCallDataHelperText = (): string | undefined => {
     if (isValidatingCallData) {
-      return 'Validating...'
+      return callDataValidationMessages.validating
     }
     if (errors.callData?.message) {
       return errors.callData.message
     }
     if (callData && selectedCallHash && !isValidatingCallData) {
-      return 'Call data matches the expected hash ✓'
+      return callDataValidationMessages.correct
     }
     return undefined
   }
@@ -272,7 +272,7 @@ export default function ApproveMultisigCallDialog({ open, setOpen, token, appId,
       } catch (error) {
         form.setError('callData', {
           type: 'custom',
-          message: 'Failed to validate call data',
+          message: callDataValidationMessages.failed,
         })
       } finally {
         setIsValidatingCallData(false)

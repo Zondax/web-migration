@@ -112,7 +112,8 @@ export function SynchronizeTabContent({ onContinue }: SynchronizeTabContentProps
           <ToggleGroupItem value={AccountViewType.MULTISIG}>
             <Users className="h-4 w-4" />
             <span>Multisig Accounts</span>
-            {hasMultisigAccounts && numberIcon(appsWithoutErrors.reduce((total, app) => total + (app.multisigAccounts?.length || 0), 0))}
+            {appsWithoutErrors.length > 0 &&
+              numberIcon(appsWithoutErrors.reduce((total, app) => total + (app.multisigAccounts?.length || 0), 0))}
           </ToggleGroupItem>
         </ToggleGroup>
       </div>

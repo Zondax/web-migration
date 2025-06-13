@@ -135,6 +135,7 @@ export const apps: AppConfig[] = [
       decimals: app.token.decimals,
       logoId: app.token.logoId || app.id,
     },
+    subscanId: app.subscanId,
   })),
   polkadotAppConfig,
 ]
@@ -143,20 +144,6 @@ export const apps: AppConfig[] = [
  * For compatibility with existing code - Map of app configs
  */
 export const appsConfigs = new Map<AppId, AppConfig>(apps.map(app => [app.id, app]))
-// Convert JSON data to AppConfig objects and add to the map
-for (const config of appsConfigData) {
-  appsConfigs.set(config.id as AppId, {
-    ...config,
-    id: config.id as AppId,
-    // Add token field for compatibility
-    token: {
-      symbol: config.token.symbol,
-      decimals: config.token.decimals,
-      logoId: config.token.logoId || config.id,
-    },
-    subscanId: config.subscanId,
-  })
-}
 
 /**
  * For compatibility with existing code - Object of app configs

@@ -127,15 +127,11 @@ export const useSynchronization = (): UseSynchronizationReturn => {
       const appIndex = apps.findIndex(app => app.id === appId)
       if (appIndex !== -1) {
         const transaction =
-          ledgerState$.apps.apps[appIndex][isMultisig ? 'multisigAccounts' : 'accounts'][accountIndex].balances[
-            balanceIndex
-          ].transaction.get()
-        ledgerState$.apps.apps[appIndex][isMultisig ? 'multisigAccounts' : 'accounts'][accountIndex].balances[balanceIndex].transaction.set(
-          {
-            ...transaction,
-            ...partial,
-          }
-        )
+          ledgerState$.apps.apps[appIndex][isMultisig ? 'multisigAccounts' : 'accounts'][accountIndex].balances[balanceIndex].transaction
+        transaction.set({
+          ...transaction.get(),
+          ...partial,
+        })
       }
     },
     [apps]

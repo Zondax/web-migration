@@ -1,6 +1,15 @@
 import type { AppId } from '@/config/apps'
 import { ledgerClient } from '@/state/client/ledger'
 
+export const callDataValidationMessages = {
+  correct: 'Call data matches the expected hash ✓',
+  invalid: 'Call data does not match the expected hash ✗',
+  validating: 'Validating...',
+  failed: 'Failed to validate call data',
+  isRequired: 'Call data is required',
+  isFormatInvalid: 'Call data must be a valid hex string starting with 0x',
+}
+
 export interface CallDataValidationResult {
   isValid: boolean
   error?: string
@@ -23,7 +32,7 @@ export async function validateCallData(appId: AppId, callDataValue: string, call
   if (!callDataValue.startsWith('0x') || !/^0x[a-fA-F0-9]+$/.test(callDataValue)) {
     return {
       isValid: false,
-      error: 'Invalid hex format',
+      error: callDataValidationMessages.isFormatInvalid,
     }
   }
 
@@ -34,7 +43,7 @@ export async function validateCallData(appId: AppId, callDataValue: string, call
     if (!isValid) {
       return {
         isValid: false,
-        error: 'Call data does not match the expected call hash',
+        error: callDataValidationMessages.invalid,
       }
     }
 
@@ -42,7 +51,7 @@ export async function validateCallData(appId: AppId, callDataValue: string, call
   } catch (error) {
     return {
       isValid: false,
-      error: 'Failed to validate call data',
+      error: callDataValidationMessages.failed,
     }
   }
 }

@@ -61,9 +61,7 @@ export class SubscanClient {
     const data: T = await response.json()
 
     if (data.code !== 0) {
-      console.log('data', data)
       const httpStatus = this.getHttpStatusFromSubscanCode(data.code)
-      console.log('httpStatus', httpStatus)
       throw new SubscanError(data.message, data.code, httpStatus)
     }
 
