@@ -1,10 +1,11 @@
 import { observer } from '@legendapp/state/react'
 import { AlertCircle, BanknoteArrowDown, Info, KeyRound, LockOpen, Route, Trash2, TriangleAlert, User } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { Collections } from 'state/ledger'
 import type { Address, AddressBalance } from 'state/types/ledger'
 
 import { CustomTooltip, TooltipBody } from '@/components/CustomTooltip'
+import { useMigration } from '@/components/hooks/useMigration'
 import { TableCell, TableRow } from '@/components/ui/table'
 import type { AppId, Token } from '@/config/apps'
 import { formatBalance } from '@/lib/utils'
@@ -13,18 +14,21 @@ import { canUnstake, hasNonTransferableBalance, hasStakedBalance, isNativeBalanc
 import { ExplorerLink } from '@/components/ExplorerLink'
 import { Spinner } from '@/components/icons'
 import { Button, type ButtonVariant } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { ExplorerItemType } from '@/config/explorers'
 import { getIdentityItems } from '@/lib/utils/ui'
+import type { CheckedState } from '@radix-ui/react-checkbox'
 import { BalanceHoverCard, LockedBalanceHoverCard } from './balance-hover-card'
 import DestinationAddressSelect from './destination-address-select'
-import RemoveIdentityDialog from './remove-identity-dialog'
-import UnstakeDialog from './unstake-dialog'
-import WithdrawDialog from './withdraw-dialog'
+import RemoveIdentityDialog from './dialogs/remove-identity-dialog'
+import UnstakeDialog from './dialogs/unstake-dialog'
+import WithdrawDialog from './dialogs/withdraw-dialog'
 
 // Component for rendering a single synchronized account row
 interface AccountBalanceRowProps {
   account: Address
   accountIndex: number
+  appIndex: number
   balance?: AddressBalance
   balanceIndex?: number
   rowSpan: number
@@ -48,6 +52,7 @@ const SynchronizedAccountRow = observer(
   ({
     account,
     accountIndex,
+    appIndex,
     balance,
     balanceIndex,
     rowSpan,
@@ -57,6 +62,7 @@ const SynchronizedAccountRow = observer(
     handleDestinationChange,
     appId,
   }: AccountBalanceRowProps) => {
+    const { toggleAccountSelection } = useMigration()
     const [unstakeOpen, setUnstakeOpen] = useState<boolean>(false)
     const [withdrawOpen, setWithdrawOpen] = useState<boolean>(false)
     const [removeIdentityOpen, setRemoveIdentityOpen] = useState<boolean>(false)
@@ -104,6 +110,13 @@ const SynchronizedAccountRow = observer(
         })
       }
     }
+
+    const handleCheckboxChange = useCallback(
+      (checked: CheckedState) => {
+        toggleAccountSelection(appIndex, accountIndex, checked === 'indeterminate' ? false : checked)
+      },
+      [toggleAccountSelection, appIndex, accountIndex]
+    )
 
     const renderStatusIcon = (account: Address): React.ReactNode | null => {
       let statusIcon: React.ReactNode | null = null
@@ -192,6 +205,7 @@ const SynchronizedAccountRow = observer(
         {isFirst && (
           <TableCell className="py-2 text-sm" rowSpan={rowSpan}>
             <div className="flex items-center gap-2">
+              <Checkbox checked={account.selected} onCheckedChange={handleCheckboxChange} />
               <ExplorerLink
                 value={account.address ?? ''}
                 appId={appId}

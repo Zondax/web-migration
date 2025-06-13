@@ -2,7 +2,7 @@ import { use$, useObservable } from '@legendapp/state/react'
 import { useCallback, useState } from 'react'
 import { type App, AppStatus, ledgerState$ } from 'state/ledger'
 
-import { filterAppsWithErrors, filterAppsWithoutErrors, hasAccountsWithErrors } from '@/lib/utils'
+import { filterAppsWithErrors, filterAppsWithoutErrors, filterSelectedAccountsForMigration, hasAccountsWithErrors } from '@/lib/utils'
 
 interface UseSynchronizationReturn {
   // General

@@ -1,12 +1,11 @@
 import type { MigratingItem } from '@/state/types/ledger'
 import { observable } from '@legendapp/state'
 import { use$ } from '@legendapp/state/react'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect } from 'react'
 import { type App, ledgerState$ } from 'state/ledger'
-import { uiState$ } from 'state/ui'
 
 import type { AppId } from '@/config/apps'
-import { filterAppsWithoutErrors } from '@/lib/utils'
+import { filterAppsWithoutErrors, filterSelectedAccountsForMigration } from '@/lib/utils'
 
 export type VerificationStatus = 'pending' | 'verifying' | 'verified' | 'failed'
 
@@ -19,6 +18,7 @@ export interface AddressWithVerificationStatus {
 interface UseMigrationReturn {
   // Computed values
   filteredAppsWithoutErrors: App[]
+  appsForMigration: App[]
   migrationResults: {
     success: number
     total: number
@@ -31,11 +31,16 @@ interface UseMigrationReturn {
   anyFailed: boolean
   isVerifying: boolean
   verifyDestinationAddresses: () => Promise<void>
+  verifySelectedAppsAddresses: () => Promise<void>
   verifyFailedAddresses: () => Promise<void>
 
   // Migration actions
-  migrateAll: () => Promise<void>
+  migrateSelected: () => Promise<void>
   restartSynchronization: () => void
+
+  // Selection actions
+  toggleAccountSelection: (appIndex: number, accountIndex: number, checked?: boolean) => void
+  toggleAllAccounts: (checked: boolean) => void
 }
 
 // Create the observable outside of the hook to ensure it persists across renders
@@ -59,7 +64,9 @@ export const useMigration = (): UseMigrationReturn => {
   // Compute derived values from apps
   const appsWithoutErrors = use$(() => filterAppsWithoutErrors(apps))
 
-  // Get destination addresses used for each app
+  const appsForMigration = use$(() => filterSelectedAccountsForMigration(appsWithoutErrors))
+
+  // Get destination addresses used for each app (only selected accounts)
   const destinationAddressesByApp = use$(() =>
     appsWithoutErrors.reduce((acc: Record<AppId, AddressWithVerificationStatus[]>, app) => {
       if (app.accounts && app.accounts.length > 0) {
@@ -68,6 +75,9 @@ export const useMigration = (): UseMigrationReturn => {
 
         // Process each account and only keep unique destination addresses
         for (const account of app.accounts) {
+          // Skip accounts that are not selected
+          if (!account.selected) continue
+
           if (account.balances && account.balances.length > 0) {
             for (const balance of account.balances) {
               if (balance.transaction?.destinationAddress && !addressMap.has(balance.transaction.destinationAddress)) {
@@ -119,6 +129,47 @@ export const useMigration = (): UseMigrationReturn => {
     }
   }, [destinationAddressesByApp])
 
+  // ---- Account selection functions ----
+
+  /**
+   * Toggle selection state of a specific account
+   */
+  const toggleAccountSelection = useCallback(
+    (appIndex: number, accountIndex: number, checked?: boolean) => {
+      const app = apps$.get()[appIndex]
+
+      if (app?.accounts?.[accountIndex]) {
+        const currentValue = app.accounts[accountIndex].selected || false
+        if (checked) {
+          apps$[appIndex].accounts[accountIndex].selected.set(true)
+        } else {
+          apps$[appIndex].accounts[accountIndex].selected.set(!currentValue)
+        }
+      }
+    },
+    [apps$]
+  )
+
+  /**
+   * Set selection state for all accounts
+   */
+  const toggleAllAccounts = useCallback(
+    (checked: boolean) => {
+      const currentApps = apps$.get()
+
+      for (let i = 0; i < currentApps.length; i++) {
+        const app = currentApps[i]
+
+        if (app.accounts && !app.error) {
+          for (let j = 0; j < app.accounts.length; j++) {
+            apps$[i].accounts[j].selected.set(checked)
+          }
+        }
+      }
+    },
+    [apps$]
+  )
+
   // ---- Verification related functions ----
 
   /**
@@ -155,6 +206,33 @@ export const useMigration = (): UseMigrationReturn => {
       isVerifying$.set(false)
     }
   }, [verifyAddress])
+
+  /**
+   * Verify only destination addresses from selected apps
+   */
+  const verifySelectedAppsAddresses = useCallback(async () => {
+    isVerifying$.set(true)
+
+    try {
+      // Get the current selected apps
+      const selectedApps = filterSelectedAccountsForMigration(appsWithoutErrors)
+      const selectedAppIds = new Set(selectedApps.map(app => app.id as AppId))
+
+      // Iterate through each app and verify only addresses from selected apps
+      for (const appId of Object.keys(destinationAddressesStatus$.peek())) {
+        // Skip apps that are not selected
+        if (!selectedAppIds.has(appId as AppId)) continue
+
+        const addresses = destinationAddressesStatus$[appId as AppId].peek() || []
+
+        for (let i = 0; i < addresses.length; i++) {
+          await verifyAddress(appId as AppId, i)
+        }
+      }
+    } finally {
+      isVerifying$.set(false)
+    }
+  }, [verifyAddress, appsWithoutErrors])
 
   /**
    * Verify only the addresses that have failed verification
@@ -194,12 +272,11 @@ export const useMigration = (): UseMigrationReturn => {
   })
 
   // ---- Migration related functions ----
-
   /**
-   * Migrate all accounts
+   * Migrate only selected accounts
    */
-  const migrateAll = useCallback(async () => {
-    await ledgerState$.migrateAll()
+  const migrateSelected = useCallback(async () => {
+    await ledgerState$.migrateSelected()
   }, [])
 
   /**
@@ -218,6 +295,7 @@ export const useMigration = (): UseMigrationReturn => {
   return {
     // Computed values
     filteredAppsWithoutErrors: appsWithoutErrors,
+    appsForMigration,
     migrationResults: {
       success: successMigration,
       total: totalMigration,
@@ -230,10 +308,15 @@ export const useMigration = (): UseMigrationReturn => {
     anyFailed,
     isVerifying,
     verifyDestinationAddresses,
+    verifySelectedAppsAddresses,
     verifyFailedAddresses,
 
     // Migration actions
-    migrateAll,
+    migrateSelected,
     restartSynchronization,
+
+    // Selection actions
+    toggleAccountSelection,
+    toggleAllAccounts,
   }
 }

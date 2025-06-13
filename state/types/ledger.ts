@@ -97,6 +97,7 @@ export interface Address extends GenericeResponseAddress {
   }
   path: string
   registration?: Registration
+  selected?: boolean
 }
 
 /**

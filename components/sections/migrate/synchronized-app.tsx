@@ -13,7 +13,7 @@ import { muifyHtml } from '@/lib/utils/html'
 import AccountsTable from './accounts-table'
 import { BalanceTypeFlag } from './balance-detail-card'
 
-function SynchronizedApp({ app, failedSync }: { app: Observable<App>; failedSync?: boolean }) {
+function SynchronizedApp({ app, appIndex, failedSync }: { app: Observable<App>; appIndex: number; failedSync?: boolean }) {
   const name = use$(app.name)
   const id = use$(app.id)
   const accounts = use$(app.accounts)
@@ -100,6 +100,7 @@ function SynchronizedApp({ app, failedSync }: { app: Observable<App>; failedSync
             polkadotAddresses={polkadotAddresses ?? []}
             collections={collections}
             appId={id}
+            appIndex={appIndex}
           />
         </div>
       ) : null}
