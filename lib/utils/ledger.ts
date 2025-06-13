@@ -144,7 +144,7 @@ export function setDefaultDestinationAddress<T extends { balances?: AddressBalan
  * @param addressMap - The map to store unique addresses with their paths and status
  */
 export function addDestinationAddressesFromAccounts(
-  accounts: { balances?: any[]; path: string }[] | undefined,
+  accounts: Address[] | MultisigAddress[] | undefined,
   addressMap: Map<string, AddressWithVerificationStatus>
 ): void {
   if (!accounts) return
