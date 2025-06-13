@@ -7,7 +7,7 @@ export const callDataValidationMessages = {
   validating: 'Validating...',
   failed: 'Failed to validate call data',
   isRequired: 'Call data is required',
-  isFormatInvalid: 'Call data must be a valid hex string starting with 0x',
+  isInvalidFormat: 'Call data must be a valid hex string starting with 0x',
 }
 
 export interface CallDataValidationResult {
@@ -32,7 +32,7 @@ export async function validateCallData(appId: AppId, callDataValue: string, call
   if (!callDataValue.startsWith('0x') || !/^0x[a-fA-F0-9]+$/.test(callDataValue)) {
     return {
       isValid: false,
-      error: callDataValidationMessages.isFormatInvalid,
+      error: callDataValidationMessages.isInvalidFormat,
     }
   }
 

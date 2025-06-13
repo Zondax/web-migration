@@ -25,7 +25,7 @@ const multisigCallFormSchema = z.object({
   callData: z
     .string()
     .min(1, callDataValidationMessages.isRequired)
-    .regex(/^0x[a-fA-F0-9]+$/, callDataValidationMessages.isFormatInvalid),
+    .regex(/^0x[a-fA-F0-9]+$/, callDataValidationMessages.isInvalidFormat),
 })
 
 export type MultisigCallFormData = z.infer<typeof multisigCallFormSchema>

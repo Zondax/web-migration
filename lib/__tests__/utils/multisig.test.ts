@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from 'vitest'
 
 import type { AppId } from '@/config/apps'
-import { validateCallData, type CallDataValidationResult } from '../../utils/multisig'
+import { callDataValidationMessages, validateCallData, type CallDataValidationResult } from '../../utils/multisig'
 
 // Mock the ledgerClient module
 vi.mock('@/state/client/ledger', () => ({
@@ -71,7 +71,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Invalid hex format',
+        error: callDataValidationMessages.isInvalidFormat,
       })
       expect(mockedValidateCallDataMatchesHash).not.toHaveBeenCalled()
     })
@@ -83,7 +83,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Invalid hex format',
+        error: callDataValidationMessages.isInvalidFormat,
       })
       expect(mockedValidateCallDataMatchesHash).not.toHaveBeenCalled()
     })
@@ -95,7 +95,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Invalid hex format',
+        error: callDataValidationMessages.isInvalidFormat,
       })
       expect(mockedValidateCallDataMatchesHash).not.toHaveBeenCalled()
     })
@@ -107,7 +107,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Invalid hex format',
+        error: callDataValidationMessages.isInvalidFormat,
       })
       expect(mockedValidateCallDataMatchesHash).not.toHaveBeenCalled()
     })
@@ -159,7 +159,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Invalid hex format',
+        error: callDataValidationMessages.isInvalidFormat,
       })
       expect(mockedValidateCallDataMatchesHash).not.toHaveBeenCalled()
     })
@@ -182,7 +182,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Call data does not match the expected call hash',
+        error: callDataValidationMessages.invalid,
       })
       expect(mockedValidateCallDataMatchesHash).toHaveBeenCalledWith(mockAppId, validCallData, validCallHash)
     })
@@ -194,7 +194,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Failed to validate call data',
+        error: callDataValidationMessages.failed,
       })
       expect(mockedValidateCallDataMatchesHash).toHaveBeenCalledWith(mockAppId, validCallData, validCallHash)
     })
@@ -206,7 +206,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Failed to validate call data',
+        error: callDataValidationMessages.failed,
       })
       expect(mockedValidateCallDataMatchesHash).toHaveBeenCalledWith(mockAppId, validCallData, validCallHash)
     })
@@ -218,7 +218,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Failed to validate call data',
+        error: callDataValidationMessages.failed,
       })
       expect(mockedValidateCallDataMatchesHash).toHaveBeenCalledWith(mockAppId, validCallData, validCallHash)
     })
@@ -271,7 +271,7 @@ describe('validateCallData', () => {
       expect(result1).toEqual({ isValid: true })
       expect(result2).toEqual({
         isValid: false,
-        error: 'Call data does not match the expected call hash',
+        error: callDataValidationMessages.invalid,
       })
       expect(mockedValidateCallDataMatchesHash).toHaveBeenCalledTimes(2)
     })
@@ -286,7 +286,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Invalid hex format',
+        error: callDataValidationMessages.isInvalidFormat,
       })
       expect(mockedValidateCallDataMatchesHash).not.toHaveBeenCalled()
     })
@@ -316,7 +316,7 @@ describe('validateCallData', () => {
       const result: CallDataValidationResult = await validateCallData(mockAppId, validCallData, validCallHash)
 
       expect(result.isValid).toBe(false)
-      expect(result.error).toBe('Call data does not match the expected call hash')
+      expect(result.error).toBe(callDataValidationMessages.invalid)
     })
 
     it('should handle unicode characters in hex (should fail)', async () => {
@@ -326,7 +326,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Invalid hex format',
+        error: callDataValidationMessages.isInvalidFormat,
       })
       expect(mockedValidateCallDataMatchesHash).not.toHaveBeenCalled()
     })
@@ -338,7 +338,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Invalid hex format',
+        error: callDataValidationMessages.isInvalidFormat,
       })
       expect(mockedValidateCallDataMatchesHash).not.toHaveBeenCalled()
     })
@@ -358,7 +358,7 @@ describe('validateCallData', () => {
 
       expect(result).toEqual({
         isValid: false,
-        error: 'Call data does not match the expected call hash',
+        error: callDataValidationMessages.invalid,
       })
     })
 
